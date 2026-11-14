@@ -7,7 +7,7 @@ import {
   STARTERS_OUTPUT_SCHEMA,
   STARTERS_SYSTEM_PROMPT,
 } from "@/lib/intake";
-import { getSeed } from "@/lib/seed-db";
+import { cachedSeed, getSeed } from "@/lib/seed-db";
 
 /**
  * Opening suggestions for the intake chat, written by Gemini from aggregate pool counts
@@ -18,7 +18,7 @@ import { getSeed } from "@/lib/seed-db";
 async function tailoredStarters() {
   "use cache";
   cacheLife("hours");
-  const pool = (await getSeed()).talent;
+  const pool = (await cachedSeed()).talent;
   const out = await generateJson<{ starters: string[] }>({
     system: STARTERS_SYSTEM_PROMPT,
     schema: STARTERS_OUTPUT_SCHEMA,

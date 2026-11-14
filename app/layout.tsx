@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
@@ -30,9 +31,28 @@ export const metadata: Metadata = {
     "More signal, less noise: companies describe real needs, talent shows real evidence, the event organiser introduces them and both decide whom to meet, with explainable matches before, during and after the event.",
 };
 
-export default async function RootLayout({ children }: LayoutProps<"/">) {
-  // Everything comes from the database (Tiger Data, else Supabase; cached, see lib/seed-db.ts).
+/**
+ * Everything comes from the database (Tiger Data, else Supabase; cached, see lib/seed-db.ts),
+ * read at request time: the build never connects to it, so this streams in under <Suspense>.
+ */
+async function DataProvider({ children }: { children: React.ReactNode }) {
   const [{ companies, needs, talent }, esco] = await Promise.all([getSeed(), getEsco()]);
+  return (
+    <DemoProvider seed={{ companies, needs, talent }} esco={esco}>
+      {children}
+    </DemoProvider>
+  );
+}
+
+function LoadingShell() {
+  return (
+    <div className="flex flex-1 items-center justify-center py-24 text-sm text-muted-foreground" aria-busy>
+      Loading the event…
+    </div>
+  );
+}
+
+export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
@@ -42,24 +62,29 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       <body className="flex min-h-full flex-col">
         <ThemeProvider>
           <TooltipProvider>
-            <DemoProvider seed={{ companies, needs, talent }} esco={esco}>
-              <SiteHeader />
-              <main className="flex-1">{children}</main>
-              <footer className="border-t py-6 text-center text-xs text-muted-foreground">
-                Prototype for the City of Espoo “Rethinking Recruitment” challenge · all data is synthetic ·
-                the AI suggests, people decide ·{" "}
-                <Link href="/responsible" className="underline underline-offset-4 hover:text-foreground">
-                  Responsible AI
-                </Link>
-                <span className="mt-1 block font-mono" title={APP_COMMIT ? `Build ${APP_COMMIT}` : undefined}>
-                  v{APP_VERSION}
-                  {APP_COMMIT && <span className="opacity-60"> · {APP_COMMIT}</span>}
-                </span>
-              </footer>
-              {/* Raised so toasts don't cover the chat button in the bottom-right corner. */}
-              <Toaster position="bottom-right" offset={{ bottom: 88 }} mobileOffset={{ bottom: 88 }} />
-              <VersionUpdate />
-            </DemoProvider>
+            <Suspense fallback={<LoadingShell />}>
+              <DataProvider>
+                <SiteHeader />
+                <main className="flex-1">{children}</main>
+                <footer className="border-t py-6 text-center text-xs text-muted-foreground">
+                  Prototype for the City of Espoo “Rethinking Recruitment” challenge · all data is synthetic ·
+                  the AI suggests, people decide ·{" "}
+                  <Link href="/responsible" className="underline underline-offset-4 hover:text-foreground">
+                    Responsible AI
+                  </Link>
+                  <span
+                    className="mt-1 block font-mono"
+                    title={APP_COMMIT ? `Build ${APP_COMMIT}` : undefined}
+                  >
+                    v{APP_VERSION}
+                    {APP_COMMIT && <span className="opacity-60"> · {APP_COMMIT}</span>}
+                  </span>
+                </footer>
+                {/* Raised so toasts don't cover the chat button in the bottom-right corner. */}
+                <Toaster position="bottom-right" offset={{ bottom: 88 }} mobileOffset={{ bottom: 88 }} />
+                <VersionUpdate />
+              </DataProvider>
+            </Suspense>
           </TooltipProvider>
         </ThemeProvider>
       </body>

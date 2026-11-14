@@ -16,6 +16,8 @@ const pg = new PGlite();
 const state = { configured: true, fail: false };
 
 vi.mock("next/cache", () => ({ cacheLife: () => {}, cacheTag: () => {} }));
+// Outside a request there is no connection() to wait for.
+vi.mock("next/server", () => ({ connection: async () => {} }));
 vi.mock("@/lib/db", () => ({
   dbConfigured: () => state.configured,
   dbProvider: () => (state.configured ? "Tiger Data" : null),
@@ -122,6 +124,18 @@ describe("Database seed source", () => {
     state.fail = true;
     await expect(getSeed()).rejects.toThrow(/timeout/);
     state.fail = false;
+  });
+
+  it("never reads the database during a build (next build sets NEXT_PHASE)", async () => {
+    const { readSeed } = await import("@/lib/db-read.mjs");
+    vi.stubEnv("NEXT_PHASE", "phase-production-build");
+    try {
+      await expect(readSeed({ query: () => pg.query("SELECT 1") })).rejects.toThrow(
+        /not read during the build/,
+      );
+    } finally {
+      vi.unstubAllEnvs();
+    }
   });
 
   it("refuses to write SQL without a snapshot to load", () => {
