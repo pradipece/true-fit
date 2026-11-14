@@ -40,3 +40,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# scraped third-party data (yarn scrape): research only, not committed
+/data/scraped/
