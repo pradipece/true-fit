@@ -49,7 +49,7 @@ import {
   type Translation,
 } from "@/lib/talent-ai";
 import type { Evidence, SkillGroup, Talent } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { cn, isSubmitEnter } from "@/lib/utils";
 
 const GROUPS: SkillGroup[] = ["Digital", "Green transition", "Healthcare", "Business", "Transversal"];
 const STEPS = ["Background", "Skills", "Evidence", "Review card"];
@@ -371,7 +371,7 @@ export function TalentProfile() {
                   id="title"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && translate()}
+                  onKeyDown={(e) => isSubmitEnter(e) && translate()}
                   placeholder="e.g. Logistikkoordinator, jefe de almacén, teacher…"
                 />
                 <div className="flex flex-wrap gap-1.5 text-xs">

@@ -51,7 +51,7 @@ import {
 import { matchesForNeed, poolCoverage } from "@/lib/match";
 import { asksNativeSpeaker, languageRule, modeKind, onlyFinnish, openToMode } from "@/lib/need-terms";
 import { useDemo } from "@/lib/store";
-import { cn } from "@/lib/utils";
+import { cn, isSubmitEnter } from "@/lib/utils";
 
 type Msg = ChatMessage & { added?: string[]; quickReplies?: string[]; source?: IntakeTurn["source"] };
 
@@ -322,7 +322,7 @@ export function CompanyIntake() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
+                if (isSubmitEnter(e)) {
                   e.preventDefault();
                   send(input);
                 }
@@ -714,7 +714,7 @@ function SkillEditor({ draft, onChange }: { draft: NeedDraft; onChange: (p: Part
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && hits[0]) {
+              if (isSubmitEnter(e) && hits[0]) {
                 e.preventDefault();
                 add(hits[0].item.id);
               }
