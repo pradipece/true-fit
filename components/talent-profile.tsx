@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   ChevronDownIcon,
@@ -59,6 +59,8 @@ import { cn, isSubmitEnter } from "@/lib/utils";
 const GROUPS: SkillGroup[] = ["Digital", "Green transition", "Healthcare", "Business", "Transversal"];
 const STEPS = ["Background", "Skills", "Evidence", "Review profile"];
 const MAX_PICK = 8;
+/** Pause after the last change to the answers or skills before they are read again. */
+const AUTO_MAP_MS = 1500;
 const MAX_SKILLS = 10;
 
 const SAMPLE_PROMPT = "Work sample file";
@@ -149,6 +151,8 @@ export function TalentProfile() {
   const [result, setResult] = useState<EvidenceResult | null>(null);
   const [mappedKey, setMappedKey] = useState("");
   const [mapping, setMapping] = useState(false);
+  /** Answers + skills the last evidence reading was for: a change re-reads them automatically. */
+  const [readFor, setReadFor] = useState("");
   const [rejected, setRejected] = useState<Set<string>>(new Set());
   const [resolved, setResolved] = useState<Set<string>>(new Set());
   const [headline, setHeadline] = useState("");
@@ -165,6 +169,10 @@ export function TalentProfile() {
   const [showPreview, setShowPreview] = useState(false);
 
   const answerList = buildAnswers(answers, sample);
+  const evidenceInputKey = JSON.stringify([answersKey(answerList), [...skills].sort()]);
+  // Something to read: skills picked and at least one answer of a few words.
+  const readable = skills.length > 0 && answerList.some((a) => a.text.trim().split(/\s+/).length >= 5);
+  const reading = mapping || (readable && evidenceInputKey !== readFor);
   const labelOf = (id: string) => answerList.find((a) => a.id === id)?.label ?? id;
   const stale = !!result && answersKey(answerList) !== mappedKey;
   const accepted = (result?.mappings ?? []).filter(
@@ -220,9 +228,15 @@ export function TalentProfile() {
     touch();
   };
 
-  const mapEvidence = async () => {
+  /**
+   * Read the answers into skill evidence. `auto` runs after the person pauses editing, so
+   * the card and "Companies that suit you best" follow new input without waiting for the
+   * Review step; it keeps the skills they already rejected and the flags they resolved.
+   */
+  const mapEvidence = async ({ auto = false } = {}) => {
     if (!answerList.length) return;
     setMapping(true);
+    setReadFor(evidenceInputKey);
     const body = { answers: answerList, picked: skills, background: translation?.localTitle || title };
     let r: EvidenceResult;
     try {
@@ -232,12 +246,24 @@ export function TalentProfile() {
     }
     setResult(r);
     setMappedKey(answersKey(answerList));
-    setRejected(new Set());
-    setResolved(new Set());
+    if (!auto) {
+      setRejected(new Set());
+      setResolved(new Set());
+    }
     if (!headline && r.headline) setHeadline(r.headline);
     setMapping(false);
     touch();
   };
+
+  // Re-read the answers whenever they or the skills change (new answers, a voice note, a work
+  // sample, skills from a CV), once the person pauses.
+  useEffect(() => {
+    if (!readable || mapping || evidenceInputKey === readFor) return;
+    const timer = setTimeout(() => mapEvidence({ auto: true }), AUTO_MAP_MS);
+    return () => clearTimeout(timer);
+    // mapEvidence reads the current answers and skills, which evidenceInputKey captures.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [evidenceInputKey, readFor, readable, mapping]);
 
   /** Writing ideas tailored to the picked skills and background; refreshed when those change. */
   const loadStarters = async () => {
@@ -679,7 +705,7 @@ export function TalentProfile() {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={mapEvidence}
+                  onClick={() => mapEvidence()}
                   disabled={mapping || !answerList.length}
                 >
                   <RefreshCwIcon data-icon="inline-start" className={cn(mapping && "animate-spin")} />
@@ -985,7 +1011,7 @@ export function TalentProfile() {
 
       {/* Companies that suit this card best, then the anonymised card itself */}
       <div className="space-y-4 lg:sticky lg:top-20 lg:self-start">
-        <CompaniesForYou talent={{ id: "T-YOU", skills: cardSkills, evidence }} />
+        <CompaniesForYou talent={{ id: "T-YOU", skills: cardSkills, evidence }} updating={reading} />
         <Card>
           <CardHeader>
             <CardDescription>

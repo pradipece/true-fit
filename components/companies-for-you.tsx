@@ -26,7 +26,14 @@ const DEBOUNCE_MS = 1200;
  * the plain skill match. Only the person's own skills and evidence and the public role
  * cards are sent; without AI the same list comes from the rules.
  */
-export function CompaniesForYou({ talent }: { talent: MatchTalent }) {
+export function CompaniesForYou({
+  talent,
+  updating = false,
+}: {
+  talent: MatchTalent;
+  /** The skill card is being re-read from new answers: wait for it before asking the AI. */
+  updating?: boolean;
+}) {
   const { needs } = useDemo();
   const roles: RoleIn[] = useMemo(
     () =>
@@ -61,7 +68,7 @@ export function CompaniesForYou({ talent }: { talent: MatchTalent }) {
   }, [roles, talent]);
 
   useEffect(() => {
-    if (!talent.skills.length || !roles.length || ai?.key === key) return;
+    if (updating || !talent.skills.length || !roles.length || ai?.key === key) return;
     const ctrl = new AbortController();
     const timer = setTimeout(() => {
       setLoadingKey(key);
@@ -86,7 +93,7 @@ export function CompaniesForYou({ talent }: { talent: MatchTalent }) {
     };
     // `key` captures talent and roles.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]);
+  }, [key, updating]);
 
   const current = ai?.key === key ? ai.data : null;
   const companies = companiesByFit(roles, current?.ranking ?? rules, skillScore);
@@ -104,7 +111,11 @@ export function CompaniesForYou({ talent }: { talent: MatchTalent }) {
           variant="outline"
           className="col-start-2 row-span-2 row-start-1 self-start justify-self-end font-normal"
         >
-          {loading ? (
+          {updating ? (
+            <>
+              <LoaderCircleIcon className="animate-spin" data-icon="inline-start" /> Reading your answers
+            </>
+          ) : loading ? (
             <>
               <LoaderCircleIcon className="animate-spin" data-icon="inline-start" /> AI is ranking
             </>
