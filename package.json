@@ -16,6 +16,7 @@
     "test:watch": "vitest",
     "db:migrate": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/db/migrate.mjs",
     "db:sql": "node scripts/db/migrate.mjs --sql",
+    "db:csv": "node scripts/db/migrate.mjs --no-scraped --csv",
     "db:talent-sql": "node scripts/db/migrate.mjs --talent-only --sql db/seed-talent.sql"
   },
   "dependencies": {

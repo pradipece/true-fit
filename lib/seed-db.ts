@@ -1,18 +1,23 @@
 import { cacheLife, cacheTag } from "next/cache";
-import { db, dbConfigured } from "./db";
+import { db, dbConfigured, dbProvider } from "./db";
 import { loadSeed, SEED, type Seed } from "./seed";
 
 /**
- * Server-side seed source: reads companies, needs and talent from Supabase and runs
- * them through the same validation as the JSON seeds (loadSeed). If Supabase isn't
- * configured or can't be reached, falls back to data/seed/*.json so the demo still runs
+ * Server-side seed source: reads companies, needs and talent from the database (Tiger Data
+ * or Supabase, see lib/db.ts) and runs them through the same validation as the JSON seeds
+ * (loadSeed). If no database is configured or it can't be reached, falls back to data/seed/*.json so the demo still runs
  * offline. Load the database with `yarn db:migrate`.
  *
  * The ESCO subset stays on data/esco: it's static reference data used synchronously
  * in the browser, and matching must run on exactly that subset.
  */
 
-export type SeedSource = { source: "supabase" | "json"; reason?: string };
+export type SeedSource = {
+  source: "database" | "json";
+  /** Which database the rows came from ("Tiger Data" | "Supabase"), when source is "database". */
+  provider?: string;
+  reason?: string;
+};
 export type LoadedSeed = Seed & SeedSource;
 
 type RawSeed = NonNullable<Parameters<typeof loadSeed>[0]>;
@@ -22,15 +27,15 @@ export async function getSeed(): Promise<LoadedSeed> {
   cacheTag("seed");
   if (!dbConfigured()) {
     cacheLife("hours");
-    return { ...SEED, source: "json", reason: "Supabase database is not configured" };
+    return { ...SEED, source: "json", reason: "No database is configured" };
   }
   try {
     const seed = loadSeed(await readRaw());
     cacheLife("hours");
-    return { ...seed, source: "supabase" };
+    return { ...seed, source: "database", provider: dbProvider() ?? undefined };
   } catch (err) {
     const reason = err instanceof Error ? err.message : String(err);
-    console.warn(`[supabase] using JSON seeds: ${reason}`);
+    console.warn(`[${dbProvider()}] using JSON seeds: ${reason}`);
     // Retry soon rather than serving the fallback for hours.
     cacheLife("minutes");
     return { ...SEED, source: "json", reason };
@@ -63,7 +68,7 @@ async function readRaw(): Promise<RawSeed> {
       q.query(`SELECT talent_id, full_name, email, phone, city FROM talent_contact`),
     ]);
   if (!companies.rows.length || !talent.rows.length)
-    throw new Error("Supabase tables are empty; run `yarn db:migrate`");
+    throw new Error("Database tables are empty; run `yarn db:migrate`");
 
   const group = <T extends Record<string, unknown>>(rows: T[], key: keyof T) => {
     const m = new Map<unknown, T[]>();

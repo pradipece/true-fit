@@ -219,7 +219,7 @@ const AI_ACT = [
 ];
 
 export default async function ResponsiblePage() {
-  const { needs: SEED_NEEDS, talent: SEED_TALENT, source } = await getSeed();
+  const { needs: SEED_NEEDS, talent: SEED_TALENT, source, provider } = await getSeed();
   const audit = biasAudit(SEED_NEEDS, SEED_TALENT);
 
   return (
@@ -433,8 +433,8 @@ export default async function ResponsiblePage() {
         <p className="text-xs text-muted-foreground">
           Group data is optional, self-declared and used only in aggregate. Synthetic pool of{" "}
           {SEED_TALENT.length} people, loaded from{" "}
-          {source === "supabase" ? "the Supabase database" : "the bundled seed files"}; with real data the
-          same check runs before every event.
+          {source === "database" ? `the ${provider ?? "project"} database` : "the bundled seed files"}; with
+          real data the same check runs before every event.
         </p>
       </section>
 

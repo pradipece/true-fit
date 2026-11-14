@@ -31,7 +31,7 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  // Supabase when configured and reachable, else the JSON seeds (cached, see lib/seed-db.ts).
+  // The database (Tiger Data or Supabase) when configured and reachable, else the JSON seeds (cached, see lib/seed-db.ts).
   const { needs, talent } = await getSeed();
   return (
     <html

@@ -4,12 +4,12 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { PGlite } from "@electric-sql/pglite";
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import { supabaseDbConfig } from "@/lib/db-config.mjs";
+import { dbConfig, supabaseDbConfig, tigerDbConfig } from "@/lib/db-config.mjs";
 import { SEED } from "@/lib/seed";
 
 /**
  * Round trip: data/ → `yarn db:sql` → Postgres (in-memory PGlite) → getSeed().
- * What the app reads from Supabase must equal what it would read from the JSON seeds.
+ * What the app reads from the database must equal what it would read from the JSON seeds.
  */
 
 const pg = new PGlite();
@@ -18,6 +18,7 @@ const state = { configured: true, fail: false };
 vi.mock("next/cache", () => ({ cacheLife: () => {}, cacheTag: () => {} }));
 vi.mock("@/lib/db", () => ({
   dbConfigured: () => state.configured,
+  dbProvider: () => (state.configured ? "Tiger Data" : null),
   db: () => ({
     query: (text: string) => {
       if (state.fail) throw new Error("Connection terminated due to connection timeout");
@@ -36,10 +37,11 @@ beforeAll(async () => {
   await pg.exec(sql); // the migration must be safe to rerun
 }, 60_000);
 
-describe("Supabase seed source", () => {
+describe("Database seed source", () => {
   it("reads back exactly the JSON seeds, in the same order", async () => {
     const seed = await getSeed();
-    expect(seed.source).toBe("supabase");
+    expect(seed.source).toBe("database");
+    expect(seed.provider).toBe("Tiger Data");
     expect(seed.companies).toEqual(SEED.companies);
     expect(seed.needs).toEqual(SEED.needs);
     expect(seed.talent).toEqual(SEED.talent);
@@ -53,7 +55,8 @@ describe("Supabase seed source", () => {
     await pg.exec(sql);
     await pg.exec(sql); // safe to rerun
     const seed = await getSeed();
-    expect(seed.source).toBe("supabase");
+    expect(seed.source).toBe("database");
+    expect(seed.provider).toBe("Tiger Data");
     expect(seed.talent).toEqual(SEED.talent);
     expect(seed.needs).toEqual(SEED.needs);
     for (const t of seed.talent) expect(t.revealName).toBe(t.contact?.fullName);
@@ -98,7 +101,7 @@ describe("Supabase seed source", () => {
     expect(seen.rows).toHaveLength(0);
   });
 
-  it("falls back to the JSON seeds when Supabase is unreachable or not configured", async () => {
+  it("falls back to the JSON seeds when the database is unreachable or not configured", async () => {
     state.fail = true;
     const down = await getSeed();
     expect(down.source).toBe("json");
@@ -135,5 +138,23 @@ describe("Supabase connection config", () => {
   it("is off until the variables are set", () => {
     expect(supabaseDbConfig({})).toBeNull();
     expect(supabaseDbConfig({ ...env, SUPABASE_POOLER_HOST: undefined })).toBeNull();
+  });
+});
+
+describe("Tiger Data connection config", () => {
+  const url = "postgres://tsdbadmin:pw@abc123.xyz.tsdb.cloud.timescale.com:31633/tsdb?sslmode=require";
+
+  it("verifies TLS and drops sslmode=require, which would skip the certificate check", () => {
+    const c = tigerDbConfig({ TIGER_DATABASE_URL: url });
+    expect(c?.connectionString).not.toContain("sslmode");
+    expect(c?.connectionString).toContain("tsdb.cloud.timescale.com:31633/tsdb");
+    expect(c?.ssl).toEqual({ rejectUnauthorized: true });
+  });
+
+  it("is preferred over Supabase when both are configured", () => {
+    const supabase = { SUPABASE_DATABASE_URL: "postgres://u:p@h:5432/postgres" };
+    expect(dbConfig({ ...supabase, TIGER_DATABASE_URL: url })?.provider).toBe("Tiger Data");
+    expect(dbConfig(supabase)?.provider).toBe("Supabase");
+    expect(dbConfig({})).toBeNull();
   });
 });

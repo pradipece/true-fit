@@ -35,7 +35,7 @@ const SEED_DECISIONS: Record<string, Decision> = {
   },
 };
 
-/** Seed rows the server loaded (Supabase, or the JSON seeds as fallback). */
+/** Seed rows the server loaded (the database, or the JSON seeds as fallback). */
 export type DemoSeed = { needs: Need[]; talent: Talent[] };
 
 const seedState = ({ needs, talent }: DemoSeed = { needs: SEED_NEEDS, talent: SEED_TALENT }): DemoState => ({
