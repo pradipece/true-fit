@@ -48,6 +48,10 @@ export type Company = {
   location: string;
 };
 
+export type Engagement = "Permanent" | "Fixed-term" | "Part-time" | "Internship / trainee";
+
+export type NeedTiming = { start: string; engagement: Engagement };
+
 export type Need = {
   id: string;
   companyId?: string;
@@ -61,6 +65,8 @@ export type Need = {
   nice: string[];
   language: "English OK" | "Finnish required" | "Finnish or English";
   mode: "On-site" | "Hybrid" | "Remote";
+  /** When the role starts and on what terms. Optional for older seeds. */
+  timing?: NeedTiming;
   submittedWeeksBefore: number;
   createdByUser?: boolean;
 };

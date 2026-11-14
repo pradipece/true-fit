@@ -11,7 +11,7 @@ export default function TalentPage() {
         step={2}
         eyebrow="Talent · before the event"
         title="Show what you can do. No CV needed."
-        description="Pick your skills, translate past job titles into local vocabulary, and back them up with three short answers. Companies first see an anonymised skill card."
+        description="Translate your past job or unusual path into local skills, answer four short real-life questions, and see which answer supports which skill. You edit everything; companies first see an anonymised skill card."
       />
       <TalentProfile />
     </div>
