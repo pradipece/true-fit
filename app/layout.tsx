@@ -5,7 +5,9 @@ import { StepNav } from "@/components/step-nav";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { VersionUpdate } from "@/components/version-update";
 import { DemoProvider } from "@/lib/store";
+import { APP_COMMIT, APP_VERSION } from "@/lib/version";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -44,8 +46,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               <footer className="border-t py-6 text-center text-xs text-muted-foreground">
                 Prototype for the City of Espoo “Rethinking Recruitment” challenge · all data is synthetic ·
                 the AI suggests, people decide
+                <span className="mt-1 block font-mono" title={APP_COMMIT ? `Build ${APP_COMMIT}` : undefined}>
+                  v{APP_VERSION}
+                  {APP_COMMIT && <span className="opacity-60"> · {APP_COMMIT}</span>}
+                </span>
               </footer>
               <Toaster position="bottom-right" />
+              <VersionUpdate />
             </DemoProvider>
           </TooltipProvider>
         </ThemeProvider>
