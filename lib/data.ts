@@ -3,16 +3,22 @@
 // Personas live in the database (lib/seed-db.ts) and are validated by the seed loader.
 export { COMPANIES, SEED_NEEDS, SEED_TALENT } from "./seed";
 
+/**
+ * When interviews happen: across a whole work week (Mon–Fri, office hours), in Espoo or
+ * online, not on one event day. Slots are "YYYY-MM-DD HH:MM" (lib/schedule.ts). Change
+ * `days` to move the interview week.
+ */
 export const EVENT = {
-  name: "Espoo Green & Digital Matchmaking",
-  date: "Thu 3 Dec 2026",
-  isoDate: "2026-12-03",
-  time: "10:00–12:00",
-  start: "10:00",
-  end: "12:00",
-  place: "Hybrid · Otaniemi + online",
-  weeksAway: 3,
-  slotMinutes: 10,
+  name: "Espoo recruitment",
+  date: "Mon 30 Nov – Fri 4 Dec 2026",
+  isoDate: "2026-11-30",
+  time: "Mon–Fri 9:00–16:00",
+  start: "09:00",
+  end: "16:00",
+  place: "In Espoo or online",
+  weeksAway: 2,
+  slotMinutes: 30,
+  days: ["2026-11-30", "2026-12-01", "2026-12-02", "2026-12-03", "2026-12-04"],
 };
 
 /**

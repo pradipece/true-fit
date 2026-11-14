@@ -3,13 +3,13 @@ import { PageGuide } from "@/components/page-guide";
 import { PageHeader } from "@/components/page-header";
 import { TalentProfile } from "@/components/talent-profile";
 
-export const metadata: Metadata = { title: "Talent skill card" };
+export const metadata: Metadata = { title: "My profile · Job seeker" };
 
 export default function TalentPage() {
   return (
     <div className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6">
       <PageHeader
-        eyebrow="Talent · before the event"
+        eyebrow="Job seeker · My profile"
         title="Show what you can do."
         description="Translate your past job or unusual path into local skills, answer four short real-life questions, and see which answer supports which skill. You edit everything; companies first see an anonymised skill card."
       />
@@ -25,7 +25,7 @@ export default function TalentPage() {
             text: "Pick your skills and answer a few short questions.",
           },
           {
-            title: "Check and join",
+            title: "Check and save",
             text: "Your card is anonymous. Espoo shares your name with a company only after you pass its short interview.",
           },
         ]}

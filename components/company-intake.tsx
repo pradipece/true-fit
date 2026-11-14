@@ -66,7 +66,7 @@ type Msg = ChatMessage & {
 
 const GREETING: Msg = {
   role: "assistant",
-  content: `Hi, I'm TrueFit Assistant! The event is ${EVENT.weeksAway} weeks away. Who would you like to meet there? Describe it in your own words. “We need a dev” is a perfectly good start.`,
+  content: `Hi, I'm TrueFit Assistant! Who would you like to hire? Describe it in your own words. “We need a dev” is a perfectly good start.`,
   quickReplies: DEFAULT_STARTERS,
 };
 

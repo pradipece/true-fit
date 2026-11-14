@@ -171,7 +171,8 @@ const obj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "o
 const str = (v: unknown, max = 2000) => (typeof v === "string" && v.length <= max ? v : undefined);
 const bool = (v: unknown) => (typeof v === "boolean" ? v : undefined);
 const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : undefined);
-const TIME = /^\d{2}:\d{2}$/;
+// "YYYY-MM-DD HH:MM" in the interview week; bare "HH:MM" from before it is still read.
+const TIME = /^(\d{4}-\d{2}-\d{2} )?\d{2}:\d{2}$/;
 const time = (v: unknown) => (typeof v === "string" && TIME.test(v) ? v : undefined);
 const prune = <T extends object>(o: T): T | undefined => {
   const out = Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined)) as T;

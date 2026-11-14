@@ -47,7 +47,7 @@ const STEPS = [
   {
     icon: Building2Icon,
     title: "Interview and offer",
-    text: "Meet the company at the event, online or on site, and get your answer here.",
+    text: "Meet the company on a weekday that suits you, online or on site, and get your answer here.",
   },
 ];
 
@@ -89,7 +89,7 @@ export function JobBoardHome() {
       <section className="border-b bg-gradient-to-b from-accent/60 to-background">
         <div className="mx-auto max-w-7xl space-y-6 px-4 py-12 sm:px-6 sm:py-16">
           <p className="flex items-center gap-1.5 text-sm font-medium text-primary">
-            <CalendarDaysIcon className="size-4" /> {EVENT.name} · {EVENT.date} · {EVENT.place}
+            <CalendarDaysIcon className="size-4" /> Interviews {EVENT.time} · {EVENT.place}
           </p>
           <div className="max-w-3xl space-y-3">
             <h1 className="text-3xl font-semibold tracking-tight text-balance sm:text-5xl">

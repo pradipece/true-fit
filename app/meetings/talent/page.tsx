@@ -10,7 +10,7 @@ export default function TalentMeetingsPage() {
   return (
     <div className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6">
       <PageHeader
-        eyebrow="Candidates · your skill card"
+        eyebrow="Job seeker · My applications"
         title="Your applications"
         description="Every role you asked about or Espoo invited you to, step by step: Espoo interview, company interview and job offer."
       />

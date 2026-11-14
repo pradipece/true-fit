@@ -48,8 +48,12 @@ import {
   type PairStage,
 } from "@/lib/pipeline";
 import {
+  dayLabel,
   earliestFree,
   ESPOO_DESK,
+  slotDay,
+  slotLabel,
+  slotTime,
   roomFor,
   screeningAvailability,
   slotAvailability,
@@ -402,7 +406,7 @@ export function Meetings({ side }: { side: MeetingSide }) {
                     <>
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1.5">
-                          <ClockIcon className="size-4" /> {EVENT.date}
+                          <ClockIcon className="size-4" /> {EVENT.time}
                         </span>
                         <span className="flex items-center gap-1.5">
                           <MapPinIcon className="size-4" /> {ESPOO_DESK}
@@ -411,7 +415,7 @@ export function Meetings({ side }: { side: MeetingSide }) {
                       {sc.slot ? (
                         <div className="flex flex-wrap items-center gap-2">
                           <Badge className="bg-evidence text-white">
-                            <CheckCircle2Icon data-icon="inline-start" /> Espoo interview at {sc.slot}
+                            <CheckCircle2Icon data-icon="inline-start" /> Espoo interview {slotLabel(sc.slot)}
                           </Badge>
                           <Button
                             size="sm"
@@ -451,7 +455,7 @@ export function Meetings({ side }: { side: MeetingSide }) {
                   {passed && (
                     <p className="flex items-center gap-2 text-sm text-evidence">
                       <BadgeCheckIcon className="size-4" /> You passed the Espoo interview
-                      {sc.slot ? ` (${sc.slot})` : ""}. Espoo sent your profile to {need.company}.
+                      {sc.slot ? ` (${slotLabel(sc.slot)})` : ""}. Espoo sent your profile to {need.company}.
                     </p>
                   )}
                 </CardContent>
@@ -523,7 +527,7 @@ export function Meetings({ side }: { side: MeetingSide }) {
                   <div className="space-y-3 border-t pt-3">
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
                       <span className="flex items-center gap-1.5">
-                        <ClockIcon className="size-4" /> {EVENT.date}, {EVENT.time}
+                        <ClockIcon className="size-4" /> {EVENT.time}
                       </span>
                       <span className="flex items-center gap-1.5">
                         <MapPinIcon className="size-4" /> {room.label}
@@ -532,7 +536,8 @@ export function Meetings({ side }: { side: MeetingSide }) {
                     {slot ? (
                       <div className="flex flex-wrap items-center gap-2">
                         <Badge className="bg-evidence text-white">
-                          <CheckCircle2Icon data-icon="inline-start" /> Interview at {slot} · {room.label}
+                          <CheckCircle2Icon data-icon="inline-start" /> Interview {slotLabel(slot)} ·{" "}
+                          {room.label}
                         </Badge>
                         {!offer && (
                           <Button size="sm" variant="ghost" onClick={() => demo.cancelSlot(key)}>
@@ -703,34 +708,64 @@ function SlotGrid({
   onBook: (time: string) => void;
 }) {
   const first = earliestFree(availability);
+  const days = [...new Set(availability.map((a) => slotDay(a.time)))];
+  const mine = availability.find((a) => a.mine);
+  // Open on the booked day, else the day of the earliest free time.
+  const [day, setDay] = useState(() => slotDay(mine?.time ?? first ?? availability[0]?.time ?? ""));
   const why = (a: SlotState) => {
     if (a.reason === "order") return "before Espoo interview";
     const mineBusy = (a.reason === "company") === (side === "company");
     return mineBusy ? "you're busy" : side === "company" ? "candidate busy" : "company busy";
   };
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       {first ? (
         <Button size="sm" onClick={() => onBook(first)}>
-          Book earliest free time ({first})
+          Book earliest free time ({slotLabel(first)})
         </Button>
       ) : (
-        <p className="text-sm text-muted-foreground">No free time left today.</p>
+        <p className="text-sm text-muted-foreground">No free time left this week.</p>
       )}
-      <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
-        {availability.map((a) => (
-          <Button
-            key={a.time}
-            variant={a.mine ? "default" : "outline"}
-            disabled={!a.free}
-            title={a.free ? undefined : why(a)}
-            className="h-auto flex-col gap-0 py-1.5 tabular-nums"
-            onClick={() => onBook(a.time)}
-          >
-            <span className={cn(!a.free && "line-through")}>{a.time}</span>
-            {!a.free && <span className="text-[10px] font-normal">{why(a)}</span>}
-          </Button>
-        ))}
+      <div className="flex flex-wrap gap-1.5" role="tablist" aria-label="Day">
+        {days.map((d) => {
+          const free = availability.filter((a) => slotDay(a.time) === d && a.free && !a.mine).length;
+          const booked = availability.some((a) => slotDay(a.time) === d && a.mine);
+          return (
+            <button
+              key={d}
+              type="button"
+              role="tab"
+              aria-selected={day === d}
+              onClick={() => setDay(d)}
+              className={cn(
+                "flex flex-col items-start rounded-lg border px-3 py-1.5 text-left text-sm transition-colors hover:bg-muted",
+                day === d && "border-primary bg-accent text-accent-foreground",
+              )}
+            >
+              <span className="font-medium">{dayLabel(d)}</span>
+              <span className="text-[11px] text-muted-foreground">
+                {booked ? "Booked" : free ? `${free} free` : "Full"}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-7">
+        {availability
+          .filter((a) => slotDay(a.time) === day)
+          .map((a) => (
+            <Button
+              key={a.time}
+              variant={a.mine ? "default" : "outline"}
+              disabled={!a.free}
+              title={a.free ? slotLabel(a.time) : why(a)}
+              className="h-auto flex-col gap-0 py-1.5 tabular-nums"
+              onClick={() => onBook(a.time)}
+            >
+              <span className={cn(!a.free && "line-through")}>{slotTime(a.time)}</span>
+              {!a.free && <span className="text-[10px] font-normal">{why(a)}</span>}
+            </Button>
+          ))}
       </div>
     </div>
   );

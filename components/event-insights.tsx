@@ -52,7 +52,7 @@ export function EventInsights() {
   ];
 
   const funnelMax = Math.max(1, ...d.funnel.map((s) => s.value));
-  const slotMax = Math.max(d.slotLoad.tables, ...d.slotLoad.slots.map((s) => s.booked));
+  const slotMax = Math.max(1, ...d.slotLoad.days.map((s) => s.booked));
 
   return (
     <div className="space-y-6">
@@ -133,21 +133,21 @@ export function EventInsights() {
         </ChartCard>
 
         <ChartCard
-          title="Meetings booked per time slot"
-          description={`${EVENT.date}, ${EVENT.time}. ${d.slotLoad.tables} tables can each hold one meeting per slot.`}
+          title="Interviews booked per weekday"
+          description={`Interview week ${EVENT.date}, ${EVENT.time}. ${d.slotLoad.tables} companies can each hold one interview per ${EVENT.slotMinutes}-minute slot.`}
           table={{
-            columns: ["Time", "Meetings booked", "Free tables"],
-            rows: d.slotLoad.slots.map((s) => [s.time, s.booked, d.slotLoad.tables - s.booked]),
+            columns: ["Day", "Interviews booked", "Free slots"],
+            rows: d.slotLoad.days.map((s) => [s.label, s.booked, s.capacity - s.booked]),
           }}
         >
           <Columns
-            unit="meetings booked"
+            unit="interviews booked"
             max={slotMax}
-            items={d.slotLoad.slots.map((s) => ({
-              key: s.time,
-              label: s.time,
+            items={d.slotLoad.days.map((s) => ({
+              key: s.day,
+              label: s.label,
               value: s.booked,
-              tip: `${s.time}: ${s.booked} booked, ${d.slotLoad.tables - s.booked} tables free`,
+              tip: `${s.label}: ${s.booked} booked, ${s.capacity - s.booked} slots free`,
             }))}
           />
         </ChartCard>

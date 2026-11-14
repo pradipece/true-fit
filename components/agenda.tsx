@@ -15,17 +15,19 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EVENT } from "@/lib/data";
-import { agendaFor, agendaIcs, type AgendaItem, type Participant } from "@/lib/schedule";
+import { agendaFor, agendaIcs, normSlot, slotLabel, type AgendaItem, type Participant } from "@/lib/schedule";
 import { useDemo } from "@/lib/store";
 
 /**
- * One participant's agenda for the event day. The page shell is prerendered for every
+ * One participant's agenda for the interview week. The page shell is prerendered for every
  * participant at build time; the bookings fill in on the device.
  */
 export function Agenda({ who, name }: { who: Participant; name: string }) {
   const { needs, talent, decisions, optIns, slots, screening, offers } = useDemo();
   const items = agendaFor(who, { needs, talent, decisions, optIns, slots, screening, offers });
-  const booked = items.filter((i) => i.bucket === "booked").sort((a, b) => a.time!.localeCompare(b.time!));
+  const booked = items
+    .filter((i) => i.bucket === "booked")
+    .sort((a, b) => normSlot(a.time!).localeCompare(normSlot(b.time!)));
   const toAnswer = items.filter((i) => i.bucket === "answer");
   const waitingOther = items.filter((i) => i.bucket === "waiting");
   const toBook = items.filter((i) => i.bucket === "book");
@@ -42,7 +44,7 @@ export function Agenda({ who, name }: { who: Participant; name: string }) {
       <Card>
         <CardHeader>
           <CardDescription className="flex items-center gap-1.5">
-            <CalendarDaysIcon className="size-3.5" /> {EVENT.date} · {EVENT.time} · {EVENT.place}
+            <CalendarDaysIcon className="size-3.5" /> Interviews {EVENT.time} · {EVENT.place}
           </CardDescription>
           <CardTitle className="text-lg">Your meetings ({booked.length})</CardTitle>
           <div className="col-start-2 row-span-2 row-start-1 flex gap-2 self-start justify-self-end print:hidden">
@@ -66,7 +68,7 @@ export function Agenda({ who, name }: { who: Participant; name: string }) {
                   <span className="absolute top-1.5 -left-[25px] size-2.5 rounded-full border-2 border-background bg-primary" />
                   <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
                     <span className="flex items-center gap-1 font-semibold tabular-nums">
-                      <ClockIcon className="size-3.5 text-muted-foreground" /> {i.time}
+                      <ClockIcon className="size-3.5 text-muted-foreground" /> {slotLabel(i.time!)}
                     </span>
                     <span className="font-medium">{i.counterpart}</span>
                     <Badge variant="outline" className="font-normal">

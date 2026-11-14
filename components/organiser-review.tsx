@@ -60,6 +60,7 @@ import { activeKeys, STAGE_LABEL, stageOf, STEPS, type PairStage } from "@/lib/p
 import { useDemo } from "@/lib/store";
 import type { AuditEntry, Decision, MatchExplanation, Need, Talent } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { slotLabel } from "@/lib/schedule";
 
 type DialogType = "approve" | "reject" | "edit" | "revert";
 type DialogState = { type: DialogType; m: MatchExplanation; current?: Decision };
@@ -433,7 +434,7 @@ export function OrganiserReview() {
                   >
                     <span className="space-y-0.5">
                       <span className="block text-sm font-medium">
-                        Everyone else at the event ({list.notSuggested.length})
+                        Everyone else registered ({list.notSuggested.length})
                       </span>
                       <span className="block text-xs text-muted-foreground">
                         Below the suggestion line. Not rejected: open any of them and decide yourself.
@@ -716,7 +717,7 @@ function MatchCard({
             {status && (
               <span className="flex w-full items-center gap-2 text-xs text-muted-foreground">
                 <MiniSteps p={status} /> {STAGE_LABEL[status.stage]}
-                {result?.slot && ` · Espoo interview ${result.slot}`}
+                {result?.slot && ` · Espoo interview ${slotLabel(result.slot)}`}
               </span>
             )}
             {result?.result && (
@@ -1133,7 +1134,7 @@ function PipelineTable({
                     <p className="text-xs text-muted-foreground">{STAGE_LABEL[r.p.stage]}</p>
                   </div>
                 </TableCell>
-                <TableCell className="text-xs tabular-nums">{r.espoo ?? "—"}</TableCell>
+                <TableCell className="text-xs tabular-nums">{r.espoo ? slotLabel(r.espoo) : "—"}</TableCell>
                 <TableCell>
                   {r.p.step >= 3 ? (
                     <AnswerBadge value={r.o?.company} />
@@ -1148,7 +1149,9 @@ function PipelineTable({
                     <span className="text-xs text-muted-foreground">—</span>
                   )}
                 </TableCell>
-                <TableCell className="text-xs tabular-nums">{r.interview ?? "—"}</TableCell>
+                <TableCell className="text-xs tabular-nums">
+                  {r.interview ? slotLabel(r.interview) : "—"}
+                </TableCell>
                 <TableCell className="text-xs">{r.offer ?? "—"}</TableCell>
                 <TableCell className="text-xs">{r.p.waiting ? WAITING_LABEL[r.p.waiting] : "—"}</TableCell>
                 <TableCell className="text-right whitespace-nowrap">

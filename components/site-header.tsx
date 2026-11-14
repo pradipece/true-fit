@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  CalendarDaysIcon,
   CloudAlertIcon,
   CloudCheckIcon,
   CloudIcon,
@@ -16,7 +15,6 @@ import { Button } from "@/components/ui/button";
 import { useSession } from "@/components/session";
 import { ThemeToggle } from "@/components/theme-provider";
 import { signOut } from "@/lib/auth/actions";
-import { EVENT } from "@/lib/data";
 import { ROLE_ICON } from "@/components/role-icons";
 import { activePage, ROLES, roleOf } from "@/lib/roles";
 import { useDemo } from "@/lib/store";
@@ -65,10 +63,6 @@ export function SiteHeader() {
           })}
         </nav>
 
-        <div className="hidden items-center gap-1.5 rounded-full border px-3 py-1 text-xs text-muted-foreground lg:flex">
-          <CalendarDaysIcon className="size-3.5" />
-          {EVENT.date} · {EVENT.place}
-        </div>
         {session && <SyncBadge status={sync} />}
         {can("organiser:reset") && (
           <Button

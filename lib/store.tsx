@@ -53,14 +53,14 @@ const SEED_DECISIONS: Record<string, Decision> = {
 const SEED_SCREENING: Record<string, Screening> = {
   [pairKey("N-01", "T-30")]: {
     answer: true,
-    slot: "10:10",
+    slot: "2026-11-30 10:00",
     result: "passed",
     reason: "Skills confirmed in the interview",
     at: "2026-11-12T10:30:00.000Z",
   },
   [pairKey("N-02", "T-12")]: {
     answer: true,
-    slot: "10:00",
+    slot: "2026-11-30 09:30",
     result: "passed",
     reason: "Transferable skills confirmed",
     note: "Clear examples of cleaning messy operations data.",
@@ -87,7 +87,7 @@ const seedState = ({ needs, talent }: Pick<Seed, "needs" | "talent">): DemoState
     [pairKey("N-01", "T-30")]: { company: true },
     [pairKey("N-02", "T-12")]: { company: true, talent: true },
   },
-  slots: { [pairKey("N-02", "T-12")]: "10:20" },
+  slots: { [pairKey("N-02", "T-12")]: "2026-12-01 10:30" },
   // Both seeded candidates already passed their Espoo interview, so the company sees them.
   screening: SEED_SCREENING,
   offers: {},

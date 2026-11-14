@@ -4,10 +4,10 @@ import { activeKeys, myTurn, ownedBy, stageOf, visibleTo, type PipelineState } f
 import type { Need, Talent } from "./types";
 
 /**
- * Event schedule: slots and rooms are pre-generated from the event config, so nothing
- * has to be computed per request when everyone logs in at the start of the event.
- * Bookings are the only per-pair state. A slot clashes only with the same company's
- * table or the same candidate, never with unrelated meetings.
+ * Interview schedule: slots run across the interview work week (Mon–Fri, office hours,
+ * lib/data.ts EVENT) and are pre-generated, so nothing is computed per request. A slot is
+ * "YYYY-MM-DD HH:MM", so plain string order is time order. Bookings are the only per-pair
+ * state. A slot clashes only with the same company or the same candidate.
  */
 
 export type OptIn = { company?: boolean; talent?: boolean };
@@ -21,14 +21,34 @@ const toMinutes = (t: string) => {
 const toTime = (min: number) =>
   `${String(Math.floor(min / 60)).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
 
-/** All slot start times between start (inclusive) and end (exclusive). */
-export function generateSlots(start = EVENT.start, end = EVENT.end, minutes = EVENT.slotMinutes) {
+/** Start times in one day between start (inclusive) and end (exclusive). */
+export function dayTimes(start = EVENT.start, end = EVENT.end, minutes = EVENT.slotMinutes) {
   const out: string[] = [];
   for (let t = toMinutes(start); t + minutes <= toMinutes(end); t += minutes) out.push(toTime(t));
   return out;
 }
 
+/** Every slot of the interview week, "YYYY-MM-DD HH:MM", in time order. */
+export function generateSlots(days = EVENT.days, times = dayTimes()) {
+  return days.flatMap((d) => times.map((t) => `${d} ${t}`));
+}
+
 export const SLOT_TIMES = generateSlots();
+
+/** Bookings saved before the work week ("10:20") count as the week's first day. */
+export const normSlot = (s: string) => (/^\d{2}:\d{2}$/.test(s) ? `${EVENT.days[0]} ${s}` : s);
+export const slotDay = (s: string) => normSlot(s).slice(0, 10);
+export const slotTime = (s: string) => normSlot(s).slice(11);
+/** "Mon 30 Nov" for "2026-11-30" (fixed locale and UTC, so server and browser agree). */
+export const dayLabel = (iso: string) =>
+  new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC",
+  });
+/** "Mon 30 Nov, 10:30". */
+export const slotLabel = (s: string) => `${dayLabel(slotDay(s))}, ${slotTime(s)}`;
 
 export type Room = { companyId: string; company: string; label: string; online: boolean };
 
@@ -93,9 +113,9 @@ function candidateTimes(
 ) {
   const busy = new Set<string>();
   for (const [k, t] of Object.entries(slots))
-    if (k !== except.company && parse(k).talentId === talentId) busy.add(t);
+    if (k !== except.company && parse(k).talentId === talentId) busy.add(normSlot(t));
   for (const [k, s] of Object.entries(screening))
-    if (k !== except.espoo && s.slot && parse(k).talentId === talentId) busy.add(s.slot);
+    if (k !== except.espoo && s.slot && parse(k).talentId === talentId) busy.add(normSlot(s.slot));
   return busy;
 }
 
@@ -114,18 +134,19 @@ export function slotAvailability(
   const company = need ? companyOf(need) : "";
   const others = Object.entries(slots).filter(([k]) => k !== key);
   const candidate = candidateTimes(talentId, slots, screening, { company: key });
-  const after = screening[key]?.slot;
+  const after = screening[key]?.slot && normSlot(screening[key].slot!);
+  const mineAt = slots[key] && normSlot(slots[key]);
   return SLOT_TIMES.map((time) => {
     const companyBusy = others.some(([k, t]) => {
-      if (t !== time) return false;
+      if (normSlot(t) !== time) return false;
       const n = needs.find((x) => x.id === parse(k).needId);
       return !!n && companyOf(n) === company;
     });
     const candidateBusy = candidate.has(time);
-    const tooEarly = !!after && toMinutes(time) <= toMinutes(after);
+    const tooEarly = !!after && time <= after;
     return {
       time,
-      mine: slots[key] === time,
+      mine: mineAt === time,
       free: !companyBusy && !candidateBusy && !tooEarly,
       reason: companyBusy ? "company" : candidateBusy ? "candidate" : tooEarly ? "order" : undefined,
     };
@@ -133,7 +154,7 @@ export function slotAvailability(
 }
 
 /** Where Espoo holds its interviews: several interviewers, so only the candidate can clash. */
-export const ESPOO_DESK = "Espoo Esbo desk, Otaniemi hall (or online)";
+export const ESPOO_DESK = "Espoo Esbo office, Otaniemi (or online)";
 
 /** Which Espoo-interview times this candidate can book: only their own bookings block a time. */
 export function screeningAvailability(
@@ -143,9 +164,10 @@ export function screeningAvailability(
 ): SlotState[] {
   const { talentId } = parse(key);
   const busy = candidateTimes(talentId, slots, screening, { espoo: key });
+  const mineAt = screening[key]?.slot && normSlot(screening[key].slot!);
   return SLOT_TIMES.map((time) => ({
     time,
-    mine: screening[key]?.slot === time,
+    mine: mineAt === time,
     free: !busy.has(time),
     reason: busy.has(time) ? "candidate" : undefined,
   }));
@@ -241,15 +263,15 @@ export function agendaFor(
   }
   const order = { booked: 0, answer: 1, book: 2, waiting: 3 };
   return items.sort(
-    (a, b) => order[a.bucket] - order[b.bucket] || (a.time ?? "").localeCompare(b.time ?? ""),
+    (a, b) =>
+      order[a.bucket] - order[b.bucket] || normSlot(a.time ?? "").localeCompare(normSlot(b.time ?? "")),
   );
 }
 
 /** iCalendar file for the booked meetings, so people can add them to their own calendar. */
 export function agendaIcs(items: AgendaItem[], ownerName: string) {
-  const date = EVENT.isoDate.replaceAll("-", "");
-  const stamp = (t: string) => `${date}T${t.replace(":", "")}00`;
-  const end = (t: string) => toTime(toMinutes(t) + EVENT.slotMinutes);
+  const stamp = (s: string) => `${slotDay(s).replaceAll("-", "")}T${slotTime(s).replace(":", "")}00`;
+  const end = (s: string) => `${slotDay(s)} ${toTime(toMinutes(slotTime(s)) + EVENT.slotMinutes)}`;
   const esc = (s: string) => s.replace(/[\\,;]/g, (c) => `\\${c}`);
   const events = items
     .filter((i) => i.time)

@@ -2,7 +2,8 @@ import { skillLabel } from "./esco";
 import { impactMetrics } from "./impact";
 import { matchesForNeed, pairKey } from "./match";
 import { fairnessSummary, funnel, overview, poolProfile } from "./oversight";
-import { companyOf, rooms, SLOT_TIMES } from "./schedule";
+import { EVENT } from "./data";
+import { companyOf, dayLabel, rooms, SLOT_TIMES, slotDay } from "./schedule";
 import type { PipelineState } from "./pipeline";
 import type { Decision, Feedback, Need, Talent } from "./types";
 
@@ -77,9 +78,15 @@ export function dashboardData({
       fromPrevious: i === 0 ? null : pct(s.value, stages[i - 1].value),
     })),
     decisionsPerNeed,
+    // Per weekday of the interview week: interviews booked against what the companies could hold.
     slotLoad: {
       tables: tables.length,
-      slots: SLOT_TIMES.map((time) => ({ time, booked: bookedAt.filter((t) => t === time).length })),
+      days: EVENT.days.map((day) => ({
+        day,
+        label: dayLabel(day),
+        booked: bookedAt.filter((t) => slotDay(t) === day).length,
+        capacity: tables.length * SLOT_TIMES.filter((s) => slotDay(s) === day).length,
+      })),
     },
     skills: profile.topSkills.map((s) => ({
       id: s.skill,

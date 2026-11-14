@@ -66,7 +66,7 @@ export function LoginForm({
     <div className="grid gap-8 lg:grid-cols-[1fr_1.3fr]">
       <div className="space-y-4">
         <p className="flex items-center gap-1.5 text-sm font-medium text-primary">
-          <LockKeyholeIcon className="size-4" /> Demo sign-in
+          <LockKeyholeIcon className="size-4" /> Sign in
         </p>
         <h1 className="text-3xl font-semibold tracking-tight text-balance">Sign in to True Fit</h1>
         <p className="text-pretty text-muted-foreground">
