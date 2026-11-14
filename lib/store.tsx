@@ -74,8 +74,27 @@ const seedState = ({ needs, talent }: DemoSeed = { needs: SEED_NEEDS, talent: SE
   },
 });
 
-// Bump when seeds change so stale persisted state does not hide new personas.
+// Bump when the state's shape changes so stale persisted state is dropped.
 const STORAGE_KEY = "truefit-demo-v4";
+
+/**
+ * Restore persisted demo state over the fresh seed. Seed needs and talent always come from
+ * the server (database or JSON), so a browser that saved an older copy (e.g. before contact
+ * details existed) still sees the current rows; only what the user created is restored.
+ */
+export function hydrate(initial: DemoState, saved: Partial<DemoState>): DemoState {
+  const mine = <T extends { id: string; createdByUser?: boolean }>(rows: T[] | undefined, seed: T[]) => {
+    const own = (rows ?? []).filter((r) => r.createdByUser);
+    const ids = new Set(own.map((r) => r.id));
+    return [...own, ...seed.filter((r) => !ids.has(r.id))];
+  };
+  return {
+    ...initial,
+    ...saved,
+    needs: mine(saved.needs, initial.needs),
+    talent: mine(saved.talent, initial.talent),
+  };
+}
 
 type Ctx = DemoState & {
   addNeed: (n: Need) => void;
@@ -106,7 +125,7 @@ export function DemoProvider({ children, seed }: { children: React.ReactNode; se
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
       // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate persisted demo state after mount
-      if (raw) setState({ ...initial, ...JSON.parse(raw) });
+      if (raw) setState(hydrate(initial, JSON.parse(raw)));
     } catch {
       /* storage unavailable: run from seed */
     }
