@@ -4,7 +4,12 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "reac
 import Link from "next/link";
 import {
   ArrowRightIcon,
+  AudioLinesIcon,
   BotIcon,
+  MicIcon,
+  MicOffIcon,
+  PhoneOffIcon,
+  PencilLineIcon,
   MessageCircleIcon,
   RotateCcwIcon,
   SendHorizonalIcon,
@@ -17,8 +22,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { AiFitBadge, RankToggle, useAiRanking } from "@/components/ai-rank";
 import { CandidateProfile } from "@/components/candidate-profile";
 import { SkillChip, SkillLegend } from "@/components/skill-chip";
+import { useLiveIntake } from "@/components/use-live-intake";
+import { VoiceInput } from "@/components/voice-input";
 import { EVENT } from "@/lib/data";
 import {
   DEFAULT_STARTERS,
@@ -30,6 +38,7 @@ import {
   type NeedDraft,
   type Topic,
 } from "@/lib/intake";
+import { cardFromToolArgs, liveToolResult } from "@/lib/intake-live";
 import { matchesForNeed } from "@/lib/match";
 import { useDemo } from "@/lib/store";
 import { cn, isSubmitEnter } from "@/lib/utils";
@@ -40,6 +49,10 @@ type Msg = ChatMessage & {
   rechecked?: boolean;
   quickReplies?: string[];
   source?: IntakeTurn["source"];
+  /** A transcript bubble from the live voice conversation that is still being spoken. */
+  live?: boolean;
+  /** "card": a note that the live conversation updated the need card (not sent to the model). */
+  kind?: "card";
 };
 
 const COMPANY = "Your company (demo)";
@@ -68,9 +81,45 @@ export function CompanyIntake() {
   const [input, setInput] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
   const online = useOnline();
   const [draft, setDraft] = useState<NeedDraft>(EMPTY_DRAFT);
   const [asked, setAsked] = useState<Topic[]>([]);
+  const draftRef = useRef(draft);
+  useEffect(() => {
+    draftRef.current = draft;
+  }, [draft]);
+  const live = useLiveIntake({
+    onTranscript: (role, text) =>
+      setMessages((m) => {
+        const last = m[m.length - 1];
+        if (last?.live && last.role === role)
+          return [...m.slice(0, -1), { ...last, content: last.content + text }];
+        return [...m.map((x) => (x.live ? closeBubble(x) : x)), { role, content: text, live: true }];
+      }),
+    onTurnEnd: () => setMessages((m) => m.map((x) => (x.live ? closeBubble(x) : x))),
+    onCard: (args) => {
+      const next = cardFromToolArgs(args);
+      const prev = draftRef.current;
+      const before = new Set([...prev.must, ...prev.nice]);
+      const after = new Set([...next.must, ...next.nice]);
+      draftRef.current = next;
+      setDraft(next);
+      setMessages((m) => [
+        ...m.map((x) => (x.live ? closeBubble(x) : x)),
+        {
+          role: "assistant",
+          kind: "card",
+          content: next.title ? `Need card updated: ${next.title}` : "Need card updated",
+          added: [...after].filter((x) => !before.has(x)),
+          removed: [...before].filter((x) => !after.has(x)),
+        },
+      ]);
+      // Counts only, never who the people are.
+      return liveToolResult(next, talent);
+    },
+  });
+  const isLive = live.state === "live" || live.state === "connecting";
   // The chat lives in a popup opened from the round button in the bottom-right corner.
   const [chatOpen, setChatOpen] = useState(false);
   const [unread, setUnread] = useState(false);
@@ -103,6 +152,7 @@ export function CompanyIntake() {
     [need, talent],
   );
   const byId = useMemo(() => new Map(talent.map((t) => [t.id, t])), [talent]);
+  const ranking = useAiRanking(need, suitable, byId);
 
   // No separate need card to approve: once the chat has a role and must-have skills, the
   // need is saved so the Candidates and Meetings pages can invite these people.
@@ -129,7 +179,7 @@ export function CompanyIntake() {
     }
     // On retry the user's message is already the last one in the thread.
     const history: ChatMessage[] = [
-      ...messages.map(({ role, content }) => ({ role, content })),
+      ...messages.filter((m) => !m.kind).map(({ role, content }) => ({ role, content })),
       ...(retry ? [] : [{ role: "user" as const, content: t }]),
     ];
     scrollDown();
@@ -188,10 +238,16 @@ export function CompanyIntake() {
   };
 
   const restart = () => {
+    if (isLive) live.stop();
     setError(null);
     setMessages([GREETING]);
     setDraft(EMPTY_DRAFT);
     setAsked([]);
+  };
+
+  const startLive = () => {
+    openChat();
+    void live.start(draftRef.current);
   };
 
   const lastMsg = messages[messages.length - 1];
@@ -222,7 +278,7 @@ export function CompanyIntake() {
             </Badge>
           </CardTitle>
           <CardDescription>
-            Turns your answers into the need card. It only sees what you type and how many people are
+            Turns your answers into the need card. It only sees what you type or say and how many people are
             registered, never any candidate.
           </CardDescription>
           <div className="col-start-2 row-span-2 row-start-1 flex items-center gap-1 self-start justify-self-end">
@@ -241,40 +297,60 @@ export function CompanyIntake() {
           className="flex-1 space-y-4 overflow-y-auto overscroll-contain py-4"
           aria-live="polite"
         >
-          {messages.map((m, i) => (
-            <div key={i} className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}>
+          {messages.map((m, i) =>
+            m.kind === "card" ? (
               <div
-                className={cn(
-                  "max-w-[85%] space-y-2 rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
-                  m.role === "user"
-                    ? "rounded-br-md bg-primary text-primary-foreground"
-                    : "rounded-bl-md bg-muted",
-                )}
+                key={i}
+                className="flex flex-wrap items-center justify-center gap-1 text-xs text-muted-foreground"
               >
-                {m.rechecked && (
-                  <p className="flex items-center gap-1 text-xs font-medium text-primary">
-                    <RotateCcwIcon className="size-3" /> New role: card and people count rechecked
-                  </p>
-                )}
-                <p className="whitespace-pre-line">{m.content}</p>
-                {m.added && m.added.length > 0 && (
-                  <div className="flex flex-wrap gap-1" aria-label="Skills added">
-                    {m.added.map((s) => (
-                      <SkillChip key={s} id={s} />
-                    ))}
-                  </div>
-                )}
-                {m.removed && m.removed.length > 0 && (
-                  <div className="flex flex-wrap items-center gap-1" aria-label="Skills removed">
-                    <span className="text-xs text-muted-foreground">Removed:</span>
-                    {m.removed.map((s) => (
-                      <SkillChip key={s} id={s} className="line-through opacity-60" />
-                    ))}
-                  </div>
-                )}
+                <PencilLineIcon className="size-3 text-primary" /> {m.content}
+                {m.added?.map((s) => (
+                  <SkillChip key={s} id={s} />
+                ))}
+                {m.removed?.map((s) => (
+                  <SkillChip key={s} id={s} className="line-through opacity-60" />
+                ))}
               </div>
-            </div>
-          ))}
+            ) : (
+              <div key={i} className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}>
+                <div
+                  className={cn(
+                    "max-w-[85%] space-y-2 rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
+                    m.role === "user"
+                      ? "rounded-br-md bg-primary text-primary-foreground"
+                      : "rounded-bl-md bg-muted",
+                  )}
+                >
+                  {m.live && (
+                    <span className="flex items-center gap-1 text-[10px] font-medium tracking-wide uppercase opacity-70">
+                      <AudioLinesIcon className="size-3 animate-pulse" /> speaking
+                    </span>
+                  )}
+                  {m.rechecked && (
+                    <p className="flex items-center gap-1 text-xs font-medium text-primary">
+                      <RotateCcwIcon className="size-3" /> New role: card and people count rechecked
+                    </p>
+                  )}
+                  <p className="whitespace-pre-line">{m.content.trim() || "…"}</p>
+                  {m.added && m.added.length > 0 && (
+                    <div className="flex flex-wrap gap-1" aria-label="Skills added">
+                      {m.added.map((s) => (
+                        <SkillChip key={s} id={s} />
+                      ))}
+                    </div>
+                  )}
+                  {m.removed && m.removed.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-1" aria-label="Skills removed">
+                      <span className="text-xs text-muted-foreground">Removed:</span>
+                      {m.removed.map((s) => (
+                        <SkillChip key={s} id={s} className="line-through opacity-60" />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ),
+          )}
           {pending && (
             <div className="flex justify-start">
               <div className="flex items-center gap-1 rounded-2xl rounded-bl-md bg-muted px-4 py-3">
@@ -317,7 +393,7 @@ export function CompanyIntake() {
               connection; you can still edit the need card by hand.
             </p>
           )}
-          {!pending && online && !error && lastMsg.role === "assistant" && replies.length > 0 && (
+          {!isLive && !pending && online && !error && lastMsg.role === "assistant" && replies.length > 0 && (
             <div className="flex flex-wrap items-center gap-1.5" aria-label="Suggested answers">
               <span className="mr-0.5 text-xs text-muted-foreground">Suggested answers:</span>
               {replies.map((q) => {
@@ -336,38 +412,124 @@ export function CompanyIntake() {
               })}
             </div>
           )}
-          <form
-            className="flex gap-2"
-            onSubmit={(e) => {
-              e.preventDefault();
-              send(input);
-            }}
-          >
-            <Textarea
-              ref={inputRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (isSubmitEnter(e)) {
-                  e.preventDefault();
-                  send(input);
-                }
-              }}
-              placeholder={online ? "Type your answer…" : "Reconnect to chat with the assistant"}
-              disabled={!online}
-              aria-label="Message"
-              className="min-h-10 resize-none"
-              rows={2}
-            />
-            <Button
-              type="submit"
-              size="icon-lg"
-              aria-label="Send"
-              disabled={!input.trim() || pending || !online}
+          {isLive ? (
+            <div
+              className="flex items-center gap-3 rounded-xl border border-primary/30 bg-accent/40 px-3 py-2"
+              aria-live="polite"
             >
-              <SendHorizonalIcon />
+              <span className="relative flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                {live.state === "live" && !live.muted && (
+                  <span
+                    className="absolute inset-0 rounded-full bg-primary/40 transition-transform duration-75"
+                    style={{ transform: `scale(${1 + Math.min(live.level * 3, 0.8)})` }}
+                    aria-hidden
+                  />
+                )}
+                <AudioLinesIcon className="relative size-4" />
+              </span>
+              <span className="min-w-0 flex-1 text-sm">
+                <span className="block font-medium">
+                  {live.state === "connecting"
+                    ? "Connecting…"
+                    : live.speaking
+                      ? "Assistant is speaking"
+                      : live.muted
+                        ? "Microphone muted"
+                        : "Listening, just talk"}
+                </span>
+                <span className="block text-xs text-muted-foreground">
+                  Interrupt any time. The card and candidates update as you talk.
+                </span>
+              </span>
+              <Button
+                size="icon"
+                variant="outline"
+                onClick={live.toggleMute}
+                disabled={live.state !== "live"}
+                aria-label={live.muted ? "Unmute microphone" : "Mute microphone"}
+                aria-pressed={live.muted}
+              >
+                {live.muted ? <MicOffIcon /> : <MicIcon />}
+              </Button>
+              <Button
+                size="icon"
+                variant="destructive"
+                onClick={live.stop}
+                aria-label="End live conversation"
+              >
+                <PhoneOffIcon />
+              </Button>
+            </div>
+          ) : (
+            <form
+              className="flex gap-2"
+              onSubmit={(e) => {
+                e.preventDefault();
+                send(input);
+              }}
+            >
+              <Textarea
+                ref={inputRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (isSubmitEnter(e)) {
+                    e.preventDefault();
+                    send(input);
+                  }
+                }}
+                placeholder={online ? "Type or speak your answer…" : "Reconnect to chat with the assistant"}
+                disabled={!online}
+                aria-label="Message"
+                className="min-h-10 resize-none"
+                rows={2}
+              />
+              <VoiceInput
+                disabled={!online || pending}
+                onError={setVoiceError}
+                onTranscript={(text) => {
+                  setVoiceError(null);
+                  // Fill the box, don't send: the user checks what Gemini heard first.
+                  setInput((prev) => (prev.trim() ? `${prev.trim()} ${text}` : text));
+                  requestAnimationFrame(() => {
+                    const el = inputRef.current;
+                    if (!el) return;
+                    el.focus();
+                    el.setSelectionRange(el.value.length, el.value.length);
+                  });
+                }}
+              />
+              <Button
+                type="submit"
+                size="icon-lg"
+                aria-label="Send"
+                disabled={!input.trim() || pending || !online}
+              >
+                <SendHorizonalIcon />
+              </Button>
+            </form>
+          )}
+          {!isLive && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="self-start"
+              onClick={startLive}
+              disabled={!online || pending}
+            >
+              <AudioLinesIcon data-icon="inline-start" /> Talk live with the assistant instead
             </Button>
-          </form>
+          )}
+          {live.error && (
+            <p className="text-xs text-destructive" role="alert">
+              {live.error}
+            </p>
+          )}
+          {voiceError && (
+            <p className="text-xs text-destructive" role="alert">
+              {voiceError}
+            </p>
+          )}
         </CardFooter>
       </Card>
 
@@ -413,10 +575,15 @@ export function CompanyIntake() {
             Tell TrueFit Assistant who you need. “We need a dev” is a fine start.
           </p>
         )}
-        <Button size="sm" onClick={openChat}>
-          <MessageCircleIcon data-icon="inline-start" />
-          {messages.length > 1 ? "Change in the chat" : "Chat with TrueFit Assistant"}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="outline" onClick={startLive} disabled={!online || isLive}>
+            <AudioLinesIcon data-icon="inline-start" /> {isLive ? "Live now" : "Talk live"}
+          </Button>
+          <Button size="sm" onClick={openChat}>
+            <MessageCircleIcon data-icon="inline-start" />
+            {messages.length > 1 ? "Change in the chat" : "Chat with TrueFit Assistant"}
+          </Button>
+        </div>
       </div>
 
       {/* Suitable candidates, live */}
@@ -441,11 +608,14 @@ export function CompanyIntake() {
               Invite on the Candidates page <ArrowRightIcon data-icon="inline-end" />
             </Button>
           </div>
+          <RankToggle ranking={ranking} />
           <SkillLegend />
           <div className="grid gap-4 lg:grid-cols-2">
-            {suitable.map((m) => {
+            {ranking.ordered.map((m) => {
               const t = byId.get(m.talentId);
-              return t ? <CandidateProfile key={t.id} t={t} m={m} /> : null;
+              return t ? (
+                <CandidateProfile key={t.id} t={t} m={m} note={<AiFitBadge fit={ranking.fitOf(t.id)} />} />
+              ) : null;
             })}
           </div>
         </section>
@@ -485,3 +655,6 @@ function useOnline() {
     () => true,
   );
 }
+
+/** Close a live transcript bubble once its turn is over. */
+const closeBubble = (m: Msg): Msg => ({ ...m, live: false, content: m.content.trim() });

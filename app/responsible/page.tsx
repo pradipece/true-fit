@@ -71,16 +71,17 @@ const KIND = {
 } as const;
 
 const DOES = [
-  "Asks a company clarifying questions and drafts a need card they edit and approve",
+  "Asks a company clarifying questions, by text or in a live voice conversation, and drafts a need card they edit and approve",
   "Translates job titles and unusual career paths into ESCO skills and Finnish job-ad words, with the official ESCO occupation alongside",
   "Scans an uploaded CV (PDF or Word, any standard layout) or LinkedIn PDF for a job title, a career summary without names or places, and stated skills with verbatim quotes",
   "Suggests which answer supports which skill, quoting the candidate's own words verbatim (invented quotes are dropped)",
   "Flags names, schools, ages and other identifying details so the candidate can remove them",
   "Offers writing ideas and sentence starters, never full answers",
   "Writes a plain-language “why this match” from the rule-based score",
+  "On request, suggests an order (“AI fit rate”) for already-matched candidates from their scoring output and evidence quotes, labelled C1, C2… with no names; the skill match stays beside it",
 ];
 const DOES_NOT = [
-  "Reject, shortlist, rank for hiring or contact anyone on its own",
+  "Reject, shortlist, hide or contact anyone on its own. Its suggested order is opt-in and never removes anyone",
   "Calculate the match score. That is transparent rules, covered by automated tests",
   "See names, photos, nationality, age, school or language when scoring",
   "Infer personality, emotion or “culture fit” from text or voice",
@@ -96,6 +97,18 @@ const DATA = [
     why: "Turn the company's words into a need card",
     sent: "Gemini",
     retention: "Not kept once the card is approved",
+  },
+  {
+    item: "Live voice conversation (company, optional)",
+    why: "Talk to the intake assistant in real time; it fills the need card as they speak",
+    sent: "Gemini Live (audio streamed, max 10 min; replies are aggregate counts only)",
+    retention: "Not recorded or stored; the transcript stays in the browser chat",
+  },
+  {
+    item: "Intake chat voice messages (company, optional)",
+    why: "Turn speech into text in the chat box, which the company checks before sending",
+    sent: "Gemini (audio, max 60 s)",
+    retention: "Not stored; transcribed once in memory",
   },
   {
     item: "Company need card",

@@ -23,10 +23,13 @@ export function CandidateProfile({
   t,
   m,
   footer,
+  note,
 }: {
   t: Talent;
   m: MatchExplanation;
   footer?: React.ReactNode;
+  /** Shown above the details, e.g. the optional AI fit rate. */
+  note?: React.ReactNode;
 }) {
   const name = displayName(t);
   return (
@@ -45,6 +48,7 @@ export function CandidateProfile({
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
+        {note}
         {t.contact && (
           <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm" aria-label={`Contact details for ${name}`}>
             <li className="flex items-center gap-1.5 text-muted-foreground">

@@ -38,6 +38,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { AiFitBadge, RankToggle, useAiRanking } from "@/components/ai-rank";
 import { IdentitySwitch, useIdentity } from "@/components/identity";
 import { MatchExplanationView, ScoreMeter } from "@/components/match-explanation";
 import { SkillChip, SkillLegend } from "@/components/skill-chip";
@@ -113,6 +114,7 @@ export function CandidateReview() {
   const need = needs.find((n) => n.id === selected) ?? needs[0];
   const list = useMemo(() => (need ? reviewList(need, talent) : null), [need, talent]);
   const talentById = useMemo(() => new Map(talent.map((t) => [t.id, t])), [talent]);
+  const ranking = useAiRanking(need, list?.suggested ?? [], talentById);
   const [tab, setTab] = useState<"review" | "log">("review");
   const awaitingReview = needs.reduce(
     (sum, n) =>
@@ -185,6 +187,7 @@ export function CandidateReview() {
         decision={d}
         status={d?.status === "approved" ? pipeline(key) : undefined}
         asked={!d && optIns[key]?.talent === true}
+        fit={ranking.fitOf(m.talentId)}
         onAction={(type) => setDialog({ type, m, current: d })}
       />
     );
@@ -294,7 +297,8 @@ export function CandidateReview() {
                   </CardContent>
                 </Card>
               )}
-              {list.suggested.map(card)}
+              {list.suggested.length > 1 && <RankToggle ranking={ranking} />}
+              {ranking.ordered.map(card)}
 
               {list.notSuggested.length > 0 && (
                 <div className="space-y-3">
@@ -385,6 +389,7 @@ function MatchCard({
   decision: d,
   status,
   asked,
+  fit,
   onAction,
 }: {
   need: Need;
@@ -394,6 +399,7 @@ function MatchCard({
   status?: string;
   /** The candidate asked to meet for this need (from Explore roles). Not part of the score. */
   asked?: boolean;
+  fit?: ReturnType<ReturnType<typeof useAiRanking>["fitOf"]>;
   onAction: (type: DialogType) => void;
 }) {
   return (
@@ -425,6 +431,7 @@ function MatchCard({
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
+        <AiFitBadge fit={fit} />
         {t.contact && (
           <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm" aria-label="Contact details">
             <li className="flex items-center gap-1.5 text-muted-foreground">

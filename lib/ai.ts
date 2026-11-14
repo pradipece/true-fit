@@ -96,3 +96,43 @@ export function logFallback(tag: string, error?: unknown) {
     console.warn(`[ai:${tag}] Gemini call failed; using offline rules.`, error);
   }
 }
+
+/** Gemini accepts up to ~20 MB inline; a 60-second voice message is far below that. */
+export const MAX_AUDIO_BYTES = 4 * 1024 * 1024;
+
+/**
+ * Transcribe a short voice message with Gemini (audio sent inline, never stored).
+ * Returns the spoken words only, in the language spoken. Throws on any failure.
+ */
+export async function transcribeAudio(audio: Uint8Array, mimeType: string): Promise<string> {
+  const response = await getClient().models.generateContent({
+    model: AI_MODEL,
+    contents: [
+      {
+        role: "user",
+        parts: [
+          { inlineData: { mimeType, data: Buffer.from(audio).toString("base64") } },
+          {
+            text: "Transcribe this voice message word for word, in the language it is spoken in. It is a hiring manager describing who they want to recruit. Fix only obvious filler words (um, uh). If nothing intelligible is said, return an empty transcript.",
+          },
+        ],
+      },
+    ],
+    config: {
+      responseMimeType: "application/json",
+      responseJsonSchema: {
+        type: "object",
+        properties: { transcript: { type: "string" } },
+        required: ["transcript"],
+      },
+      thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
+      abortSignal: AbortSignal.timeout(TIMEOUT_MS),
+    },
+  });
+  const blocked = response.promptFeedback?.blockReason;
+  if (blocked) throw new Error(`Prompt blocked: ${blocked}`);
+  const text = response.text;
+  if (!text) throw new Error("Empty response");
+  const { transcript } = JSON.parse(text) as { transcript?: unknown };
+  return typeof transcript === "string" ? transcript.trim().slice(0, 2000) : "";
+}
