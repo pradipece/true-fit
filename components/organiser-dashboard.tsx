@@ -121,7 +121,7 @@ export function OrganiserDashboard() {
           description:
             next === "approved"
               ? "Identities stay hidden until both say yes."
-              : "The candidate stays in the pool for other needs.",
+              : "The candidate can still be matched to other needs.",
         },
       );
     }
@@ -179,8 +179,9 @@ export function OrganiserDashboard() {
           <ScaleIcon className="mt-0.5 size-4 shrink-0 text-primary" />
           <span>
             <span className="font-medium text-foreground">You decide every match.</span> Nobody is rejected
-            automatically: people below the {Math.round(SUGGEST_THRESHOLD * 100)}% guide are listed too. There
-            are no hidden scores: every percentage is skill overlap and opens to its full calculation.
+            automatically: people below the {Math.round(SUGGEST_THRESHOLD * 100)}% suggestion line are listed
+            too. There are no hidden scores: every percentage is a skill match you can open to see how it was
+            worked out.
           </span>
         </p>
 
@@ -230,15 +231,14 @@ export function OrganiserDashboard() {
               <div className="space-y-1">
                 <h2 className="text-sm font-medium">Suggested for review ({list.suggested.length})</h2>
                 <p className="text-xs text-muted-foreground">
-                  At least {Math.round(SUGGEST_THRESHOLD * 100)}% skill overlap, highest first. A suggestion
-                  only.
+                  At least {Math.round(SUGGEST_THRESHOLD * 100)}% skill match, best first. A suggestion only.
                 </p>
               </div>
               {list.suggested.length === 0 && (
                 <Card>
                   <CardContent className="py-6 text-center text-sm text-muted-foreground">
-                    No one reaches the guide for this need yet. Review the people below yourself, or invite
-                    talent with these skills.
+                    No one reaches the suggestion line for this need yet. Review the people below yourself, or
+                    invite talent with these skills.
                   </CardContent>
                 </Card>
               )}
@@ -254,10 +254,10 @@ export function OrganiserDashboard() {
                   >
                     <span className="space-y-0.5">
                       <span className="block text-sm font-medium">
-                        Everyone else in the pool ({list.notSuggested.length})
+                        Everyone else at the event ({list.notSuggested.length})
                       </span>
                       <span className="block text-xs text-muted-foreground">
-                        Below the overlap guide. Not rejected: open any of them and decide yourself.
+                        Below the suggestion line. Not rejected: open any of them and decide yourself.
                       </span>
                     </span>
                     <ChevronDownIcon
@@ -352,7 +352,7 @@ function MatchCard({
           {t.createdByUser && <Badge>You</Badge>}
           {!m.suggested && (
             <Badge variant="outline" className="font-normal">
-              below guide, not rejected
+              below the line, not rejected
             </Badge>
           )}
         </CardTitle>
@@ -446,7 +446,7 @@ const DIALOG_COPY: Record<DialogType, { title: string; body: string; cta: string
   },
   reject: {
     title: "Reject for this need?",
-    body: "Rejections need a reason so they can be reviewed for bias. The candidate stays in the pool for other needs and is not told.",
+    body: "Rejections need a reason so they can be reviewed for bias. The candidate can still be matched to other needs and is not told.",
     cta: "Reject with reason",
   },
   edit: {
@@ -599,7 +599,12 @@ function AuditLog({
           <Button size="sm" variant="outline" onClick={onExport} disabled={!entries.length}>
             <DownloadIcon data-icon="inline-start" /> Export CSV
           </Button>
-          <Button size="sm" variant="outline" nativeButton={false} render={<Link href="/meetings" />}>
+          <Button
+            size="sm"
+            variant="outline"
+            nativeButton={false}
+            render={<Link href="/meetings/organiser" />}
+          >
             <HandshakeIcon data-icon="inline-start" /> Opt-ins & slots{" "}
             <ArrowRightIcon data-icon="inline-end" />
           </Button>

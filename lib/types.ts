@@ -50,7 +50,8 @@ export type Company = {
 
 export type Engagement = "Permanent" | "Fixed-term" | "Part-time" | "Internship / trainee";
 
-export type NeedTiming = { start: string; engagement: Engagement };
+/** `engagement` is free text; `Engagement` lists the presets offered in the UI. */
+export type NeedTiming = { start: string; engagement: string };
 
 export type Need = {
   id: string;
@@ -63,8 +64,10 @@ export type Need = {
   summary: string;
   must: string[];
   nice: string[];
-  language: "English OK" | "Finnish required" | "Finnish or English";
-  mode: "On-site" | "Hybrid" | "Remote";
+  /** Working language in plain words. Presets: "English OK", "Finnish or English", "Finnish required"; anything else is allowed. */
+  language: string;
+  /** Way of working in plain words. Presets: "On-site", "Hybrid", "Remote"; anything else is allowed. */
+  mode: string;
   /** When the role starts and on what terms. Optional for older seeds. */
   timing?: NeedTiming;
   submittedWeeksBefore: number;

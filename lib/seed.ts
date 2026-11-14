@@ -76,8 +76,8 @@ export function loadSeed(raw = { companies: companiesJson.companies, talent: tal
         companyId: c.id,
         company: c.name,
         companyBlurb: c.blurb,
-        language: n.language as Need["language"],
-        mode: n.mode as Need["mode"],
+        language: n.language,
+        mode: n.mode,
       });
     }
   }

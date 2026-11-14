@@ -34,10 +34,9 @@ export default async function AgendaPage({ params }: PageProps<"/meetings/agenda
         <ArrowLeftIcon data-icon="inline-start" /> All agendas
       </Button>
       <PageHeader
-        step={4}
         eyebrow={p.kind === "company" ? `Company agenda · ${p.sub}` : "Candidate agenda"}
         title={p.name}
-        description="Your meetings for the event day, plus anything still waiting for an answer. This page is prerendered and served as a static file."
+        description="Your meetings for the event day, plus anything still waiting for an answer. You can add it to your calendar."
       />
       <Agenda who={{ kind: p.kind, id: p.id }} name={p.name} />
     </div>

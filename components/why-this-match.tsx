@@ -61,7 +61,7 @@ export function WhyThisMatch({ need, talent }: { need: Need; talent: Talent }) {
       <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
         <SparklesIcon className="size-3.5 text-primary" /> Why this match
         <Badge variant="outline" className="font-normal">
-          {text.source === "ai" ? "Gemini, from the score" : "Template, from the score"}
+          {text.source === "ai" ? "AI summary of the score" : "Summary of the score"}
         </Badge>
       </p>
       <p className="leading-relaxed">{text.why}</p>

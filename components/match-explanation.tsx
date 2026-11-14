@@ -9,14 +9,14 @@ import { cn } from "@/lib/utils";
 export function matchSentence(m: MatchExplanation) {
   const ev = m.shared.filter((s) => s.level === "evidenced").map((s) => skillLabel(s.skill).toLowerCase());
   const parts: string[] = [];
-  if (ev.length) parts.push(`shows evidence of ${listJoin(ev)}`);
+  if (ev.length) parts.push(`has shown ${listJoin(ev)} in their answers`);
   const claimed = m.shared.filter((s) => s.level === "claimed").map((s) => skillLabel(s.skill).toLowerCase());
-  if (claimed.length) parts.push(`reports ${listJoin(claimed)}`);
+  if (claimed.length) parts.push(`says they have ${listJoin(claimed)}`);
   if (m.transferable.length) {
     const t = m.transferable[0];
     parts.push(`could transfer ${skillLabel(t.from).toLowerCase()} → ${skillLabel(t.to).toLowerCase()}`);
   }
-  if (!parts.length) return "Little overlap with this need yet.";
+  if (!parts.length) return "Few skills in common with this need yet.";
   const s = parts.join("; ");
   return s.charAt(0).toUpperCase() + s.slice(1) + ".";
 }
@@ -31,7 +31,7 @@ export function ScoreMeter({ score, className }: { score: number; className?: st
   const segments = 10;
   const filled = Math.round(score * segments);
   return (
-    <div className={cn("flex items-center gap-2", className)} aria-label={`Skill overlap ${pct}%`}>
+    <div className={cn("flex items-center gap-2", className)} aria-label={`Skill match ${pct}%`}>
       <div className="flex gap-0.5">
         {Array.from({ length: segments }, (_, i) => (
           <span
@@ -43,7 +43,7 @@ export function ScoreMeter({ score, className }: { score: number; className?: st
           />
         ))}
       </div>
-      <span className="text-xs text-muted-foreground tabular-nums">{pct}% overlap</span>
+      <span className="text-xs text-muted-foreground tabular-nums">{pct}% skill match</span>
     </div>
   );
 }
@@ -96,10 +96,10 @@ export function MatchExplanationView({
 const pts = (n: number) => (Math.round(n * 100) / 100).toString();
 
 function lineResult(l: ScoreLine) {
-  const lvl = l.level === "evidenced" ? "evidenced" : "self-reported";
+  const lvl = l.level === "evidenced" ? "shown" : "stated";
   if (l.kind === "direct") return `Has it (${lvl})`;
   if (l.kind === "gap") return "Not shown";
-  const occ = l.occupations?.length ? `; both in ESCO ${l.occupations[0]}` : "";
+  const occ = l.occupations?.length ? `; both used by a ${l.occupations[0]}` : "";
   return `Via ${skillLabel(l.from!)} (${lvl}, relation ${l.relation}${occ})`;
 }
 
@@ -108,7 +108,7 @@ export function ScoreBreakdown({ m }: { m: MatchExplanation }) {
   return (
     <details className="group text-xs">
       <summary className="cursor-pointer text-muted-foreground select-none hover:text-foreground">
-        How this {Math.round(m.score * 100)}% is calculated
+        How this {Math.round(m.score * 100)}% is worked out
       </summary>
       <div className="mt-2 overflow-x-auto rounded-lg border">
         <table className="w-full text-left">
@@ -157,8 +157,8 @@ export function ScoreBreakdown({ m }: { m: MatchExplanation }) {
         </table>
       </div>
       <p className="mt-1.5 leading-snug text-muted-foreground">
-        Must-have {SCORING.mustWeight} points, nice-to-have {SCORING.niceWeight}. Evidenced skills earn full
-        points, self-reported {SCORING.claimed * 100}%. A related skill earns relation × level ×{" "}
+        Must-have {SCORING.mustWeight} points, nice-to-have {SCORING.niceWeight}. Skills shown in answers earn
+        full points, stated ones {SCORING.claimed * 100}%. A related skill earns relation × level ×{" "}
         {SCORING.transferFactor}. Only skills are scored: never name, origin, language, education, career path
         or age.
       </p>

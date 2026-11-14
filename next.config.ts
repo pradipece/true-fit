@@ -29,9 +29,9 @@ const nextConfig: NextConfig = {
   experimental: {
     agentFeedback: true,
   },
-  // No landing page: the demo opens straight on step 1 of the flow.
+  // The old meetings picker: each role now has its own meetings page, chosen on the home page.
   async redirects() {
-    return [{ source: "/", destination: "/company", permanent: false }];
+    return [{ source: "/meetings", destination: "/", permanent: false }];
   },
   cacheComponents: true,
   partialPrefetching: true,

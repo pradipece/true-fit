@@ -1,6 +1,7 @@
 import { aiConfigured, generateJson, logFallback } from "@/lib/ai";
 import { getSeed } from "@/lib/seed-db";
 import {
+  cleanQuickReplies,
   INTAKE_OUTPUT_SCHEMA,
   INTAKE_SYSTEM_PROMPT,
   missingFields,
@@ -65,7 +66,7 @@ async function aiTurn(req: IntakeRequest): Promise<IntakeTurn> {
   const draft = sanitizeDraft(out.draft);
   return {
     reply: out.reply,
-    quickReplies: (out.quick_replies ?? []).filter((q) => typeof q === "string").slice(0, 4),
+    quickReplies: cleanQuickReplies(out.quick_replies, history[history.length - 1]?.content),
     draft,
     asked: req.asked,
     // Trust the card, not the flag: ready means every required field is filled.

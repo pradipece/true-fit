@@ -293,7 +293,7 @@ export function TalentProfile() {
       id: "T-YOU",
       alias: "Candidate T-YOU",
       revealName: "You (demo)",
-      headline: headline.trim() || "New to the pool",
+      headline: headline.trim() || "New at this event",
       previousField: translation?.localTitle || title.trim() || "—",
       skills: skills.map((id) => ({ id, level: evidenced.has(id) ? "evidenced" : "claimed" })),
       evidence,
@@ -305,7 +305,9 @@ export function TalentProfile() {
       createdByUser: true,
     });
     setJoined(true);
-    toast.success("You're in the pool", { description: "The organiser sees your anonymised skill card." });
+    toast.success("You're registered for the event", {
+      description: "The organiser sees your anonymised skill card.",
+    });
   };
 
   const canJoin = skills.length > 0 && !!result && !stale && openFlags.length === 0 && reviewed;
@@ -495,7 +497,7 @@ export function TalentProfile() {
                 </span>
               </div>
               <p className="text-sm text-muted-foreground">
-                These start as self-reported. Your answers in the next step can back them up.
+                For now these are skills you say you have. Your answers in the next step can show them.
               </p>
               {GROUPS.map((g) => (
                 <div key={g} className="space-y-2">
@@ -652,7 +654,8 @@ export function TalentProfile() {
 
               {!answerList.length && (
                 <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
-                  Write at least one answer in step 3 first. Without answers, your skills stay self-reported.
+                  Write at least one answer in step 3 first. Without answers, your skills count as stated, not
+                  shown.
                 </p>
               )}
               {stale && !mapping && (
@@ -711,7 +714,7 @@ export function TalentProfile() {
                             })
                           ) : (
                             <p className="text-xs text-muted-foreground">
-                              No answer shows this yet, so it stays self-reported. That&apos;s fine.
+                              No answer shows this yet, so it counts as stated. That&apos;s fine.
                             </p>
                           )}
                         </li>
@@ -861,14 +864,14 @@ export function TalentProfile() {
               {step === 2 ? "Review my card" : "Next"} <ArrowRightIcon data-icon="inline-end" />
             </Button>
           ) : joined ? (
-            <Button variant="outline" nativeButton={false} render={<Link href="/organiser" />}>
-              Go to organiser view <ArrowRightIcon data-icon="inline-end" />
+            <Button variant="outline" nativeButton={false} render={<Link href="/meetings/talent" />}>
+              Go to your meetings <ArrowRightIcon data-icon="inline-end" />
             </Button>
           ) : (
             <div className="flex items-center gap-3">
               {joinHint && <span className="hidden text-xs text-muted-foreground sm:inline">{joinHint}</span>}
               <Button onClick={join} disabled={!canJoin}>
-                Join the event pool
+                Join the event
               </Button>
             </div>
           )}
@@ -965,7 +968,7 @@ function Row({ label, value }: { label: string; value: string }) {
 function SourceBadge({ source }: { source: "ai" | "rules" }) {
   return (
     <Badge variant="outline" className="font-normal">
-      {source === "ai" ? "Gemini" : "Offline rules"}
+      {source === "ai" ? "AI" : "Basic mode"}
     </Badge>
   );
 }

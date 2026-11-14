@@ -46,7 +46,7 @@ describe("intake quick replies follow the pool", () => {
       `${languageCount("Finnish required", SEED_TALENT)} of ${SEED_TALENT.length} can work in it`,
     );
     expect(quickReplyHint("Also cloud platforms", d, SEED_TALENT)).toBe(
-      `${poolCount(["cloud"], SEED_TALENT)} in the pool`,
+      `${poolCount(["cloud"], SEED_TALENT)} at this event`,
     );
   });
 

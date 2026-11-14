@@ -45,7 +45,7 @@ export type MeetingSide = "company" | "talent";
 const OTHER: Record<MeetingSide, string> = { company: "the candidate", talent: "the company" };
 
 /**
- * One side's view of step 4. Company and candidate each get their own route
+ * One side's view of the meetings. Company and candidate each get their own route
  * (/meetings/company, /meetings/talent) and only see their own answers.
  */
 export function Meetings({ side }: { side: MeetingSide }) {
@@ -77,9 +77,11 @@ export function Meetings({ side }: { side: MeetingSide }) {
     return (
       <Card>
         <CardContent className="space-y-3 py-12 text-center">
-          <p className="text-muted-foreground">No approved matches yet.</p>
-          <Button nativeButton={false} render={<Link href="/organiser" />}>
-            Approve matches in the organiser dashboard
+          <p className="text-muted-foreground">
+            No approved matches yet. The organiser reviews every suggestion before anything reaches you.
+          </p>
+          <Button variant="outline" nativeButton={false} render={<Link href="/organiser" />}>
+            Switch to the organiser view (demo)
           </Button>
         </CardContent>
       </Card>
@@ -243,7 +245,7 @@ export function Meetings({ side }: { side: MeetingSide }) {
           )}
           {declined && (
             <p className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
-              No meeting this time. Neither side is told who said no or why, and both stay in the pool for
+              No meeting this time. Neither side is told who said no or why, and both can still be matched for
               other matches.
             </p>
           )}
@@ -336,18 +338,6 @@ export function Meetings({ side }: { side: MeetingSide }) {
                   );
                 })}
               </div>
-              <p className="text-xs text-muted-foreground">
-                Pre-generated schedule:{" "}
-                <a
-                  href="/api/schedule"
-                  className="underline underline-offset-2"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  /api/schedule
-                </a>{" "}
-                (static JSON). Agenda pages are prerendered for every participant.
-              </p>
             </CardContent>
           </Card>
         </section>

@@ -108,7 +108,7 @@ export function OrganiserOverview({ onReview }: { onReview: (needId?: string) =>
                 ? `Across ${waiting.length} company ${waiting.length === 1 ? "need" : "needs"}. Each takes about a minute: read why it was suggested, then approve or reject with a reason.`
                 : "Every suggested match has a decision. New need cards and skill cards will show up here."}
               {empty.length > 0 &&
-                ` ${empty.length} ${empty.length === 1 ? "need has" : "needs have"} no one in the pool yet.`}
+                ` ${empty.length} ${empty.length === 1 ? "need has" : "needs have"} no one at the event yet.`}
             </p>
           </div>
           {o.awaitingReview > 0 && (
@@ -154,10 +154,10 @@ export function OrganiserOverview({ onReview }: { onReview: (needId?: string) =>
         {/* Supply per need */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Can the pool fill each need?</CardTitle>
+            <CardTitle className="text-base">Can each need be filled?</CardTitle>
             <CardDescription>
-              People whose skills overlap at least 40% with the need. “Only a few” or “No one yet” means
-              it&apos;s worth inviting more talent.
+              People with at least a 40% skill match. “Only a few” or “No one yet” means it&apos;s worth
+              inviting more talent.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -195,7 +195,7 @@ export function OrganiserOverview({ onReview }: { onReview: (needId?: string) =>
         {/* Pool profile */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Who is in the pool</CardTitle>
+            <CardTitle className="text-base">Who is registered</CardTitle>
             <CardDescription>
               People with at least one skill in each area. {Math.round(profile.evidencedShare * 100)}% back at
               least one skill with their own answers, not just a CV line.

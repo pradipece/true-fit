@@ -51,16 +51,16 @@ export function SkillLegend({ className }: { className?: string }) {
       className={cn("flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground", className)}
     >
       <span className="flex items-center gap-1.5">
-        <BadgeCheckIcon className="size-3.5 text-evidence" /> Evidenced by a scenario, voice note or sample
+        <BadgeCheckIcon className="size-3.5 text-evidence" /> Shown in an answer, voice note or sample
       </span>
       <span className="flex items-center gap-1.5">
-        <CircleIcon className="size-3.5" /> Self-reported
+        <CircleIcon className="size-3.5" /> Stated, not shown yet
       </span>
       <span className="flex items-center gap-1.5">
-        <ArrowRightIcon className="size-3.5 text-transfer" /> Transferable from a related skill
+        <ArrowRightIcon className="size-3.5 text-transfer" /> Comes from a related skill
       </span>
       <span className="flex items-center gap-1.5">
-        <CircleDashedIcon className="size-3.5" /> Not shown yet
+        <CircleDashedIcon className="size-3.5" /> Missing so far
       </span>
     </div>
   );

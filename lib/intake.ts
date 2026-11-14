@@ -10,6 +10,7 @@ import {
   skillLabel,
 } from "./esco";
 import { matchesForNeed } from "./match";
+import { openToMode, speaksRequired } from "./need-terms";
 import type { Engagement, Need, Talent } from "./types";
 
 /**
@@ -19,9 +20,10 @@ import type { Engagement, Need, Talent } from "./types";
  * talent data, and nothing reaches the organiser until a person approves the card.
  */
 
-export const LANGUAGES: Need["language"][] = ["English OK", "Finnish or English", "Finnish required"];
-export const MODES: Need["mode"][] = ["On-site", "Hybrid", "Remote"];
-export const ENGAGEMENTS: Engagement[] = ["Permanent", "Fixed-term", "Part-time", "Internship / trainee"];
+/** Presets offered as one-tap choices. The fields themselves are free text. */
+export const LANGUAGES = ["English OK", "Finnish or English", "Finnish required"];
+export const MODES = ["On-site", "Hybrid", "Remote"];
+export const ENGAGEMENTS: string[] = ["Permanent", "Fixed-term", "Part-time", "Internship / trainee"];
 
 /** Work-in-progress need card. Empty string = not decided yet. */
 export type NeedDraft = {
@@ -30,9 +32,11 @@ export type NeedDraft = {
   summary: string;
   must: string[];
   nice: string[];
-  language: Need["language"] | "";
-  mode: Need["mode"] | "";
-  timing: { start: string; engagement: Engagement | "" };
+  /** Free text; "" = not decided yet. */
+  language: string;
+  /** Free text; "" = not decided yet. */
+  mode: string;
+  timing: { start: string; engagement: string };
 };
 
 export const EMPTY_DRAFT: NeedDraft = {
@@ -67,22 +71,26 @@ export type IntakeTurn = {
 const uniq = <T>(xs: T[]) => [...new Set(xs)];
 
 /** Drop unknown skill ids, duplicates and must/nice overlap; clamp enums. */
+/** Longest free-text value for language, way of working and contract type. */
+export const FREE_TEXT_MAX = 60;
+
 export function sanitizeDraft(d: Partial<NeedDraft>): NeedDraft {
   const must = uniq((d.must ?? []).filter((s) => SKILL_BY_ID[s]));
   const nice = uniq((d.nice ?? []).filter((s) => SKILL_BY_ID[s] && !must.includes(s)));
-  const oneOf = <T extends string>(v: unknown, allowed: readonly T[]): T | "" =>
-    allowed.includes(v as T) ? (v as T) : "";
+  // Free-text fields: any wording is allowed, kept short and on one line.
+  const text = (v: unknown, max = FREE_TEXT_MAX) =>
+    typeof v === "string" ? v.replace(/\s+/g, " ").trim().slice(0, max) : "";
   return {
     title: (d.title ?? "").trim().slice(0, 80),
     occupation: d.occupation && OCCUPATION_BY_ID[d.occupation] ? d.occupation : "",
     summary: (d.summary ?? "").trim().slice(0, 400),
     must,
     nice,
-    language: oneOf(d.language, LANGUAGES),
-    mode: oneOf(d.mode, MODES),
+    language: text(d.language),
+    mode: text(d.mode),
     timing: {
-      start: (d.timing?.start ?? "").trim().slice(0, 40),
-      engagement: oneOf(d.timing?.engagement, ENGAGEMENTS),
+      start: text(d.timing?.start, 40),
+      engagement: text(d.timing?.engagement),
     },
   };
 }
@@ -143,8 +151,13 @@ export const INTAKE_SYSTEM_PROMPT = `You are the intake assistant for a recruitm
 How to run the conversation:
 - Ask one clarifying question per turn, in plain language, at most two sentences plus the question. Aim to finish in 4–6 turns.
 - Cover, in roughly this order: what kind of role and the actual work in the first three months; which skills are truly must-have versus nice-to-have; working language; start date and type of contract; on-site, hybrid or remote.
-- Offer 2–4 short quick replies the user can tap (under 40 characters each), tailored to this conversation and to the <pool_summary> (aggregate counts of who is registered). Offer options the pool can actually fill: areas and skills many people have, start dates people are available by, and, when discussing must-haves, moving a rare skill to nice-to-have. Name skills by their labels so the user can tap them. Leave quick replies empty only when the card is ready.
-- You may cite pool numbers from <pool_summary> in your reply ("6 people in the pool work with Python"). They are counts only; never imply you know who those people are.
+- Offer 2–4 suggested answers ("quick_replies") the user can tap instead of typing. Rules for them:
+  - Each one is a complete answer to the exact question in your reply, written as the user would say it (first person, "we"/"our"), in the language the user writes in. Never a question, never a bare "Yes"/"No", never advice to the user.
+  - Tailor them to this conversation: reuse the role, domain, tools and constraints the user already mentioned ("Python and SQL are must-haves, React is a bonus" rather than "Data skills"). Don't repeat something already settled on the card.
+  - Make them genuinely different options, ordered from most likely to least, and keep one flexible or uncertain option when it fits ("Not sure yet, English is fine to start").
+  - Use the <pool_summary> (aggregate counts of who is registered) to favour options the pool can actually fill: areas and skills many people have, start dates people are available by and, when discussing must-haves, moving a rare skill to nice-to-have. Name skills by their labels.
+  - Keep each under 60 characters. Leave the list empty only when the card is ready.
+- You may cite pool numbers from <pool_summary> in your reply ("6 people at this event work with Python"). They are counts only; never imply you know who those people are.
 - Gently challenge requirements that shrink the pool without serving the work. If Finnish isn't needed from day one, suggest "Finnish or English". Keep must-haves to 2–3 skills. Do not add degree, nationality, age, gender, accent or "native speaker" requirements; if the user asks for one, explain briefly that matching uses skills only and steer back to the skill behind it.
 - Never invent candidates or mention specific people. You do not see the talent pool.
 
@@ -152,6 +165,9 @@ How to fill the draft:
 - Use only skill ids from the skill catalogue below. Map the user's words to the closest skill. Put a skill in "must" only when the user says it is essential or clearly implies it; otherwise use "nice".
 - "occupation" is the closest ESCO occupation id from the catalogue, or "" if none fits. "title" is a short, human job title.
 - "summary" is one or two sentences describing the work, in the user's terms.
+- You have full access to the whole card and may change any field, including values you or the user set earlier, whenever the conversation calls for it (for example the user changes their mind, or a later answer refines an earlier one). Say briefly in your reply what you changed.
+- "language", "mode" and "timing.engagement" are free text. Use the standard wording when it fits (language: ${LANGUAGES.join(" / ")}; mode: ${MODES.join(" / ")}; contract: ${ENGAGEMENTS.join(" / ")}). When the user describes something else, write it in their words, short and clear: "Swedish or English", "Finnish within a year, English to start", "On-site 3 days, 2 remote", "6-month project". Never write a "native speaker" or mother-tongue requirement; use a working level instead.
+- Skills are the exception: "must" and "nice" accept only ids from the skill catalogue, because matching runs on that list. If the user names a skill that isn't in it, map it to the closest catalogue skill and mention it in the summary.
 - Leave a field as "" (or []) when it hasn't been discussed. Do not guess language, timing or way of working.
 - The user may edit the card directly. The <current_need_card> in their latest message is authoritative: keep their edits unless they ask for a change in the chat.
 - Set "ready" to true only when title, at least one must-have, language, timing.start and mode are all filled. When ready, tell them to review and approve the card; nothing is sent to the organiser until they do.
@@ -178,7 +194,12 @@ export const INTAKE_OUTPUT_SCHEMA = {
   required: ["reply", "quick_replies", "draft", "ready"],
   properties: {
     reply: str("Your chat message to the company: brief context plus one clarifying question."),
-    quick_replies: { type: "array", description: "2–4 tappable answers.", items: { type: "string" } },
+    quick_replies: {
+      type: "array",
+      description:
+        "2–4 suggested answers to your question, in the user's voice and language, tailored to what they said. Under 60 characters each.",
+      items: { type: "string" },
+    },
     ready: { type: "boolean", description: "True only when every required field is filled." },
     draft: {
       type: "object",
@@ -190,19 +211,73 @@ export const INTAKE_OUTPUT_SCHEMA = {
         summary: str("One or two sentences on the work."),
         must: skillList("Essential skills. Keep to 2–3."),
         nice: skillList("Helpful but not essential skills."),
-        language: { type: "string", enum: ["", ...LANGUAGES] },
-        mode: { type: "string", enum: ["", ...MODES] },
+        language: str(
+          `Working language in plain words. Use a preset when it fits (${LANGUAGES.join(", ")}), otherwise the user's own wording, e.g. "Swedish or English". Empty if not discussed.`,
+        ),
+        mode: str(
+          `Way of working in plain words. Use a preset when it fits (${MODES.join(", ")}), otherwise the user's own wording, e.g. "On-site 4 days, 1 remote". Empty if not discussed.`,
+        ),
         timing: {
           type: "object",
           additionalProperties: false,
           required: ["start", "engagement"],
           properties: {
             start: str('When the person should start, e.g. "ASAP", "February 2027", or empty.'),
-            engagement: { type: "string", enum: ["", ...ENGAGEMENTS] },
+            engagement: str(
+              `Contract type in plain words. Use a preset when it fits (${ENGAGEMENTS.join(", ")}), otherwise the user's wording, e.g. "6-month project". Empty if not discussed.`,
+            ),
           },
         },
       },
     },
+  },
+} as const;
+
+export const QUICK_REPLY_MAX = 60;
+
+/**
+ * Clean the model's suggested answers before they reach the chat: trimmed, unquoted,
+ * short, no duplicates, nothing that just repeats what the user last said. At most 4.
+ */
+export function cleanQuickReplies(list: unknown, lastUserText = ""): string[] {
+  if (!Array.isArray(list)) return [];
+  const norm = (t: string) =>
+    t
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}]+/gu, " ")
+      .trim();
+  const last = norm(lastUserText);
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const item of list) {
+    if (typeof item !== "string") continue;
+    const text = item
+      .trim()
+      .replace(/^["“'«]+|["”'»]+$/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+    const key = norm(text);
+    if (!key || text.length > QUICK_REPLY_MAX || key === last || seen.has(key)) continue;
+    seen.add(key);
+    out.push(text);
+    if (out.length === 4) break;
+  }
+  return out;
+}
+
+/** Fixed opening suggestions, used until (or instead of) the tailored ones. */
+export const DEFAULT_STARTERS = ["We need a dev", "Someone to sort out our data", "A nurse for home care"];
+
+export const STARTERS_SYSTEM_PROMPT = `You write opening suggestions for a company intake chat at a City of Espoo recruitment matchmaking event. The assistant has just asked the company: "Who would you like to meet there? Describe it in your own words."
+
+Write 3 short answers a company representative might tap, in English, in their voice ("We need…", "Someone who…"). Keep them casual and a bit vague, like real first messages. Base them on the <pool_summary> (aggregate counts of who is registered): pick three different areas where many registered people have skills, so the company is likely to find a match. Each under ${QUICK_REPLY_MAX} characters. Never mention specific people or numbers.`;
+
+export const STARTERS_OUTPUT_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  required: ["starters"],
+  properties: {
+    starters: { type: "array", description: "Three opening messages.", items: { type: "string" } },
   },
 } as const;
 
@@ -259,17 +334,12 @@ export function mentionedSkills(text: string) {
   ]);
 }
 
-const works = (t: Talent, lang: string) => t.languages.some((l) => l.lang === lang && l.level !== "Learning");
-
-export function languageCount(req: Need["language"], pool: Talent[]) {
-  if (req === "Finnish required") return pool.filter((t) => works(t, "Finnish")).length;
-  if (req === "Finnish or English")
-    return pool.filter((t) => works(t, "Finnish") || works(t, "English")).length;
-  return pool.filter((t) => works(t, "English")).length;
+/** People who can work in the required language(s). Works for presets and free text. */
+export function languageCount(req: string, pool: Talent[]) {
+  return pool.filter((t) => speaksRequired(req, t)).length;
 }
 
-const modeCount = (mode: Need["mode"], pool: Talent[]) =>
-  pool.filter((t) => t.mode === mode || t.mode === "Any").length;
+const modeCount = (mode: string, pool: Talent[]) => pool.filter((t) => openToMode(mode, t)).length;
 
 const MONTH_INDEX: [string, number][] = [
   ["asap", 0],
@@ -372,7 +442,7 @@ function timingOptions(pool: Talent[]) {
 const modeOptions = (pool: Talent[]) => [...MODES].sort((a, b) => modeCount(b, pool) - modeCount(a, pool));
 
 /**
- * A short data hint for a quick reply, e.g. "6 in the pool" or "4 relevant (now 2)".
+ * A short data hint for a quick reply, e.g. "6 at this event" or "4 relevant (now 2)".
  * Computed in the browser for any reply, from Gemini or the rules.
  */
 export function quickReplyHint(text: string, d: NeedDraft, pool: Talent[]): string | undefined {
@@ -404,7 +474,7 @@ export function quickReplyHint(text: string, d: NeedDraft, pool: Talent[]): stri
     if (!must.length) return undefined;
     return `${relevantCount({ ...d, must, nice: uniq([...d.nice, ...skills]) }, pool)} relevant (now ${base})`;
   }
-  return `${poolCount(skills, pool)} in the pool`;
+  return `${poolCount(skills, pool)} at this event`;
 }
 
 /** Aggregate pool numbers for the model. Counts only; nothing about any individual. */
@@ -427,7 +497,7 @@ export function poolSummary(pool: Talent[]) {
   };
 }
 
-function parseLanguage(t: string): Need["language"] | "" {
+function parseLanguage(t: string): string {
   if (/finnish (is )?(required|needed|must)|must speak finnish|fluent finnish|suomi pakollinen/.test(t))
     return "Finnish required";
   if (/finnish or english|either/.test(t)) return "Finnish or English";
@@ -435,7 +505,7 @@ function parseLanguage(t: string): Need["language"] | "" {
   return "";
 }
 
-function parseMode(t: string): Need["mode"] | "" {
+function parseMode(t: string): string {
   if (/hybrid/.test(t)) return "Hybrid";
   if (/remote|etatyo/.test(t)) return "Remote";
   if (/on-?site|in the office|at the office|lahityo/.test(t)) return "On-site";

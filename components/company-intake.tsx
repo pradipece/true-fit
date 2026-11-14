@@ -33,9 +33,12 @@ import { SkillChip } from "@/components/skill-chip";
 import { EVENT } from "@/lib/data";
 import { getSkill, searchSkills, skillLabel } from "@/lib/esco";
 import {
+  DEFAULT_STARTERS,
   draftToNeed,
   EMPTY_DRAFT,
   ENGAGEMENTS,
+  FREE_TEXT_MAX,
+  languageCount,
   LANGUAGES,
   missingFields,
   MODES,
@@ -46,6 +49,7 @@ import {
   type Topic,
 } from "@/lib/intake";
 import { matchesForNeed, poolCoverage } from "@/lib/match";
+import { asksNativeSpeaker, languageRule, modeKind, onlyFinnish, openToMode } from "@/lib/need-terms";
 import { useDemo } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -54,19 +58,30 @@ type Msg = ChatMessage & { added?: string[]; quickReplies?: string[]; source?: I
 const GREETING: Msg = {
   role: "assistant",
   content: `Hi! The event is ${EVENT.weeksAway} weeks away. Who would you like to meet there? Describe it in your own words. “We need a dev” is a perfectly good start.`,
-  quickReplies: ["We need a dev", "Someone to sort out our data", "A nurse for home care"],
+  quickReplies: DEFAULT_STARTERS,
 };
 
 export function CompanyIntake() {
   const { talent, addNeed } = useDemo();
   const [messages, setMessages] = useState<Msg[]>([GREETING]);
+  // Opening suggestions tailored by Gemini to who is registered; fixed ones until they arrive.
+  const [starters, setStarters] = useState<string[]>(DEFAULT_STARTERS);
+  useEffect(() => {
+    const ctrl = new AbortController();
+    fetch("/api/intake/starters", { signal: ctrl.signal })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { starters?: unknown } | null) => {
+        if (Array.isArray(d?.starters) && d.starters.length) setStarters(d.starters as string[]);
+      })
+      .catch(() => {});
+    return () => ctrl.abort();
+  }, []);
   const [input, setInput] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const online = useOnline();
   const [draft, setDraft] = useState<NeedDraft>(EMPTY_DRAFT);
   const [asked, setAsked] = useState<Topic[]>([]);
-  const [source, setSource] = useState<IntakeTurn["source"] | null>(null);
   const [company, setCompany] = useState("Your company (demo)");
   const [reviewed, setReviewed] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -79,9 +94,10 @@ export function CompanyIntake() {
     [need, talent],
   );
   const evidenced = useMemo(() => poolCoverage(draft.must, talent), [draft.must, talent]);
-  const finnishSpeakers = talent.filter((t) =>
-    t.languages.some((l) => l.lang === "Finnish" && l.level !== "Learning"),
-  ).length;
+  const speakers = draft.language ? languageCount(draft.language, talent) : 0;
+  const knownLanguage = !!languageRule(draft.language);
+  const kind = modeKind(draft.mode);
+  const openToThisMode = talent.filter((t) => openToMode(draft.mode, t)).length;
 
   // Scroll only the message list. scrollIntoView() would also scroll the page itself,
   // making the whole layout jump each time a reply arrives.
@@ -147,7 +163,6 @@ export function CompanyIntake() {
     const added = [...turn.draft.must, ...turn.draft.nice].filter((s) => !before.has(s));
     setDraft(turn.draft);
     setAsked(turn.asked);
-    setSource(turn.source);
     setReviewed(false);
     setSubmitted(false);
     setMessages((m) => [
@@ -171,12 +186,12 @@ export function CompanyIntake() {
     setMessages([GREETING]);
     setDraft(EMPTY_DRAFT);
     setAsked([]);
-    setSource(null);
     setReviewed(false);
     setSubmitted(false);
   };
 
   const lastMsg = messages[messages.length - 1];
+  const replies = messages.length === 1 ? starters : (lastMsg.quickReplies ?? []);
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_440px]">
@@ -190,12 +205,13 @@ export function CompanyIntake() {
                 className={cn("size-1.5 rounded-full", online ? "bg-evidence" : "bg-destructive")}
                 aria-hidden
               />
-              {online ? `Gemini${source ? "" : " · online"}` : "Offline"}
+              {online ? "AI · online" : "Offline"}
             </Badge>
           </CardTitle>
           <CardDescription>
-            Turns your words into ESCO skills using Gemini, so it needs an internet connection. It sees what
-            you type and pool totals, never any candidate, and it doesn&apos;t pick candidates.
+            Answer a few questions in your own words and the assistant turns them into a list of skills. It
+            needs an internet connection. It only sees what you type and how many people are registered, never
+            any candidate, and it never picks candidates.
           </CardDescription>
           {messages.length > 1 && (
             <Button
@@ -276,29 +292,25 @@ export function CompanyIntake() {
               connection; you can still edit the need card by hand.
             </p>
           )}
-          {!pending &&
-            online &&
-            !error &&
-            lastMsg.role === "assistant" &&
-            lastMsg.quickReplies &&
-            lastMsg.quickReplies.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {lastMsg.quickReplies.map((q) => {
-                  const hint = quickReplyHint(q, draft, talent);
-                  return (
-                    <button
-                      key={q}
-                      type="button"
-                      onClick={() => send(q)}
-                      className="flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition-colors hover:bg-muted"
-                    >
-                      <SparklesIcon className="size-3 text-primary" /> {q}
-                      {hint && <span className="text-muted-foreground tabular-nums">· {hint}</span>}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+          {!pending && online && !error && lastMsg.role === "assistant" && replies.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5" aria-label="Suggested answers">
+              <span className="mr-0.5 text-xs text-muted-foreground">Suggested answers:</span>
+              {replies.map((q) => {
+                const hint = quickReplyHint(q, draft, talent);
+                return (
+                  <button
+                    key={q}
+                    type="button"
+                    onClick={() => send(q)}
+                    className="flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition-colors hover:bg-muted"
+                  >
+                    <SparklesIcon className="size-3 text-primary" /> {q}
+                    {hint && <span className="text-muted-foreground tabular-nums">· {hint}</span>}
+                  </button>
+                );
+              })}
+            </div>
+          )}
           <form
             className="flex gap-2"
             onSubmit={(e) => {
@@ -392,25 +404,52 @@ export function CompanyIntake() {
 
             <Separator />
 
-            <ChoiceRow
+            <ChoiceOrText
+              id="language"
               label="Working language"
               options={LANGUAGES}
               value={draft.language}
               onChange={(language) => edit({ language })}
+              placeholder="Or write your own, e.g. Swedish or English"
             />
-            {draft.language === "Finnish required" && (
-              <p className="-mt-2 flex items-start gap-1.5 text-xs text-transfer">
-                <InfoIcon className="mt-0.5 size-3.5 shrink-0" />
-                Only {finnishSpeakers} of {talent.length} people in the pool speak Finnish at working level.
-                If the job can be learned in English first, “Finnish or English” keeps more people in.
-              </p>
+            {draft.language && (
+              <div className="-mt-2 space-y-1">
+                {asksNativeSpeaker(draft.language) ? (
+                  <FieldNote tone="warn">
+                    “Native speaker” screens people out by where they grew up, not by what they can do. Ask
+                    for a working level instead, e.g. “Fluent Finnish”.
+                  </FieldNote>
+                ) : onlyFinnish(draft.language) ? (
+                  <FieldNote tone="warn">
+                    Only {speakers} of {talent.length} people at this event can work in this language. If the
+                    job can be learned in English first, “Finnish or English” keeps more people in.
+                  </FieldNote>
+                ) : knownLanguage ? (
+                  <FieldNote>
+                    {speakers} of {talent.length} people at this event can work in this language.
+                  </FieldNote>
+                ) : (
+                  <FieldNote>No language named, so nobody is left out because of language.</FieldNote>
+                )}
+              </div>
             )}
-            <ChoiceRow
+            <ChoiceOrText
+              id="mode"
               label="Way of working"
               options={MODES}
               value={draft.mode}
               onChange={(mode) => edit({ mode })}
+              placeholder="Or write your own, e.g. On-site 3 days a week"
             />
+            {draft.mode && (
+              <div className="-mt-2">
+                <FieldNote>
+                  {kind
+                    ? `${openToThisMode} of ${talent.length} people are open to ${kind.toLowerCase()} work.`
+                    : "Couldn't tell if this is on-site, hybrid or remote, so nobody is left out because of it."}
+                </FieldNote>
+              </div>
+            )}
             <div className="space-y-1.5">
               <Label htmlFor="start" className="text-xs text-muted-foreground">
                 Timing
@@ -421,20 +460,18 @@ export function CompanyIntake() {
                   value={draft.timing.start}
                   onChange={(e) => edit({ timing: { ...draft.timing, start: e.target.value } })}
                   placeholder="Start, e.g. February 2027"
-                  className="h-8 w-44"
+                  className="h-8 w-full sm:w-60"
                 />
-                {ENGAGEMENTS.map((e) => (
-                  <Button
-                    key={e}
-                    size="sm"
-                    variant={draft.timing.engagement === e ? "default" : "outline"}
-                    onClick={() => edit({ timing: { ...draft.timing, engagement: e } })}
-                  >
-                    {e}
-                  </Button>
-                ))}
               </div>
             </div>
+            <ChoiceOrText
+              id="engagement"
+              label="Contract"
+              options={ENGAGEMENTS}
+              value={draft.timing.engagement}
+              onChange={(engagement) => edit({ timing: { ...draft.timing, engagement } })}
+              placeholder="Or write your own, e.g. 6-month project"
+            />
           </CardContent>
 
           <CardFooter className="flex-col items-stretch gap-3">
@@ -444,8 +481,8 @@ export function CompanyIntake() {
                   <ShieldCheckIcon className="size-4" /> You approved this card. The organiser decides which
                   suggested matches to approve.
                 </p>
-                <Button variant="outline" nativeButton={false} render={<Link href="/organiser" />}>
-                  See it in the organiser dashboard <ArrowRightIcon data-icon="inline-end" />
+                <Button variant="outline" nativeButton={false} render={<Link href="/meetings/company" />}>
+                  Go to your meetings <ArrowRightIcon data-icon="inline-end" />
                 </Button>
               </>
             ) : (
@@ -489,20 +526,28 @@ function Field({ id, label, children }: { id: string; label: string; children: R
   );
 }
 
-function ChoiceRow<T extends string>({
+/** Preset buttons plus a free-text box: pick a common answer or write your own. */
+function ChoiceOrText({
+  id,
   label,
   options,
   value,
   onChange,
+  placeholder,
 }: {
+  id: string;
   label: string;
-  options: readonly T[];
-  value: T | "";
-  onChange: (v: T) => void;
+  options: readonly string[];
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
 }) {
+  const custom = options.includes(value) ? "" : value;
   return (
-    <div className="space-y-1.5" role="group" aria-label={label}>
-      <p className="text-xs text-muted-foreground">{label}</p>
+    <div className="space-y-1.5" role="group" aria-labelledby={`${id}-label`}>
+      <p id={`${id}-label`} className="text-xs text-muted-foreground">
+        {label}
+      </p>
       <div className="flex flex-wrap gap-1.5">
         {options.map((o) => (
           <Button
@@ -510,13 +555,36 @@ function ChoiceRow<T extends string>({
             size="sm"
             variant={value === o ? "default" : "outline"}
             aria-pressed={value === o}
-            onClick={() => onChange(o)}
+            onClick={() => onChange(value === o ? "" : o)}
           >
             {o}
           </Button>
         ))}
       </div>
+      <Input
+        id={id}
+        value={custom}
+        onChange={(e) => onChange(e.target.value)}
+        maxLength={FREE_TEXT_MAX}
+        placeholder={placeholder}
+        aria-label={`${label}, in your own words`}
+        className={cn("h-8 text-xs", custom && "border-primary/50")}
+      />
     </div>
+  );
+}
+
+function FieldNote({ tone, children }: { tone?: "warn"; children: React.ReactNode }) {
+  return (
+    <p
+      className={cn(
+        "flex items-start gap-1.5 text-xs",
+        tone === "warn" ? "text-transfer" : "text-muted-foreground",
+      )}
+    >
+      <InfoIcon className="mt-0.5 size-3.5 shrink-0" />
+      <span>{children}</span>
+    </p>
   );
 }
 
@@ -547,12 +615,12 @@ function PoolCount({
                 >
                   {relevant}
                 </span>{" "}
-                relevant candidates already in the pool
+                people at this event already fit
               </p>
               <p className="text-xs leading-snug text-muted-foreground">
-                {evidenced} of them show evidence for your must-haves in scenario answers or work samples, not
-                keyword-matched CVs. Free to join doesn&apos;t mean low quality. You only see people after the
-                organiser approves a match and both sides opt in.
+                {evidenced} of them have shown your must-have skills in their own answers or work samples, not
+                just listed them on a CV. Free to join doesn&apos;t mean low quality. You only see people
+                after the organiser approves a match and both sides opt in.
               </p>
             </>
           ) : (
@@ -602,7 +670,7 @@ function SkillEditor({ draft, onChange }: { draft: NeedDraft; onChange: (p: Part
         <button
           type="button"
           onClick={() => setMust(id, !must)}
-          title={`${must ? "Make nice-to-have" : "Make must-have"} · ESCO: ${skill?.escoLabel ?? id}`}
+          title={`${must ? "Make nice-to-have" : "Make must-have"} · EU skill name: ${skill?.escoLabel ?? id}`}
           className={cn("flex h-full items-center gap-1 rounded-l-full pl-2.5", !must && "hover:bg-muted")}
         >
           {must && <CheckIcon className="size-3" />}
@@ -624,8 +692,8 @@ function SkillEditor({ draft, onChange }: { draft: NeedDraft; onChange: (p: Part
     <div className="space-y-3">
       <div className="space-y-1.5">
         <p className="flex items-baseline justify-between text-xs text-muted-foreground">
-          <span>Must-have (ESCO)</span>
-          {draft.must.length > 3 && <span className="text-transfer">More than 3 shrinks the pool a lot</span>}
+          <span>Must-have skills</span>
+          {draft.must.length > 3 && <span className="text-transfer">More than 3 rules out many people</span>}
         </p>
         {draft.must.length ? (
           <div className="flex flex-wrap gap-1.5">{draft.must.map((s) => chip(s, true))}</div>
@@ -674,16 +742,16 @@ function SkillEditor({ draft, onChange }: { draft: NeedDraft; onChange: (p: Part
                 </ul>
               )}
               <p className="flex items-center gap-1.5 border-t bg-muted/40 px-3 py-1 text-[11px] text-muted-foreground">
-                <LandmarkIcon className="size-3" /> All of ESCO (live)
+                <LandmarkIcon className="size-3" /> More from the EU skills list
                 {esco.state === "loading" && <Loader2Icon className="size-3 animate-spin" />}
               </p>
               {esco.state === "error" && (
                 <p className="px-3 py-1.5 text-muted-foreground">
-                  The ESCO service isn&apos;t reachable right now.
+                  The EU skills list can&apos;t be reached right now.
                 </p>
               )}
               {esco.state === "done" && esco.hits.length === 0 && (
-                <p className="px-3 py-1.5 text-muted-foreground">No ESCO skills match.</p>
+                <p className="px-3 py-1.5 text-muted-foreground">No matching skills in the EU list.</p>
               )}
               {esco.state === "done" && (
                 <ul>

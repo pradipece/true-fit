@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { SiteHeader } from "@/components/site-header";
-import { StepNav } from "@/components/step-nav";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -45,7 +44,6 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             <DemoProvider seed={{ needs, talent }}>
               <SiteHeader />
               <main className="flex-1">{children}</main>
-              <StepNav />
               <footer className="border-t py-6 text-center text-xs text-muted-foreground">
                 Prototype for the City of Espoo “Rethinking Recruitment” challenge · all data is synthetic ·
                 the AI suggests, people decide

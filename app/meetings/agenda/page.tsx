@@ -16,7 +16,6 @@ export default function AgendasPage() {
   return (
     <div className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6">
       <PageHeader
-        step={4}
         eyebrow="Event day · per participant"
         title="Agendas"
         description="For the demo you can open anyone's agenda. In production each company and candidate signs in and sees only their own. All of these pages are prerendered."

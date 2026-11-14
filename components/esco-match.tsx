@@ -23,8 +23,8 @@ export function EscoMatch({
       <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
         <LandmarkIcon className="size-3.5" />
         {lookup.status === "none"
-          ? "No direct match in the official ESCO classification; the skills below come from your words."
-          : "The ESCO service isn't reachable right now, so this uses the cached skill set."}
+          ? "No exact match in the official EU job list, so the skills below come from your own words."
+          : "The EU job list can't be reached right now, so this uses the event's own skill list."}
       </p>
     );
 
@@ -35,7 +35,8 @@ export function EscoMatch({
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="space-y-0.5">
           <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-            <LandmarkIcon className="size-3.5" /> Official ESCO occupation (live from the EU&apos;s ESCO API)
+            <LandmarkIcon className="size-3.5" /> Official EU job title (from ESCO, the EU&apos;s skills and
+            jobs list)
           </p>
           <p className="text-sm font-medium first-letter:uppercase">{o.labels.en}</p>
           <p className="text-xs text-muted-foreground">
@@ -50,20 +51,20 @@ export function EscoMatch({
           rel="noreferrer"
           className="flex items-center gap-1 text-xs text-primary underline-offset-2 hover:underline"
         >
-          View on ESCO <ExternalLinkIcon className="size-3" />
+          See the EU description <ExternalLinkIcon className="size-3" />
         </a>
       </div>
       {o.description && <p className="line-clamp-2 text-xs text-muted-foreground">{o.description}</p>}
       {o.regulated && (
         <p className="text-xs text-transfer">
-          ESCO marks this as a regulated profession: working in Finland may need recognition of the
+          The EU lists this as a regulated profession: working in Finland may need recognition of the
           qualification.
         </p>
       )}
       <div className="space-y-1.5">
         <div className="flex items-center justify-between gap-2">
           <p className="text-xs text-muted-foreground">
-            {o.essential.length} essential skills in ESCO · {linked.length} map to this event&apos;s skills
+            {o.essential.length} key skills for this job · {linked.length} of them are used at this event
           </p>
           {linked.length > 0 && (
             <Button size="xs" variant="secondary" onClick={() => onAddAll(linked.map((s) => s.subset!.id))}>
@@ -87,14 +88,14 @@ export function EscoMatch({
         </ul>
         <details className="text-xs text-muted-foreground">
           <summary className="cursor-pointer select-none hover:text-foreground">
-            All ESCO essential skills
+            All key skills for this job
           </summary>
           <p className="mt-1 leading-relaxed">{o.essential.map((s) => s.title).join(" · ")}</p>
         </details>
       </div>
       {lookup.others.length > 0 && (
         <p className="text-xs text-muted-foreground">
-          Also close in ESCO: {lookup.others.map((x) => x.title).join(", ")}
+          Similar EU job titles: {lookup.others.map((x) => x.title).join(", ")}
         </p>
       )}
     </div>

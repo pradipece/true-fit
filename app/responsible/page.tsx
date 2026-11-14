@@ -225,7 +225,6 @@ export default async function ResponsiblePage() {
   return (
     <div className="mx-auto max-w-7xl space-y-10 px-4 py-8 sm:px-6">
       <PageHeader
-        step={5}
         eyebrow="Responsible & feasible"
         title="The AI suggests. People decide."
         description="Who decides what, what the AI does and never does, a live bias check on the synthetic pool, what data is kept and for how long, and how this maps to the EU AI Act."
