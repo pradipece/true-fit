@@ -1,0 +1,832 @@
+{
+  "$comment": "Cached ESCO occupation subset used by the skills translator. Curated fields: id, uri, skills (mapped to our skill subset), extraTitles (informal or foreign titles seen at events), fiTitle (optional override when ESCO's Finnish label is awkward in everyday use). ESCO fields (label, isco, labels, altLabels) are filled by `node scripts/refresh-esco.mjs`.",
+  "source": "ESCO (European Skills, Competences, Qualifications and Occupations), https://esco.ec.europa.eu",
+  "retrieved": "2026-11-14",
+  "occupations": [
+    {
+      "id": "data-scientist",
+      "uri": "http://data.europa.eu/esco/occupation/258e46f9-0075-4a2e-adae-1ff0477e0f30",
+      "skills": ["python", "pipelines", "sql", "ml", "analysis"],
+      "extraTitles": [
+        "ingeniero de datos",
+        "dateningenieur",
+        "ingénieur données",
+        "data-insinööri",
+        "ml engineer"
+      ],
+      "label": "data scientist",
+      "isco": "2511",
+      "labels": {
+        "en": "data scientist",
+        "fi": "datatutkija",
+        "sv": "forskare inom datavetenskap",
+        "de": "Datenwissenschaftler/Datenwissenschaftlerin",
+        "fr": "scientifique des données",
+        "es": "científico de datos/científica de datos",
+        "pt": "Cientista de dados",
+        "pl": "specjalista ds. zarządzania danymi",
+        "et": "andmeteadur",
+        "ar": "عالم البيانات / عالمة البيانات"
+      },
+      "altLabels": {
+        "en": [
+          "data scientists",
+          "data engineer",
+          "research data scientist",
+          "data expert",
+          "data research scientist"
+        ],
+        "fi": ["hakutietotutkija", "hakutietotutkijat", "datatutkijat"]
+      }
+    },
+    {
+      "id": "data-analyst",
+      "uri": "http://data.europa.eu/esco/occupation/d3edb8f8-3a06-47a0-8fb9-9b212c006aa2",
+      "skills": ["analysis", "sql", "python", "stakeholders"],
+      "extraTitles": ["bi analyst", "analista de datos", "business analyst"],
+      "label": "data analyst",
+      "isco": "2511",
+      "labels": {
+        "en": "data analyst",
+        "fi": "data-analyytikko",
+        "sv": "dataanalytiker",
+        "de": "Datenanalytiker/Datenanalytikerin",
+        "fr": "analyste de données",
+        "es": "analista de datos",
+        "pt": "Analista de dados",
+        "pl": "analityk danych",
+        "et": "andmeanalüütik",
+        "ar": "محلل البيانات / محللة البيانات"
+      },
+      "altLabels": {
+        "en": ["data warehousing analyst", "data analysts", "data warehouse analyst", "data storage analyst"],
+        "fi": ["data-analyytikot", "tietovarastoanalyytikot", "tietoanalyytikko", "tietovarastoanalyytikko"]
+      }
+    },
+    {
+      "id": "web-developer",
+      "uri": "http://data.europa.eu/esco/occupation/c40a2919-48a9-40ea-b506-1f34f693496d",
+      "skills": ["js", "react", "ux", "a11y"],
+      "extraTitles": ["front-end developer", "frontend developer", "react developer", "full-stack developer"],
+      "label": "web developer",
+      "isco": "2513",
+      "labels": {
+        "en": "web developer",
+        "fi": "verkkokehittäjä",
+        "sv": "webbutvecklare",
+        "de": "Web-Designer/Web-Designerin",
+        "fr": "développeur web/développeuse web",
+        "es": "desarrollador web/desarrolladora web",
+        "pt": "Programador web/Programadora web",
+        "pl": "twórca stron internetowych",
+        "et": "veebirakenduste arendaja",
+        "ar": "مطور ويب / مطورة ويب"
+      },
+      "altLabels": {
+        "en": [
+          "web programmer",
+          "web application developer",
+          "web engineer",
+          "web developers",
+          "web specialist"
+        ],
+        "fi": ["verkko-ohjelmoija", "verkkosovellusten kehittäjä", "WWW-kehittäjä", "verkko-ohjelmoijat"]
+      }
+    },
+    {
+      "id": "software-developer",
+      "uri": "http://data.europa.eu/esco/occupation/f2b15a0e-e65a-438a-affb-29b9d50b77d1",
+      "skills": ["backend", "python", "js", "testing"],
+      "extraTitles": ["back-end developer", "backend developer", "desenvolvedor", "ohjelmoija"],
+      "label": "software developer",
+      "isco": "2512",
+      "labels": {
+        "en": "software developer",
+        "fi": "ohjelmistokehittäjä",
+        "sv": "programvaruutvecklare",
+        "de": "Softwareentwickler/Softwareentwicklerin",
+        "fr": "développeur de logiciels/développeuse de logiciels",
+        "es": "desarrollador de software/desarrolladora de software",
+        "pt": "Programador de software/Programadora de software",
+        "pl": "twórca oprogramowania",
+        "et": "tarkvaraarendaja",
+        "ar": "مطور برمجيات / مطورة برمجيات"
+      },
+      "altLabels": {
+        "en": [
+          "application developer",
+          "application programmer",
+          "solutions developer",
+          "programmer",
+          "software specialist",
+          "application software developer"
+        ],
+        "fi": ["ohjelmistokehittäjät", "ratkaisujen kehittäjä", "sovellusinsinööri", "ratkaisukehittäjä"]
+      }
+    },
+    {
+      "id": "software-tester",
+      "uri": "http://data.europa.eu/esco/occupation/106f79e4-6264-45f1-9e7a-297435cd684b",
+      "skills": ["testing", "problem", "js"],
+      "extraTitles": ["qa engineer", "test engineer", "testaaja"],
+      "label": "software tester",
+      "isco": "2519",
+      "labels": {
+        "en": "software tester",
+        "fi": "ohjelmistotestaaja",
+        "sv": "programvarutestare",
+        "de": "Softwareprüfer/Softwareprüferin",
+        "fr": "testeur de logiciels/testeuse de logiciels",
+        "es": "probador de software/probadora de software",
+        "pt": "Testador de software/Testadora de software",
+        "pl": "tester oprogramowania",
+        "et": "tarkvara testija",
+        "ar": "مختبر برمجيات / مختبرة برمجيات"
+      },
+      "altLabels": {
+        "en": [
+          "application software tester",
+          "unit tester",
+          "application tester",
+          "software application tester",
+          "tester",
+          "module tester"
+        ],
+        "fi": [
+          "sovellusohjelmiston testaaja",
+          "moduulitestaajat",
+          "ohjelmistotestaajat",
+          "sovellusohjelmiston testaajat"
+        ]
+      }
+    },
+    {
+      "id": "ui-designer",
+      "uri": "http://data.europa.eu/esco/occupation/96e20037-0a25-4bf6-a25e-808d1605d890",
+      "skills": ["ux", "a11y", "react"],
+      "extraTitles": ["ux designer", "product designer", "palvelumuotoilija"],
+      "label": "user interface designer",
+      "isco": "2513",
+      "labels": {
+        "en": "user interface designer",
+        "fi": "käyttöliittymäsuunnittelija",
+        "sv": "designer av användargränssnitt",
+        "de": "Multimedia-Designer/Multimedia-Designerin",
+        "fr": "concepteur d’interface utilisateur/conceptrice d’interface utilisatrice",
+        "es": "diseñador de interfaces de usuario/diseñadora de interfaces de usuario",
+        "pt": "Designer de interfaces do utilizador",
+        "pl": "projektant interfejsu użytkownika",
+        "et": "kasutajaliideste projekteerija",
+        "ar": "مصمم واجهة المستخدم / مصممة واجهة المستخدم"
+      },
+      "altLabels": {
+        "en": ["accessibility designer", "user interface designers", "UI designer"],
+        "fi": [
+          "käytettävyyssuunnittelijat",
+          "käyttöliittymäsuunnittelijat",
+          "käytettävyysinsinöörit",
+          "UI-suunnittelija"
+        ]
+      }
+    },
+    {
+      "id": "ethical-hacker",
+      "uri": "http://data.europa.eu/esco/occupation/76ef0a87-6afe-4560-b5d0-9a086abe45c5",
+      "skills": ["security", "cloud", "problem"],
+      "extraTitles": ["security analyst", "pentester", "soc analyst", "tietoturva-asiantuntija"],
+      "label": "ethical hacker",
+      "isco": "2529",
+      "labels": {
+        "en": "ethical hacker",
+        "fi": "eettinen hakkeri",
+        "sv": "moralisk hacker",
+        "de": "ethischer Hacker/ethische Hackerin",
+        "fr": "hacker éthique",
+        "es": "hacker ético/hacker ética",
+        "pt": "Hacker ético/Hacker ética",
+        "pl": "tester odporności oprogramowania",
+        "et": "eetiline häkker",
+        "ar": "مخترق أخلاقي / مخترقة أخلاقية"
+      },
+      "altLabels": {
+        "en": [
+          "vulnerability analyst",
+          "ethical hackers",
+          "ICT security tester",
+          "system security tester",
+          "network security tester"
+        ],
+        "fi": [
+          "haavoittuvuusanalyytikko",
+          "haavoittuvuusanalyytikot",
+          "IT-turvallisuustestaajat",
+          "IT-turvallisuustestaaja"
+        ]
+      }
+    },
+    {
+      "id": "embedded-developer",
+      "uri": "http://data.europa.eu/esco/occupation/57af9090-55b4-4911-b2d0-86db01c00b02",
+      "skills": ["embedded", "python", "problem"],
+      "extraTitles": ["firmware engineer", "automation engineer"],
+      "label": "embedded systems software developer",
+      "isco": "2514",
+      "labels": {
+        "en": "embedded systems software developer",
+        "fi": "sulautettujen järjestelmien ohjelmistokehittäjä",
+        "sv": "programutvecklare för inbäddade system",
+        "de": "Softwareentwickler für Embedded Systems/Softwareentwicklerin für Embedded Systems",
+        "fr": "développeur de logiciels pour systèmes informatiques intégrés/développeuse de logiciels pour systèmes informatiques intégrés",
+        "es": "desarrollador de software para sistemas empotrados/desarrolladora de software para sistemas empotrados",
+        "pt": "Programador de software de sistemas incorporados/Programadora de software de sistemas incorporados",
+        "pl": "twórca oprogramowania systemów wbudowanych",
+        "et": "manussüsteemide tarkvara arendaja",
+        "ar": "مطور برمجيات النظم المندمجة / مطورة برمجيات النظم المندمجة"
+      },
+      "altLabels": {
+        "en": [
+          "embedded systems designer",
+          "embedded systems software developers",
+          "embedded software developerl embedded systems engineer",
+          "embedded system software programmer",
+          "embedded system software developer",
+          "embedded software programmer"
+        ],
+        "fi": [
+          "upotettujen ohjelmien ohjelmoija",
+          "upotettujen ohjelmien kehittäjä",
+          "upotettujen ohjelmoistojen ohjelmoija",
+          "upotettujen järjestelmien ohjelmistojen kehittäjä"
+        ]
+      }
+    },
+    {
+      "id": "logistics-manager",
+      "uri": "http://data.europa.eu/esco/occupation/823db06f-25e1-4658-b063-d6ef956b41f5",
+      "skills": ["logistics", "supply", "stakeholders", "pm"],
+      "extraTitles": ["logistikkoordinator", "coordinador de logística", "koordynator logistyki"],
+      "fiTitle": "Logistiikkakoordinaattori",
+      "label": "logistics and distribution manager",
+      "isco": "1324",
+      "labels": {
+        "en": "logistics and distribution manager",
+        "fi": "logistiikka- ja jakelujohtaja",
+        "sv": "logistikchef",
+        "de": "Logistik- und Vertriebsmanager/Logistik- und Vertriebsmanagerin",
+        "fr": "responsable logistique et distribution",
+        "es": "director de distribución y logística/directora de distribución y logística",
+        "pt": "Diretor de distribuição e logística/Diretora de distribuição e logística",
+        "pl": "kierownik ds. logistyki i dystrybucji",
+        "et": "logistika- ja turustusjuht",
+        "ar": "مدير التوزيع والخدمات اللوجستية / مديرة التوزيع والخدمات اللوجستية"
+      },
+      "altLabels": {
+        "en": [
+          "logistics manager",
+          "manager of logistics and distribution",
+          "logistics coordinator",
+          "director of logistics and distribution",
+          "distribution and logistics manager",
+          "distribution coordinator"
+        ],
+        "fi": ["logistiikka- ja jakelupäällikkö"]
+      }
+    },
+    {
+      "id": "logistics-analyst",
+      "uri": "http://data.europa.eu/esco/occupation/51cd3a7a-eae6-4dc6-9f24-179d7ec6d230",
+      "skills": ["analysis", "supply", "logistics", "sql"],
+      "extraTitles": ["supply chain planner", "demand planner"],
+      "label": "logistics analyst",
+      "isco": "2141",
+      "labels": {
+        "en": "logistics analyst",
+        "fi": "logistiikkasuunnittelija",
+        "sv": "logistikanalytiker",
+        "de": "Logistik-Analyst/Logistik-Analystin",
+        "fr": "analyste logistique",
+        "es": "analista de logística",
+        "pt": "Analista de logística",
+        "pl": "specjalista ds. logistyki",
+        "et": "logistika analüütik",
+        "ar": "محلل الخدمات اللوجستية / محللة الخدمات اللوجستية"
+      },
+      "altLabels": {
+        "en": [
+          "analyst of logistics",
+          "distribution analyst",
+          "distribution and logistics analyst",
+          "supply chain consultant",
+          "logistics consultant",
+          "supply chain analyst"
+        ],
+        "fi": [
+          "kuljetussuunnittelija",
+          "logistiikka-analyytikko",
+          "rahtauspäällikkö",
+          "toimitussuunnittelija"
+        ]
+      }
+    },
+    {
+      "id": "warehouse-manager",
+      "uri": "http://data.europa.eu/esco/occupation/2f5de1ab-eddf-4715-8193-e994912c22ea",
+      "skills": ["warehouse", "logistics", "lead", "supply"],
+      "extraTitles": ["varastopäällikkö", "lagerleiter", "jefe de almacén", "shift lead", "vuoroesimies"],
+      "fiTitle": "Varastopäällikkö",
+      "label": "warehouse manager",
+      "isco": "1324",
+      "labels": {
+        "en": "warehouse manager",
+        "fi": "varaston johtaja",
+        "sv": "lagerchef",
+        "de": "Führungskraft in der Lagerwirtschaft",
+        "fr": "responsable d'entrepôt",
+        "es": "jefe de almacén/jefa de almacén",
+        "pt": "Gestor de armazém/Gestora de armazém",
+        "pl": "kierownik magazynu",
+        "et": "laojuht",
+        "ar": "مدير المستودع / مديرة المستودع"
+      },
+      "altLabels": {
+        "en": [
+          "manager of warehouse",
+          "warehouse administration manager",
+          "warehouse supervisor",
+          "warehouse superintendent",
+          "warehouse operations manager",
+          "inventory manager"
+        ],
+        "fi": ["varastopäällikkö"]
+      }
+    },
+    {
+      "id": "purchaser",
+      "uri": "http://data.europa.eu/esco/occupation/29fa406d-de89-4515-be8d-0fe7bda993f1",
+      "skills": ["procurement", "supply", "stakeholders"],
+      "extraTitles": ["buyer", "einkäufer", "hankinta-asiantuntija"],
+      "label": "purchaser",
+      "isco": "3323",
+      "labels": {
+        "en": "purchaser",
+        "fi": "ostaja",
+        "sv": "inköpare",
+        "de": "Einkäufer/Einkäuferin",
+        "fr": "acheteur/acheteuse",
+        "es": "jefe de compras/jefa de compras",
+        "pt": "Comprador/Compradora",
+        "pl": "zaopatrzeniowiec",
+        "et": "ostuagent",
+        "ar": "مشتري / مشترية"
+      },
+      "altLabels": {
+        "en": [
+          "purchasing and supply office worker",
+          "purchasing and supply office clerk",
+          "purchasing and supply agent",
+          "senior purchaser",
+          "assistant purchaser",
+          "senior buyer"
+        ],
+        "fi": ["sisäänostaja"]
+      }
+    },
+    {
+      "id": "freight-dispatcher",
+      "uri": "http://data.europa.eu/esco/occupation/49e28648-4fa8-4b36-ac4d-781c108547bf",
+      "skills": ["logistics", "problem", "stakeholders", "adapt"],
+      "extraTitles": ["dispatcher", "dispečer", "transport planner"],
+      "fiTitle": "Ajojärjestelijä",
+      "label": "freight transport dispatcher",
+      "isco": "4323",
+      "labels": {
+        "en": "freight transport dispatcher",
+        "fi": "ajojärjestelijä, tavaraliikenne",
+        "sv": "fraktspeditör",
+        "de": "Frachtdisponent/Frachtdisponentin",
+        "fr": "dispatcheur transport de marchandises/dispatcheuse transport de marchandises",
+        "es": "despachador de transporte aéreo/despachadora de transporte aéreo",
+        "pt": "Controlador de transportes de mercadorias/Controladora de transportes de mercadorias",
+        "pl": "ekspedytor",
+        "et": "veokorraldaja",
+        "ar": "مرسل شحن البضائع / مرسلة شحن البضائع"
+      },
+      "altLabels": {
+        "en": [
+          "freight dispatching operator",
+          "freight dispatching officer",
+          "dispatcher of freight",
+          "freight dispatcher",
+          "air freight dispatcher",
+          "freight transportation dispatcher"
+        ],
+        "fi": ["tavaraliikenteen ajojärjestelijä"]
+      }
+    },
+    {
+      "id": "secondary-teacher",
+      "uri": "http://data.europa.eu/esco/occupation/5efb2c08-ba3a-4659-a2e4-1883f54e77b6",
+      "skills": ["mentoring", "stakeholders", "pm", "adapt"],
+      "extraTitles": ["lehrer", "teacher", "opettaja", "profesor", "enseignant", "nauczyciel"],
+      "fiTitle": "Opettaja",
+      "label": "secondary school teacher",
+      "isco": "2330",
+      "labels": {
+        "en": "secondary school teacher",
+        "fi": "opettaja, yläluokat ja lukio",
+        "sv": "gymnasielärare",
+        "de": "Lehrkraft Sekundarstufe",
+        "fr": "chargé/chargée d'enseignement général du second degré",
+        "es": "profesor de educación secundaria y bachillerato/profesora de educación secundaria y bachillerato",
+        "pt": "Professor do ensino secundário/Professora do ensino secundário",
+        "pl": "nauczyciel w szkole ponadpodstawowej/nauczycielka w szkole ponadpodstawowej",
+        "et": "üldhariduskoolide vanema astme õpetaja",
+        "ar": "مدرس بالمدرسة الثانوية / مدرسة بالمدرسة الثانوية"
+      },
+      "altLabels": {
+        "en": [
+          "secondary school head of department",
+          "home economics teacher",
+          "secondary school schoolteacher",
+          "maths teacher",
+          "religious education teacher",
+          "science teacher"
+        ],
+        "fi": []
+      }
+    },
+    {
+      "id": "project-manager",
+      "uri": "http://data.europa.eu/esco/occupation/bea99fea-0383-4c63-b944-70d4799de2c5",
+      "skills": ["pm", "stakeholders", "lead", "problem"],
+      "extraTitles": ["chef de projet", "projektipäällikkö", "jefe de proyecto", "projektleiter"],
+      "fiTitle": "Projektipäällikkö",
+      "label": "project manager",
+      "isco": "1219",
+      "labels": {
+        "en": "project manager",
+        "fi": "hankepäällikkö",
+        "sv": "projektledare",
+        "de": "Projektmanager/Projektmanagerin",
+        "fr": "chef de projet",
+        "es": "gestor de proyectos/gestora de proyectos",
+        "pt": "Chefe de projeto",
+        "pl": "kierownik projektu",
+        "et": "projektijuht",
+        "ar": "مدير المشروع / مديرة المشروع"
+      },
+      "altLabels": {
+        "en": [
+          "project coordinator",
+          "project leader",
+          "special project manager",
+          "project expediter",
+          "senior project manager",
+          "project director"
+        ],
+        "fi": ["projektijohtaja", "projektipäällikkö"]
+      }
+    },
+    {
+      "id": "domestic-electrician",
+      "uri": "http://data.europa.eu/esco/occupation/5dbb9cf0-b226-402c-a295-2f42ef05ff8b",
+      "skills": ["energy", "hvac", "problem", "battery"],
+      "extraTitles": ["electrician", "sähköasentaja", "elektriker", "electricista", "електрик"],
+      "fiTitle": "Sähköasentaja",
+      "label": "domestic electrician",
+      "isco": "7411",
+      "labels": {
+        "en": "domestic electrician",
+        "fi": "sähköasentaja, kotitaloudet",
+        "sv": "serviceelektriker, hushåll",
+        "de": "Elektroniker für Energie- und Gebäudetechnik/Elektronikerin für Energie- und Gebäudetechnik",
+        "fr": "électricien d’équipements domestiques/électricienne d’équipements domestiques",
+        "es": "electricista doméstico/electricista doméstica",
+        "pt": "Eletricista doméstico/Eletricista doméstica",
+        "pl": "elektryk instalacji domowych i sprzętu gospodarstwa domowego",
+        "et": "olmeelektrik",
+        "ar": "كهربائي منازل / كهربائية منازل"
+      },
+      "altLabels": {
+        "en": ["electrician", "domestic and commercial electrician", "residential electrician"],
+        "fi": []
+      }
+    },
+    {
+      "id": "hvac-technician",
+      "uri": "http://data.europa.eu/esco/occupation/3ce9c89d-6f1a-48b5-942d-386e46e2fd06",
+      "skills": ["hvac", "energy", "problem", "customer"],
+      "extraTitles": ["lvi-asentaja", "hvac technician", "kylmäasentaja"],
+      "fiTitle": "LVI-asentaja",
+      "label": "heating, ventilation, air conditioning and refrigeration engineering technician",
+      "isco": "3115",
+      "labels": {
+        "en": "heating, ventilation, air conditioning and refrigeration engineering technician",
+        "fi": "LVI-asiantuntija",
+        "sv": "VVS-ingenjör",
+        "de": "Anlagenmechaniker Sanitär-, Heizungs- und Klimatechnik/Anlagenmechanikerin Sanitär-, Heizungs- und Klimatechnik",
+        "fr": "technicien en génie climatique/technicienne en génie climatique",
+        "es": "ingeniero técnico de climatización/ingeniera técnica de climatización",
+        "pt": "Técnico de aquecimento, ventilação, ar condicionado e refrigeração/Técnica de aquecimento, ventilação, ar condicionado e refrigeração",
+        "pl": "technik systemów grzewczych, wentylacyjnych, klimatyzacji i chłodzenia",
+        "et": "kütte-, ventilatsiooni-, külmutus- ja kliimaseadmete ehitustehnik",
+        "ar": "فني هندسة التدفئة والتهوية وتكييف الهواء والتبريد"
+      },
+      "altLabels": {
+        "en": [
+          "HVACR technician",
+          "HVAC project technician",
+          "air conditioning technician",
+          "HVAC systems technician"
+        ],
+        "fi": []
+      }
+    },
+    {
+      "id": "energy-assessor",
+      "uri": "http://data.europa.eu/esco/occupation/c7f5cab7-7cfb-47d7-890c-6b9c00a9eaaf",
+      "skills": ["energy", "hvac", "esg", "stakeholders"],
+      "extraTitles": ["energy auditor", "energiakatselmoija", "energy consultant"],
+      "fiTitle": "Energiatodistuksen laatija",
+      "label": "energy assessor",
+      "isco": "3112",
+      "labels": {
+        "en": "energy assessor",
+        "fi": "asiantuntija, energiatodistus",
+        "sv": "energiexpert",
+        "de": "Energiegutachter/Energiegutachterin",
+        "fr": "diagnostiqueur performance énergétique du bâtiment/diagnostiqueuse performance énergétique du bâtiment",
+        "es": "asesor energético/asesora energética",
+        "pt": "Assessor de desempenho energético/Assessora de desempenho energético",
+        "pl": "audytor efektywności energetycznej",
+        "et": "energiaauditi teostaja",
+        "ar": "مقيّم الطاقة / مقيّمة الطاقة"
+      },
+      "altLabels": {
+        "en": [
+          "energy performance assessor",
+          "household energy use assessor",
+          "energy performance certificate assessor",
+          "EPC certification assessor",
+          "energy savings advisor",
+          "energy consumption advisor"
+        ],
+        "fi": [
+          "energiatodistuksen tekijä",
+          "energiatodistuksen laatija",
+          "hyväksytty asiantuntija, energiatodistus"
+        ]
+      }
+    },
+    {
+      "id": "csr-manager",
+      "uri": "http://data.europa.eu/esco/occupation/1313aeea-63a9-4b4d-82d1-dbe00ff9ed10",
+      "skills": ["esg", "circular", "stakeholders", "pm"],
+      "extraTitles": ["sustainability coordinator", "esg analyst", "vastuullisuusasiantuntija"],
+      "label": "corporate social responsibility manager",
+      "isco": "1219",
+      "labels": {
+        "en": "corporate social responsibility manager",
+        "fi": "yritysvastuujohtaja",
+        "sv": "csr-chef",
+        "de": "Beauftragter für die soziale Verantwortung der Unternehmen/Beauftragte für die soziale Verantwortung der Unternehmen",
+        "fr": "responsable RSE - responsabilité sociale de l'entreprise",
+        "es": "gerente de responsabilidad social empresarial",
+        "pt": "Diretor de responsabilidade social/Diretora de responsabilidade social",
+        "pl": "kierownik ds. odpowiedzialności społecznej przedsiębiorstw",
+        "et": "ettevõtte sotsiaalse vastutuse valdkonna juht",
+        "ar": "مدير المسؤولية الاجتماعية للشركات / مديرة المسؤولية الاجتماعية للشركات"
+      },
+      "altLabels": {
+        "en": [
+          "corporate sustainability director",
+          "chief sustainability officer",
+          "corporate responsibility director",
+          "sustainability project manager",
+          "corporate responsibility manager",
+          "sustainable services manager"
+        ],
+        "fi": ["yhteiskuntavastuujohtaja"]
+      }
+    },
+    {
+      "id": "call-centre-agent",
+      "uri": "http://data.europa.eu/esco/occupation/0ededdc2-050a-4ec3-8e70-6295105fcd19",
+      "skills": ["customer", "stakeholders", "problem", "adapt"],
+      "extraTitles": ["call center", "customer support", "asiakaspalvelija", "kundenservice", "service desk"],
+      "fiTitle": "Asiakaspalvelija",
+      "label": "call centre agent",
+      "isco": "5244",
+      "labels": {
+        "en": "call centre agent",
+        "fi": "myyjä, puhelin- ja asiakaspalvelukeskus",
+        "sv": "telefonförsäljare",
+        "de": "Mitarbeiter Callcenter/Mitarbeiterin Callcenter",
+        "fr": "agent de centre d’appels/agente de centre d’appels",
+        "es": "teleoperador/teleoperadora",
+        "pt": "Operador de centros de contacto/Operadora de centros de contacto",
+        "pl": "sprzedawca w centrum sprzedaży telefonicznej",
+        "et": "telefonimüügi agent",
+        "ar": "وكيل مركز الاتصال / وكيلة مركز الاتصال"
+      },
+      "altLabels": {
+        "en": [
+          "telemarketing agent",
+          "call centre operator",
+          "outbound call center agent",
+          "outbound telemarketer",
+          "telephone sales agent",
+          "inbound telemarketer"
+        ],
+        "fi": ["telemarkkinoija", "puhelinmyyjä"]
+      }
+    },
+    {
+      "id": "general-nurse",
+      "uri": "http://data.europa.eu/esco/occupation/8d3e8aaa-791b-4c75-a465-f3f827028f50",
+      "skills": ["patient-care", "medication", "ehr", "health-regs"],
+      "extraTitles": ["registered nurse", "nurse", "krankenschwester", "enfermera", "pielęgniarka"],
+      "label": "nurse responsible for general care",
+      "isco": "2221",
+      "labels": {
+        "en": "nurse responsible for general care",
+        "fi": "sairaanhoitaja",
+        "sv": "sjuksköterska, grundutbildad",
+        "de": "Krankenpfleger Allgemeine Krankenpflege/Krankenschwester Allgemeine Krankenpflege",
+        "fr": "infirmier de soins généraux/infirmière de soins généraux",
+        "es": "enfermero responsable de cuidados generales/enfermera responsable de cuidados generales",
+        "pt": "Enfermeiro de cuidados gerais/Enfermeira de cuidados gerais",
+        "pl": "pielęgniarz/pielęgniarka praktyki ogólnej",
+        "et": "õde",
+        "ar": "ممرض مسؤول عن الرعاية العامة / ممرضة مسؤولة عن الرعاية العامة"
+      },
+      "altLabels": {
+        "en": [
+          "district nurse",
+          "healthcare nurse",
+          "learning disability nurse",
+          "community staff nurse",
+          "adult nurse",
+          "children's nurse"
+        ],
+        "fi": ["yleissairaanhoitaja", "yleissairaanhoidosta vastaava sairaanhoitaja"]
+      }
+    },
+    {
+      "id": "healthcare-assistant",
+      "uri": "http://data.europa.eu/esco/occupation/d38c2107-98f2-47b7-8bb4-f69750d51082",
+      "skills": ["patient-care", "elderly-care", "medication", "team"],
+      "extraTitles": ["practical nurse", "caregiver", "pflegehelfer", "auxiliar de enfermería"],
+      "label": "healthcare assistant",
+      "isco": "5321",
+      "labels": {
+        "en": "healthcare assistant",
+        "fi": "lähihoitaja",
+        "sv": "undersköterska, vård- och specialavdelning och mottagning",
+        "de": "Pflegehelfer/Pflegehelferin",
+        "fr": "aide-soignant en institution/aide-soignante en institution",
+        "es": "técnico de atención sociosanitaria/técnica de atención sociosanitaria",
+        "pt": "Assistente de cuidados de saúde",
+        "pl": "opiekun medyczny",
+        "et": "hooldaja tervishoiuasutustes",
+        "ar": "مساعد العناية الصحية / مساعدة العناية الصحية"
+      },
+      "altLabels": {
+        "en": [
+          "maternity care assistant",
+          "health care assistant",
+          "primary healthcare assistant",
+          "resident care assistant",
+          "elderly care assistant",
+          "resident healthcare assistant"
+        ],
+        "fi": []
+      }
+    },
+    {
+      "id": "home-care-aide",
+      "uri": "http://data.europa.eu/esco/occupation/1391bdf9-bd61-4fb5-91ca-c29036ab2b60",
+      "skills": ["elderly-care", "patient-care", "customer", "adapt"],
+      "extraTitles": ["home care worker", "kotihoitaja", "care worker"],
+      "fiTitle": "Kotihoitaja",
+      "label": "home care aide",
+      "isco": "5322",
+      "labels": {
+        "en": "home care aide",
+        "fi": "kodinhoitaja",
+        "sv": "hemtjänstassistent",
+        "de": "Haus- und Familienpfleger/Haus- und Familienpflegerin",
+        "fr": "assistant de vie/assistante de vie",
+        "es": "técnico de atención sociosanitaria a personas en el domicilio/técnica de atención sociosanitaria a personas en el domicilio",
+        "pt": "Ajudante familiar",
+        "pl": "opiekunka domowa / opiekun domowy",
+        "et": "koduhooldusteenuse pakkuja",
+        "ar": "مساعد الرعاية المنزلية / مساعدة الرعاية المنزلية"
+      },
+      "altLabels": {
+        "en": [
+          "personal care provider",
+          "home health care aide",
+          "elderly people assistant",
+          "personal care attendant",
+          "health care provider",
+          "in home nurse"
+        ],
+        "fi": ["lähihoitaja", "kotiavustaja"]
+      }
+    },
+    {
+      "id": "pharmacist",
+      "uri": "http://data.europa.eu/esco/occupation/7c132147-428b-4ea3-87e1-70f7abb691ce",
+      "skills": ["medication", "health-regs", "customer"],
+      "extraTitles": ["farmaceut", "farmaseutti", "صيدلي"],
+      "label": "pharmacist",
+      "isco": "2262",
+      "labels": {
+        "en": "pharmacist",
+        "fi": "proviisori",
+        "sv": "farmaceut",
+        "de": "Apotheker/Apothekerin",
+        "fr": "pharmacien/pharmacienne",
+        "es": "farmacéutico/farmacéutica",
+        "pt": "Farmacêutico/Farmacêutica",
+        "pl": "farmaceuta",
+        "et": "proviisor",
+        "ar": "صيدلاني / صيدلانية"
+      },
+      "altLabels": {
+        "en": [
+          "practitioner of pharmacology",
+          "pharmacy practitioner",
+          "dispensing chemist",
+          "pharmacologist",
+          "pharmacology practitioner",
+          "retail pharmacist"
+        ],
+        "fi": ["apteekkari", "apteekinhoitaja"]
+      }
+    },
+    {
+      "id": "medical-records-manager",
+      "uri": "http://data.europa.eu/esco/occupation/983c2816-a339-4817-97f4-151a9ff3e64d",
+      "skills": ["ehr", "health-regs", "analysis"],
+      "extraTitles": ["health informatics", "clinical informatics", "terveysteknologia"],
+      "label": "medical records manager",
+      "isco": "3252",
+      "labels": {
+        "en": "medical records manager",
+        "fi": "potilastietojärjestelmävastaava",
+        "sv": "patientjournalansvarig",
+        "de": "Patientendatenverwalter/Patientendatenverwalterin",
+        "fr": "responsable du service des dossiers médicaux",
+        "es": "responsable en documentación y administración sanitaria",
+        "pt": "Responsável de registos médicos",
+        "pl": "menedżer ds. zarządzania dokumentacją medyczną",
+        "et": "terviseandmete haldur",
+        "ar": "مدير السجلات الطبية / مديرة السجلات الطبية"
+      },
+      "altLabels": {
+        "en": [
+          "senior medical records officer",
+          "patient records manager",
+          "manager of patient records",
+          "director of medical records",
+          "supervisor of medical records",
+          "manager of medical records"
+        ],
+        "fi": ["potilastietokoordinaattori"]
+      }
+    },
+    {
+      "id": "chef",
+      "uri": "http://data.europa.eu/esco/occupation/1009be17-7efd-45f1-a033-566bf179c588",
+      "skills": ["team", "lead", "adapt", "problem"],
+      "extraTitles": ["cook", "kokki", "cozinheiro"],
+      "label": "chef",
+      "isco": "3434",
+      "labels": {
+        "en": "chef",
+        "fi": "keittiömestari",
+        "sv": "kock",
+        "de": "Chefkoch/Chefköchin",
+        "fr": "chef de cuisine",
+        "es": "chef",
+        "pt": "Chef",
+        "pl": "szef kuchni",
+        "et": "peakokk",
+        "ar": "طاهي / طاهية"
+      },
+      "altLabels": {
+        "en": [
+          "industrial chef",
+          "chef de partie",
+          "sous-chef",
+          "banqueting chef",
+          "commis chef",
+          "chef de cuisine"
+        ],
+        "fi": ["ravintolakokki", "kokki", "kokit", "apukokki"]
+      }
+    }
+  ]
+}

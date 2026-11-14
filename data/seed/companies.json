@@ -1,0 +1,127 @@
+{
+  "$comment": "Synthetic companies and their needs for the demo event. All names are fictional. Skill ids refer to data/esco/skills.json, occupation ids to data/esco/occupations.json.",
+  "companies": [
+    {
+      "id": "C-kivi",
+      "name": "Kivi Energy Systems",
+      "blurb": "Battery storage start-up, 40 people",
+      "sector": "Energy & cleantech",
+      "location": "Otaniemi, Espoo",
+      "needs": [
+        {
+          "id": "N-01",
+          "title": "Data engineer, battery telemetry",
+          "occupation": "data-scientist",
+          "summary": "Build pipelines from test rigs to the cloud and help engineers make sense of cell data.",
+          "must": ["pipelines", "python", "sql"],
+          "nice": ["battery", "cloud", "stakeholders"],
+          "language": "English OK",
+          "mode": "Hybrid",
+          "submittedWeeksBefore": 4
+        }
+      ]
+    },
+    {
+      "id": "C-lumo",
+      "name": "Lumo Logistics",
+      "blurb": "Regional 3PL operator, 220 people",
+      "sector": "Logistics",
+      "location": "Juvanmalmi, Espoo",
+      "needs": [
+        {
+          "id": "N-02",
+          "title": "Supply chain analyst",
+          "occupation": "logistics-analyst",
+          "summary": "Turn warehouse and transport data into weekly decisions for ops leads.",
+          "must": ["analysis", "supply"],
+          "nice": ["sql", "logistics", "stakeholders"],
+          "language": "Finnish or English",
+          "mode": "On-site",
+          "submittedWeeksBefore": 3
+        },
+        {
+          "id": "N-06",
+          "title": "Warehouse shift lead",
+          "occupation": "warehouse-manager",
+          "summary": "Run the evening shift of a 12-person picking team and keep the floor safe and on time.",
+          "must": ["warehouse", "lead"],
+          "nice": ["logistics", "problem", "intercultural"],
+          "language": "Finnish or English",
+          "mode": "On-site",
+          "submittedWeeksBefore": 2
+        }
+      ]
+    },
+    {
+      "id": "C-haukka",
+      "name": "Haukka Health Tech",
+      "blurb": "Digital health scale-up, 85 people",
+      "sector": "Health technology",
+      "location": "Keilaniemi, Espoo",
+      "needs": [
+        {
+          "id": "N-03",
+          "title": "Front-end developer",
+          "occupation": "web-developer",
+          "summary": "Ship accessible patient-facing web features with a small product team.",
+          "must": ["react", "js"],
+          "nice": ["a11y", "ux", "team"],
+          "language": "English OK",
+          "mode": "Remote",
+          "submittedWeeksBefore": 2
+        },
+        {
+          "id": "N-07",
+          "title": "Clinical data specialist",
+          "occupation": "medical-records-manager",
+          "summary": "Bridge clinicians and engineers: map patient-record data, keep it compliant, and spot what's useful.",
+          "must": ["ehr", "health-regs"],
+          "nice": ["analysis", "sql", "patient-care"],
+          "language": "English OK",
+          "mode": "Hybrid",
+          "submittedWeeksBefore": 3
+        }
+      ]
+    },
+    {
+      "id": "C-rakenne",
+      "name": "Rakenne Green Buildings",
+      "blurb": "Building services engineering, 120 people",
+      "sector": "Construction & building services",
+      "location": "Leppävaara, Espoo",
+      "needs": [
+        {
+          "id": "N-04",
+          "title": "Energy efficiency specialist",
+          "occupation": "energy-assessor",
+          "summary": "Assess office buildings and propose HVAC and energy upgrades to property owners.",
+          "must": ["energy", "hvac"],
+          "nice": ["esg", "stakeholders", "pm"],
+          "language": "Finnish required",
+          "mode": "On-site",
+          "submittedWeeksBefore": 1
+        }
+      ]
+    },
+    {
+      "id": "C-otso",
+      "name": "Otso Care",
+      "blurb": "Home care and assisted living provider, 300 people",
+      "sector": "Healthcare & social care",
+      "location": "Espoon keskus, Espoo",
+      "needs": [
+        {
+          "id": "N-05",
+          "title": "Home care practical nurse",
+          "occupation": "healthcare-assistant",
+          "summary": "Visit older clients at home, support daily living and medication, and keep care notes up to date.",
+          "must": ["elderly-care", "patient-care"],
+          "nice": ["medication", "ehr", "intercultural"],
+          "language": "Finnish or English",
+          "mode": "On-site",
+          "submittedWeeksBefore": 3
+        }
+      ]
+    }
+  ]
+}
