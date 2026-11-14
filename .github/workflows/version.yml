@@ -1,0 +1,66 @@
+name: Version
+
+# Bumps package.json on every push to main and pushes a "chore(release): vX.Y.Z" commit
+# plus a tag. Vercel's ignoreCommand (vercel.json) only builds production for that
+# commit, so each change deploys once, with the new version in the footer.
+#
+# Bump type from conventional commits since the last release: feat → minor,
+# "type!:" or "BREAKING CHANGE:" → major (minor while < 1.0.0), anything else → patch.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Force a bump type (leave empty to use the commit messages)"
+        type: choice
+        options: ["", patch, minor, major]
+        default: ""
+
+permissions:
+  contents: write
+
+# One release at a time; a newer push waits instead of racing.
+concurrency:
+  group: version-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    # Pushes made with GITHUB_TOKEN don't re-trigger workflows; this guard covers
+    # release commits pushed any other way.
+    if: ${{ !startsWith(github.event.head_commit.message, 'chore(release):') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Bump version
+        id: bump
+        run: node scripts/release/bump-cli.mjs "${{ inputs.bump }}" >> "$GITHUB_OUTPUT"
+
+      - name: Commit, tag and push
+        if: ${{ steps.bump.outputs.version != '' }}
+        env:
+          VERSION: ${{ steps.bump.outputs.version }}
+        run: |
+          # Author the commit as the person who pushed (GitHub noreply address), so
+          # Vercel accepts it as coming from a project member.
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
+          git commit -am "chore(release): v${VERSION}"
+          git tag "v${VERSION}"
+          for attempt in 1 2 3; do
+            if git push origin HEAD:main && git push origin "v${VERSION}"; then exit 0; fi
+            echo "Push rejected (attempt ${attempt}), rebasing on the latest main…"
+            git pull --rebase origin main
+            git tag -f "v${VERSION}"
+          done
+          exit 1

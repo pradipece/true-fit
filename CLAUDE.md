@@ -45,7 +45,7 @@ yarn db:migrate  # load data/ into Supabase (--no-scraped to skip scraped data)
 yarn db:sql      # write the same migration to db/migrate.sql instead (--split <KB> for SQL editors)
 ```
 
-A Husky pre-commit hook runs lint-staged (`eslint --fix` + `prettier --write` on staged files). Tests use **Vitest** (`vitest.config.mts`, `@/` alias, files in `tests/`): run `yarn test` (or `yarn test:watch`). There is no `typecheck` script; run `yarn tsc --noEmit`.
+**Releases and deploys**: don't bump `version` in `package.json` by hand. On every push to `main`, `.github/workflows/version.yml` bumps it from the conventional commits since the last release (`feat` → minor, `!`/`BREAKING CHANGE` → major, minor while < 1.0, else patch; logic in `scripts/release/bump.mjs`), then pushes a `chore(release): vX.Y.Z` commit and tag. `vercel.json`'s `ignoreCommand` (`scripts/release/vercel-ignore.mjs`) skips production builds for every other `main` commit, so each change deploys once. Pull after pushing, since CI adds a commit. A Husky pre-commit hook runs lint-staged (`eslint --fix` + `prettier --write` on staged files). Tests use **Vitest** (`vitest.config.mts`, `@/` alias, files in `tests/`): run `yarn test` (or `yarn test:watch`). There is no `typecheck` script; run `yarn tsc --noEmit`.
 
 ## Stack and versions
 
