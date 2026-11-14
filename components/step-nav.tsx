@@ -3,13 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowLeftIcon, ArrowRightIcon, RotateCcwIcon } from "lucide-react";
-import { STEPS } from "@/lib/steps";
+import { STEPS, stepIndex } from "@/lib/steps";
 import { cn } from "@/lib/utils";
 
 /** Previous / next step bar shown at the bottom of every step page. */
 export function StepNav() {
   const pathname = usePathname();
-  const i = STEPS.findIndex((s) => s.href === pathname);
+  const i = stepIndex(pathname);
   if (i === -1) return null;
 
   const prev = STEPS[i - 1];

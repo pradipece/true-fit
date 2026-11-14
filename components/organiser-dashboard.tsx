@@ -91,13 +91,15 @@ export function OrganiserDashboard() {
   };
 
   const pipeline = (key: string) =>
-    feedback[key]
-      ? "Feedback in"
-      : slots[key]
-        ? `Meeting at ${slots[key]}`
-        : optIns[key]?.company && optIns[key]?.talent
-          ? "Both opted in"
-          : "Awaiting opt-in";
+    feedback[key]?.company && feedback[key]?.talent
+      ? "Feedback from both sides"
+      : feedback[key]?.company || feedback[key]?.talent
+        ? "Feedback from one side"
+        : slots[key]
+          ? `Meeting at ${slots[key]}`
+          : optIns[key]?.company && optIns[key]?.talent
+            ? "Both opted in"
+            : "Awaiting opt-in";
 
   const confirm = (reason: string, note: string, status?: Decision["status"]) => {
     if (!dialog) return;

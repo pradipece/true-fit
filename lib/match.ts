@@ -128,33 +128,42 @@ export function languageGroup(t: Talent): string {
 }
 
 const AUDIT_DIMS = {
-  origin: { label: "Origin", group: (t: Talent) => t.audit.origin },
+  origin: { label: "Nationality / origin", group: (t: Talent) => t.audit.origin },
   language: { label: "Language", group: languageGroup },
   education: { label: "Education", group: (t: Talent) => t.audit.education },
   path: { label: "Career path", group: (t: Talent) => t.audit.path },
 } as const;
 
 /** Aggregate suggestion rates per audit group (four-fifths rule check). */
+/**
+ * Aggregate fairness check per audit group (four-fifths rule on the suggestion rate).
+ * - rate: share of people in the group with at least one suggestion
+ * - pairRate: share of all need × person pairs in the group that were suggested
+ * - avgBest: mean of each person's best overlap across all needs
+ * Group attributes are read here only, never by the scorer.
+ */
 export function biasAudit(needs: Need[], pool: Talent[]) {
   const dims = Object.keys(AUDIT_DIMS) as (keyof typeof AUDIT_DIMS)[];
-  const all = needs.flatMap((n) => pool.map((t) => ({ t, m: explainMatch(n, t) })));
+  const perPerson = pool.map((t) => {
+    const ms = needs.map((n) => explainMatch(n, t));
+    return {
+      t,
+      suggested: ms.filter((m) => m.suggested).length,
+      best: ms.reduce((b, m) => Math.max(b, m.score), 0),
+    };
+  });
   return dims.map((dim) => {
-    const groups = new Map<string, { pairs: number; suggested: number; people: Set<string> }>();
-    for (const { t, m } of all) {
-      const g = AUDIT_DIMS[dim].group(t);
-      const row = groups.get(g) ?? { pairs: 0, suggested: 0, people: new Set() };
-      row.pairs += 1;
-      row.people.add(t.id);
-      if (m.suggested) row.suggested += 1;
-      groups.set(g, row);
+    const groups = new Map<string, typeof perPerson>();
+    for (const p of perPerson) {
+      const g = AUDIT_DIMS[dim].group(p.t);
+      groups.set(g, [...(groups.get(g) ?? []), p]);
     }
-    const rows = [...groups.entries()].map(([group, r]) => ({
+    const rows = [...groups.entries()].map(([group, ps]) => ({
       group,
-      people: r.people.size,
-      // share of people in this group who got at least one suggestion
-      rate: r.people.size
-        ? [...r.people].filter((id) => all.some((x) => x.t.id === id && x.m.suggested)).length / r.people.size
-        : 0,
+      people: ps.length,
+      rate: ps.filter((p) => p.suggested > 0).length / ps.length,
+      pairRate: needs.length ? ps.reduce((s, p) => s + p.suggested, 0) / (ps.length * needs.length) : 0,
+      avgBest: ps.reduce((s, p) => s + p.best, 0) / ps.length,
     }));
     const maxRate = Math.max(...rows.map((r) => r.rate), 0.0001);
     const minRate = Math.min(...rows.map((r) => r.rate));

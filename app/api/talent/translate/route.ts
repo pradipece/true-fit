@@ -1,9 +1,11 @@
 import { aiEnabled, generateJson, logFallback } from "@/lib/ai";
+import { getOccupation, searchEsco } from "@/lib/esco-api";
 import {
   rulesTranslate,
   sanitizeTranslation,
   TRANSLATE_SCHEMA,
   TRANSLATE_SYSTEM_PROMPT,
+  type EscoLookup,
   type TranslateModelOutput,
   type Translation,
 } from "@/lib/talent-ai";
@@ -18,6 +20,9 @@ export async function POST(request: Request) {
   const path = typeof body?.path === "string" ? body.path.trim().slice(0, 1500) : "";
   if (!title && !path) return Response.json({ error: "Give a job title or career path" }, { status: 400 });
 
+  // Official ESCO lookup runs alongside the translation; only the typed title is sent.
+  const esco = escoLookup(title);
+
   if (aiEnabled()) {
     try {
       const out = await generateJson<TranslateModelOutput>({
@@ -30,11 +35,35 @@ export async function POST(request: Request) {
           },
         ],
       });
-      return Response.json({ ...sanitizeTranslation(out), source: "ai" } satisfies Translation);
+      return Response.json({
+        ...sanitizeTranslation(out),
+        esco: await esco,
+        source: "ai",
+      } satisfies Translation);
     } catch (error) {
       logFallback("translate", error);
     }
   } else logFallback("translate");
 
-  return Response.json({ ...rulesTranslate({ title, path }), source: "rules" } satisfies Translation);
+  return Response.json({
+    ...rulesTranslate({ title, path }),
+    esco: await esco,
+    source: "rules",
+  } satisfies Translation);
+}
+
+async function escoLookup(title: string): Promise<EscoLookup> {
+  if (title.length < 3) return { status: "skipped" };
+  try {
+    const hits = await searchEsco(title, "occupation", { limit: 3 });
+    if (!hits.length) return { status: "none" };
+    return {
+      status: "found",
+      occupation: await getOccupation(hits[0].uri),
+      others: hits.slice(1).map((h) => ({ uri: h.uri, title: h.title })),
+    };
+  } catch (error) {
+    console.warn("[esco] translator lookup failed", error);
+    return { status: "unavailable" };
+  }
 }

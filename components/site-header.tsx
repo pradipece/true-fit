@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-provider";
 import { EVENT } from "@/lib/data";
-import { FIRST_STEP, STEPS } from "@/lib/steps";
+import { FIRST_STEP, STEPS, stepIndex } from "@/lib/steps";
 import { useDemo } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -26,8 +26,8 @@ export function SiteHeader() {
         </Link>
 
         <nav className="-mx-1 flex min-w-0 flex-1 [scrollbar-width:none] items-center gap-0.5 overflow-x-auto px-1">
-          {STEPS.map((item) => {
-            const active = pathname === item.href;
+          {STEPS.map((item, i) => {
+            const active = stepIndex(pathname) === i;
             return (
               <Link
                 key={item.href}

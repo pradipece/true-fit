@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import {
   ArrowRightIcon,
@@ -8,6 +8,8 @@ import {
   CheckIcon,
   CircleDashedIcon,
   InfoIcon,
+  LandmarkIcon,
+  Loader2Icon,
   PencilIcon,
   PlusIcon,
   RotateCcwIcon,
@@ -573,6 +575,7 @@ function SkillEditor({ draft, onChange }: { draft: NeedDraft; onChange: (p: Part
   const hits = query
     ? searchSkills(query, { limit: 5, keywords: true }).filter((h) => !all.includes(h.item.id))
     : [];
+  const esco = useEscoSkillSearch(query);
 
   const setMust = (id: string, must: boolean) =>
     onChange({
@@ -652,21 +655,71 @@ function SkillEditor({ draft, onChange }: { draft: NeedDraft; onChange: (p: Part
             aria-label="Add a skill"
             className="h-8 pl-8 text-xs"
           />
-          {hits.length > 0 && (
-            <ul className="absolute inset-x-0 top-full z-10 mt-1 overflow-hidden rounded-lg border bg-popover shadow-md">
-              {hits.map((h) => (
-                <li key={h.item.id}>
-                  <button
-                    type="button"
-                    onClick={() => add(h.item.id)}
-                    className="flex w-full items-baseline justify-between gap-2 px-3 py-1.5 text-left text-xs hover:bg-muted"
-                  >
-                    <span>{h.item.label}</span>
-                    <span className="truncate text-muted-foreground">{h.item.escoLabel}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
+          {query.trim().length >= 2 && (hits.length > 0 || esco.state !== "idle") && (
+            <div className="absolute inset-x-0 top-full z-10 mt-1 max-h-72 overflow-y-auto rounded-lg border bg-popover text-xs shadow-md">
+              {hits.length > 0 && (
+                <ul>
+                  {hits.map((h) => (
+                    <li key={h.item.id}>
+                      <button
+                        type="button"
+                        onClick={() => add(h.item.id)}
+                        className="flex w-full items-baseline justify-between gap-2 px-3 py-1.5 text-left hover:bg-muted"
+                      >
+                        <span>{h.item.label}</span>
+                        <span className="truncate text-muted-foreground">{h.item.escoLabel}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <p className="flex items-center gap-1.5 border-t bg-muted/40 px-3 py-1 text-[11px] text-muted-foreground">
+                <LandmarkIcon className="size-3" /> All of ESCO (live)
+                {esco.state === "loading" && <Loader2Icon className="size-3 animate-spin" />}
+              </p>
+              {esco.state === "error" && (
+                <p className="px-3 py-1.5 text-muted-foreground">
+                  The ESCO service isn&apos;t reachable right now.
+                </p>
+              )}
+              {esco.state === "done" && esco.hits.length === 0 && (
+                <p className="px-3 py-1.5 text-muted-foreground">No ESCO skills match.</p>
+              )}
+              {esco.state === "done" && (
+                <ul>
+                  {esco.hits.map((h) => {
+                    const id = h.subset?.id;
+                    const have = !!id && all.includes(id);
+                    return (
+                      <li key={h.uri}>
+                        <button
+                          type="button"
+                          disabled={!id || have}
+                          onClick={() => id && add(id)}
+                          title={
+                            !id
+                              ? "Not in this event's skill set yet, so it can't be matched"
+                              : h.subset?.via === "keyword"
+                                ? `Close match: adds “${skillLabel(id)}”`
+                                : undefined
+                          }
+                          className="flex w-full items-baseline justify-between gap-2 px-3 py-1.5 text-left hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          <span className="first-letter:uppercase">{h.title}</span>
+                          <span className="shrink-0 text-muted-foreground">
+                            {!id
+                              ? "not in this event's skill set yet"
+                              : have
+                                ? "on the card"
+                                : `→ ${skillLabel(id)}`}
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
           )}
         </div>
       </div>
@@ -690,4 +743,36 @@ function useOnline() {
     () => navigator.onLine,
     () => true,
   );
+}
+
+type EscoSkillHit = { uri: string; title: string; subset?: { id: string; via: "uri" | "keyword" } };
+type EscoSearch = { state: "idle" | "loading" | "done" | "error"; hits: EscoSkillHit[] };
+
+/** Live ESCO skill search, debounced, for skills beyond the cached list. */
+function useEscoSkillSearch(query: string): EscoSearch {
+  const [result, setResult] = useState<EscoSearch & { q: string }>({ q: "", state: "idle", hits: [] });
+  const q = query.trim();
+  useEffect(() => {
+    if (q.length < 3) return;
+    const ctrl = new AbortController();
+    const timer = setTimeout(async () => {
+      setResult({ q, state: "loading", hits: [] });
+      try {
+        const res = await fetch(`/api/esco/search?type=skill&q=${encodeURIComponent(q)}`, {
+          signal: ctrl.signal,
+        });
+        const data = (await res.json()) as { hits?: EscoSkillHit[] };
+        if (!res.ok || !data.hits) throw new Error();
+        setResult({ q, state: "done", hits: data.hits });
+      } catch {
+        if (!ctrl.signal.aborted) setResult({ q, state: "error", hits: [] });
+      }
+    }, 350);
+    return () => {
+      clearTimeout(timer);
+      ctrl.abort();
+    };
+  }, [q]);
+  // Results for an older query, or a query too short to search, count as idle.
+  return q.length >= 3 && result.q === q ? result : { state: q.length >= 3 ? "loading" : "idle", hits: [] };
 }

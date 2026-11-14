@@ -54,7 +54,17 @@ const contains = (haystack: string, needle: string) =>
 
 export type TranslateRequest = { title: string; path: string };
 
+/** Live lookup in the official ESCO API, alongside the translation. */
+export type EscoLookup =
+  | {
+      status: "found";
+      occupation: import("./esco-api").EscoOccupation;
+      others: { uri: string; title: string }[];
+    }
+  | { status: "none" | "unavailable" | "skipped" };
+
 export type Translation = {
+  esco?: EscoLookup;
   localTitle: string;
   occupation: string;
   skills: { skill: string; why: string }[];

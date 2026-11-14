@@ -10,3 +10,7 @@ export const STEPS = [
 export type Step = (typeof STEPS)[number];
 
 export const FIRST_STEP = STEPS[0];
+
+/** The step a path belongs to, including sub-routes such as /meetings/company. */
+export const stepIndex = (pathname: string) =>
+  STEPS.findIndex((s) => pathname === s.href || pathname.startsWith(`${s.href}/`));

@@ -29,6 +29,7 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { SkillChip, SkillLegend } from "@/components/skill-chip";
+import { EscoMatch } from "@/components/esco-match";
 import { VoiceNote } from "@/components/voice-note";
 import { sampleToText, WorkSample, type Sample } from "@/components/work-sample";
 import { SCENARIO_PROMPTS, VOICE_PROMPT } from "@/lib/data";
@@ -420,6 +421,12 @@ export function TalentProfile() {
                     <SourceBadge source={translation.source} />
                   </div>
                   {translation.note && <p className="text-xs text-transfer">{translation.note}</p>}
+                  <EscoMatch
+                    lookup={translation.esco}
+                    picked={skills}
+                    onToggle={toggleSkill}
+                    onAddAll={(ids) => addSkills(ids)}
+                  />
                   {translation.vocabulary.length > 0 && (
                     <div className="space-y-1">
                       <p className="text-xs font-medium text-muted-foreground">

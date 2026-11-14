@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EVENT } from "@/lib/data";
 import { skillLabel } from "@/lib/esco";
+import { impactMetrics } from "@/lib/impact";
 import { fairnessSummary, funnel, needSupply, overview, poolProfile, type Supply } from "@/lib/oversight";
 import { useDemo } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -74,6 +75,7 @@ export function OrganiserOverview({ onReview }: { onReview: (needId?: string) =>
   const supply = needSupply(needs, talent, decisions);
   const profile = poolProfile(talent);
   const fairness = fairnessSummary(needs, talent);
+  const impact = impactMetrics(slots, feedback);
   const waiting = supply.filter((s) => s.toReview > 0);
   const empty = supply.filter((s) => s.supply === "none");
 
@@ -225,6 +227,9 @@ export function OrganiserOverview({ onReview }: { onReview: (needId?: string) =>
           </CardContent>
         </Card>
 
+        {/* Impact */}
+        <ImpactCard impact={impact} />
+
         {/* Fairness */}
         <Card>
           <CardHeader>
@@ -261,5 +266,92 @@ export function OrganiserOverview({ onReview }: { onReview: (needId?: string) =>
         </Card>
       </div>
     </div>
+  );
+}
+
+const stars = (n: number | null) => (n === null ? "–" : `${n.toFixed(1)} / 5`);
+
+/** After the event: did meetings happen, lead anywhere, and were people glad they came? */
+function ImpactCard({ impact: i }: { impact: ReturnType<typeof impactMetrics> }) {
+  const tiles = [
+    {
+      label: "Meetings held",
+      value: `${i.held}`,
+      sub: `of ${i.booked} booked${i.noShows ? `, ${i.noShows} no-show` : ""}`,
+    },
+    { label: "Follow-ups agreed", value: `${i.followUps}`, sub: `${i.interviews} going to interview` },
+    { label: "Companies' satisfaction", value: stars(i.satisfaction.company), sub: "meeting worth the time" },
+    { label: "Candidates' satisfaction", value: stars(i.satisfaction.talent), sub: "meeting worth the time" },
+  ];
+  return (
+    <Card className="lg:col-span-2">
+      <CardHeader>
+        <CardTitle className="text-base">Impact after the event</CardTitle>
+        <CardDescription>
+          From both sides&apos; feedback. A follow-up needs interest from both. Ratings are about the meeting
+          and the cards, never the person.
+          {i.responseRate !== null &&
+            ` Both sides answered for ${Math.round(i.responseRate * 100)}% of meetings held.`}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {i.booked === 0 ? (
+          <p className="rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">
+            Fills in after the event, once people have met and answered the 30-second feedback.
+          </p>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+              {tiles.map((t) => (
+                <div key={t.label} className="rounded-lg border p-3">
+                  <p className="text-xs text-muted-foreground">{t.label}</p>
+                  <p className="text-2xl font-semibold tabular-nums">{t.value}</p>
+                  <p className="text-xs text-muted-foreground">{t.sub}</p>
+                </div>
+              ))}
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-1 text-sm">
+                <p className="font-medium">Did the cards hold up?</p>
+                <p className="text-muted-foreground">
+                  Skill cards matched the person:{" "}
+                  <span className="text-foreground tabular-nums">{stars(i.accuracy.skillCards)}</span> (rated
+                  by companies)
+                </p>
+                <p className="text-muted-foreground">
+                  Need cards matched the role:{" "}
+                  <span className="text-foreground tabular-nums">{stars(i.accuracy.needCards)}</span> (rated
+                  by candidates)
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  This is the “more signal, less noise” check: low scores mean the evidence or the need card
+                  needs work.
+                </p>
+              </div>
+              <div className="space-y-1.5 text-sm">
+                <p className="font-medium">Ideas for next time</p>
+                {i.ideas.length ? (
+                  <ul className="space-y-1">
+                    {i.ideas.map((idea, n) => (
+                      <li key={n} className="flex gap-2 text-muted-foreground">
+                        <span className="shrink-0 text-xs uppercase">
+                          {idea.side === "company" ? "Company" : "Candidate"}
+                        </span>
+                        <span className="text-foreground">“{idea.text}”</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-muted-foreground">No suggestions yet.</p>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  Names and other identifying details are removed.
+                </p>
+              </div>
+            </div>
+          </>
+        )}
+      </CardContent>
+    </Card>
   );
 }

@@ -13,7 +13,8 @@
     "esco:refresh": "node scripts/refresh-esco.mjs && prettier --write data/esco",
     "scrape": "node scripts/scrape/index.mjs",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "db:migrate": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/db/migrate.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
@@ -32,6 +33,7 @@
   "devDependencies": {
     "@tailwindcss/turbopack": "4.3.3",
     "@types/node": "^20",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
@@ -39,6 +41,7 @@
     "eslint-config-prettier": "^10.1.8",
     "husky": "^9.1.7",
     "lint-staged": "^17.6.0",
+    "pg": "^8.23.1",
     "prettier": "^3.10.1",
     "prettier-plugin-tailwindcss": "^0.8.1",
     "tailwindcss": "4.3.3",

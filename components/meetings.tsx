@@ -2,7 +2,9 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
+  ArrowLeftRightIcon,
   Building2Icon,
   CalendarDaysIcon,
   CheckCircle2Icon,
@@ -34,12 +36,23 @@ import {
   type PairStatus,
 } from "@/lib/schedule";
 import { useDemo } from "@/lib/store";
-import type { Feedback } from "@/lib/types";
+import { feedbackError, NEXT_STEPS, pairOutcome, QUESTIONS } from "@/lib/impact";
+import type { FeedbackSide, NextStep, SideFeedback } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-export function Meetings() {
+export type MeetingSide = "company" | "talent";
+
+const OTHER: Record<MeetingSide, string> = { company: "the candidate", talent: "the company" };
+
+/**
+ * One side's view of step 4. Company and candidate each get their own route
+ * (/meetings/company, /meetings/talent) and only see their own answers.
+ */
+export function Meetings({ side }: { side: MeetingSide }) {
   const { needs, talent, decisions, optIns, slots, feedback, setOptIn, bookSlot, cancelSlot, giveFeedback } =
     useDemo();
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   const pairs = useMemo(
     () =>
@@ -55,8 +68,10 @@ export function Meetings() {
     [decisions, needs, talent],
   );
 
-  const [selected, setSelected] = useState<string | null>(null);
+  const selected = searchParams.get("pair");
   const current = pairs.find((p) => p.key === selected) ?? pairs[0];
+  const select = (key: string) =>
+    router.replace(`/meetings/${side}?pair=${encodeURIComponent(key)}`, { scroll: false });
 
   if (!current) {
     return (
@@ -72,6 +87,7 @@ export function Meetings() {
   }
 
   const o = optIns[current.key] ?? {};
+  const mine = o[side];
   const status = pairStatus(o, slots[current.key]);
   const mutual = status === "mutual" || status === "booked";
   const declined = status === "declined";
@@ -80,12 +96,20 @@ export function Meetings() {
   const firstFree = earliestFree(availability);
   const room = roomFor(current.need, needs);
   const fb = feedback[current.key];
+  const talentName = mutual ? current.t.revealName : current.t.alias;
+  const me = side === "company" ? current.need.company : talentName;
+  const otherSide: MeetingSide = side === "company" ? "talent" : "company";
+  const agendaId = side === "company" ? companyOf(current.need) : current.t.id;
 
-  const answer = (side: "company" | "talent", v: OptInAnswer) => {
-    const other = side === "company" ? o.talent : o.company;
+  const answer = (v: OptInAnswer) => {
+    const other = o[otherSide];
     setOptIn(current.key, side, v);
     if (v === true && other === true) toast.success("It's mutual! Identities revealed. Pick a slot.");
-    else if (v === false) toast("Declined. Nobody is told who said no, or why.");
+    else if (v === true) toast(`Saved. You'll hear back when ${OTHER[side]} answers.`);
+    else if (v === false)
+      toast(
+        `Declined. ${OTHER[side][0].toUpperCase() + OTHER[side].slice(1)} is not told who said no, or why.`,
+      );
     else if (v === undefined && slot) toast("Withdrawn. The booked slot was released.");
   };
 
@@ -97,28 +121,38 @@ export function Meetings() {
   return (
     <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
       <div className="space-y-2">
-        <p className="px-1 text-xs font-medium text-muted-foreground">Approved matches</p>
+        <p className="px-1 text-xs font-medium text-muted-foreground">
+          {side === "company" ? "Candidates suggested to companies" : "Companies suggested to candidates"}
+        </p>
         {pairs.map((p) => {
           const po = optIns[p.key] ?? {};
           const ps = pairStatus(po, slots[p.key]);
-          const label = feedback[p.key] ? "Feedback in" : STATUS_LABEL[ps](slots[p.key]);
+          const pm = ps === "mutual" || ps === "booked";
+          const label = feedback[p.key]?.[side]
+            ? "Feedback sent"
+            : ps === "waiting" && po[side] !== undefined
+              ? `Waiting for ${OTHER[side]}`
+              : STATUS_LABEL[ps](slots[p.key]);
           return (
             <button
               key={p.key}
               type="button"
-              onClick={() => setSelected(p.key)}
+              onClick={() => select(p.key)}
               className={cn(
                 "w-full rounded-xl border bg-card p-3 text-left transition-colors hover:bg-muted/50",
                 current.key === p.key && "border-primary ring-2 ring-primary/20",
               )}
             >
-              <p className="truncate text-sm font-medium">{p.need.title}</p>
+              <p className="truncate text-sm font-medium">
+                {side === "company" ? (pm ? p.t.revealName : p.t.alias) : p.need.title}
+              </p>
               <p className="truncate text-xs text-muted-foreground">
-                {p.need.company} × {ps === "mutual" || ps === "booked" ? p.t.revealName : p.t.alias}
+                {side === "company"
+                  ? `for ${p.need.company} · ${p.need.title}`
+                  : `${p.need.company} · as ${pm ? p.t.revealName : p.t.alias}`}
               </p>
               <div className="mt-2 flex items-center gap-1.5">
-                <Dot value={po.company} label="Company" />
-                <Dot value={po.talent} label="Talent" />
+                <Dot value={po[side]} label="Your answer" />
                 <span className="ml-auto text-xs text-muted-foreground">{label}</span>
               </div>
             </button>
@@ -127,17 +161,23 @@ export function Meetings() {
       </div>
 
       <div className="space-y-6">
-        {/* Step A: mutual opt-in */}
+        {/* Step A: opt in */}
         <section className="space-y-3">
-          <StepTitle n="A" title="Mutual opt-in" done={mutual}>
-            Each side sees why the match was suggested. Identities are revealed only when both say yes.
+          <StepTitle
+            n="A"
+            title={
+              side === "company" ? "Do you want to meet this candidate?" : "Do you want to meet this company?"
+            }
+            done={mutual}
+          >
+            You see why the match was suggested. {side === "company" ? "Their name" : "Your name"} is revealed
+            only when both sides say yes, and nobody is told who said no.
           </StepTitle>
-          <div className="grid gap-4 md:grid-cols-2">
-            {/* Company view */}
+          {side === "company" ? (
             <Card>
               <CardHeader>
                 <CardDescription className="flex items-center gap-1.5">
-                  <Building2Icon className="size-3.5" /> {current.need.company} sees
+                  <Building2Icon className="size-3.5" /> {current.need.company} · {current.need.title}
                 </CardDescription>
                 <CardTitle className="flex items-center gap-2 text-base">
                   {mutual ? (
@@ -145,7 +185,7 @@ export function Meetings() {
                   ) : (
                     <EyeOffIcon className="size-4 text-muted-foreground" />
                   )}
-                  {mutual ? current.t.revealName : current.t.alias}
+                  {talentName}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -158,16 +198,14 @@ export function Meetings() {
                 )}
               </CardContent>
               <CardFooter className="gap-2">
-                <OptInButtons value={o.company} onChange={(v) => answer("company", v)} />
+                <OptInButtons value={mine} onChange={answer} />
               </CardFooter>
             </Card>
-
-            {/* Talent view */}
+          ) : (
             <Card>
               <CardHeader>
                 <CardDescription className="flex items-center gap-1.5">
-                  <UserRoundIcon className="size-3.5" /> {mutual ? current.t.revealName : current.t.alias}{" "}
-                  sees
+                  <UserRoundIcon className="size-3.5" /> Suggested to {talentName}
                 </CardDescription>
                 <CardTitle className="text-base">{current.need.title}</CardTitle>
               </CardHeader>
@@ -194,10 +232,15 @@ export function Meetings() {
                 </div>
               </CardContent>
               <CardFooter className="gap-2">
-                <OptInButtons value={o.talent} onChange={(v) => answer("talent", v)} />
+                <OptInButtons value={mine} onChange={answer} />
               </CardFooter>
             </Card>
-          </div>
+          )}
+          {mine === true && status === "waiting" && (
+            <p className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
+              Waiting for {OTHER[side]} to answer. You&apos;ll be notified if it&apos;s mutual.
+            </p>
+          )}
           {declined && (
             <p className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
               No meeting this time. Neither side is told who said no or why, and both stay in the pool for
@@ -205,22 +248,22 @@ export function Meetings() {
             </p>
           )}
           <div className="flex flex-wrap gap-2 text-xs">
-            <span className="self-center text-muted-foreground">Agendas:</span>
             <Button
               size="xs"
               variant="outline"
               nativeButton={false}
-              render={<Link href={`/meetings/agenda/${companyOf(current.need)}`} />}
+              render={<Link href={`/meetings/agenda/${agendaId}`} />}
             >
-              <CalendarDaysIcon data-icon="inline-start" /> {current.need.company}
+              <CalendarDaysIcon data-icon="inline-start" /> Your agenda
             </Button>
             <Button
               size="xs"
-              variant="outline"
+              variant="ghost"
               nativeButton={false}
-              render={<Link href={`/meetings/agenda/${current.t.id}`} />}
+              render={<Link href={`/meetings/${otherSide}?pair=${encodeURIComponent(current.key)}`} />}
             >
-              <CalendarDaysIcon data-icon="inline-start" /> {mutual ? current.t.revealName : current.t.alias}
+              <ArrowLeftRightIcon data-icon="inline-start" /> Demo: switch to the{" "}
+              {otherSide === "company" ? "company" : "candidate"}&apos;s view
             </Button>
           </div>
         </section>
@@ -229,7 +272,8 @@ export function Meetings() {
         <section className={cn("space-y-3", !mutual && "pointer-events-none opacity-50")}>
           <StepTitle n="B" title={`Book a ${EVENT.slotMinutes}-minute slot`} done={!!slot}>
             The schedule is generated before the event and served as static files, so the login rush at the
-            start can&apos;t overload it. A time is only blocked if this company or this candidate is busy.
+            start can&apos;t overload it. A time is only blocked if{" "}
+            {side === "company" ? "you or the candidate" : "you or the company"} are busy.
           </StepTitle>
           <Card>
             <CardContent className="space-y-4">
@@ -265,29 +309,32 @@ export function Meetings() {
                 )}
               </div>
               <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
-                {availability.map((a) => (
-                  <Button
-                    key={a.time}
-                    variant={a.mine ? "default" : "outline"}
-                    disabled={!a.free}
-                    title={
-                      a.reason === "company"
-                        ? `${current.need.company} already has a meeting at ${a.time}`
-                        : a.reason === "candidate"
-                          ? `The candidate already has a meeting at ${a.time}`
-                          : undefined
-                    }
-                    className="h-auto flex-col gap-0 py-1.5 tabular-nums"
-                    onClick={() => book(a.time)}
-                  >
-                    <span className={cn(!a.free && "line-through")}>{a.time}</span>
-                    {!a.free && (
-                      <span className="text-[10px] font-normal no-underline">
-                        {a.reason === "company" ? "company busy" : "candidate busy"}
-                      </span>
-                    )}
-                  </Button>
-                ))}
+                {availability.map((a) => {
+                  const mineBusy = (a.reason === "company") === (side === "company");
+                  return (
+                    <Button
+                      key={a.time}
+                      variant={a.mine ? "default" : "outline"}
+                      disabled={!a.free}
+                      title={
+                        a.free
+                          ? undefined
+                          : mineBusy
+                            ? `You already have a meeting at ${a.time}`
+                            : `${OTHER[side]} is busy at ${a.time}`
+                      }
+                      className="h-auto flex-col gap-0 py-1.5 tabular-nums"
+                      onClick={() => book(a.time)}
+                    >
+                      <span className={cn(!a.free && "line-through")}>{a.time}</span>
+                      {!a.free && (
+                        <span className="text-[10px] font-normal no-underline">
+                          {mineBusy ? "you're busy" : side === "company" ? "candidate busy" : "company busy"}
+                        </span>
+                      )}
+                    </Button>
+                  );
+                })}
               </div>
               <p className="text-xs text-muted-foreground">
                 Pre-generated schedule:{" "}
@@ -307,17 +354,29 @@ export function Meetings() {
 
         {/* Step C: feedback */}
         <section className={cn("space-y-3", !slot && "pointer-events-none opacity-50")}>
-          <StepTitle n="C" title="After the meeting: 30-second feedback" done={!!fb}>
-            Helps the organiser improve the next event and report impact. It doesn&apos;t rate people.
+          <StepTitle n="C" title="After the meeting: 30-second feedback" done={!!fb?.[side]}>
+            You answer on your own. It rates the meeting and the cards, never the person, and helps the
+            organiser report impact and improve the next event.
           </StepTitle>
-          <FeedbackForm
-            key={current.key}
-            initial={fb}
-            onSubmit={(f) => {
-              giveFeedback(current.key, f);
-              toast.success("Thanks, feedback saved");
-            }}
-          />
+          {fb?.company && fb?.talent && (
+            <p className="rounded-lg border border-evidence/30 bg-evidence-soft p-3 text-sm text-evidence">
+              {OUTCOME_LABEL[pairOutcome(fb)]}
+            </p>
+          )}
+          <div className="max-w-xl">
+            <FeedbackForm
+              key={`${current.key}:${side}`}
+              side={side}
+              who={me}
+              initial={fb?.[side]}
+              onSubmit={(f) => {
+                giveFeedback(current.key, side, f);
+                toast.success("Thanks, feedback saved", {
+                  description: "Your answers are shared with the organiser, not with the other side.",
+                });
+              }}
+            />
+          </div>
         </section>
       </div>
     </div>
@@ -413,62 +472,149 @@ function OptInButtons({ value, onChange }: { value: OptInAnswer; onChange: (v: O
   );
 }
 
-function FeedbackForm({ initial, onSubmit }: { initial?: Feedback; onSubmit: (f: Feedback) => void }) {
-  const [accuracy, setAccuracy] = useState(initial?.evidenceAccuracy ?? 0);
-  const [next, setNext] = useState<Feedback["nextStep"] | null>(initial?.nextStep ?? null);
-  const [comment, setComment] = useState(initial?.comment ?? "");
+const OUTCOME_LABEL: Record<ReturnType<typeof pairOutcome>, string> = {
+  awaiting: "Waiting for both answers.",
+  "no-show": "The meeting didn't take place.",
+  interview: "Both want to continue: an interview is next.",
+  "follow-up": "Both are open to keeping in touch.",
+  "no-follow-up": "No follow-up this time. Thanks for meeting!",
+};
+
+function Stars({ value, onChange, label }: { value: number; onChange: (n: number) => void; label: string }) {
+  return (
+    <div className="flex gap-1" role="radiogroup" aria-label={label}>
+      {[1, 2, 3, 4, 5].map((n) => (
+        <button
+          key={n}
+          type="button"
+          role="radio"
+          aria-checked={value === n}
+          aria-label={`${n} of 5`}
+          onClick={() => onChange(n)}
+          className="rounded p-0.5 transition-transform hover:scale-110"
+        >
+          <StarIcon
+            className={cn("size-6", n <= value ? "fill-transfer text-transfer" : "text-muted-foreground/40")}
+          />
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function FeedbackForm({
+  side,
+  who,
+  initial,
+  onSubmit,
+}: {
+  side: FeedbackSide;
+  who: string;
+  initial?: SideFeedback;
+  onSubmit: (f: SideFeedback) => void;
+}) {
+  const [held, setHeld] = useState<boolean | undefined>(initial?.held);
+  const [usefulness, setUsefulness] = useState(initial?.usefulness ?? 0);
+  const [accuracy, setAccuracy] = useState(initial?.accuracy ?? 0);
+  const [next, setNext] = useState<NextStep | undefined>(initial?.nextStep);
+  const [improve, setImprove] = useState(initial?.improve ?? "");
+  const draft: Partial<SideFeedback> = { held, usefulness, accuracy, nextStep: next };
+  const error = feedbackError(draft);
+  const q = QUESTIONS[side];
 
   return (
     <Card>
+      <CardHeader>
+        <CardDescription className="flex items-center gap-1.5">
+          {side === "company" ? (
+            <Building2Icon className="size-3.5" />
+          ) : (
+            <UserRoundIcon className="size-3.5" />
+          )}
+          {who} answers
+        </CardDescription>
+        <CardTitle className="text-base">
+          {side === "company" ? "Company feedback" : "Candidate feedback"}
+        </CardTitle>
+        {initial && (
+          <Badge
+            variant="outline"
+            className="col-start-2 row-span-2 row-start-1 self-start justify-self-end font-normal"
+          >
+            <CheckCircle2Icon data-icon="inline-start" /> Sent
+          </Badge>
+        )}
+      </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-1.5">
-          <p className="text-sm">Did the skill card reflect what you heard in the meeting?</p>
-          <div className="flex gap-1">
-            {[1, 2, 3, 4, 5].map((n) => (
-              <button
-                key={n}
-                type="button"
-                aria-label={`${n} of 5`}
-                onClick={() => setAccuracy(n)}
-                className="rounded p-0.5 transition-transform hover:scale-110"
-              >
-                <StarIcon
-                  className={cn(
-                    "size-6",
-                    n <= accuracy ? "fill-transfer text-transfer" : "text-muted-foreground/40",
-                  )}
-                />
-              </button>
-            ))}
+          <p className="text-sm">Did the meeting take place?</p>
+          <div className="flex gap-1.5">
+            <Button size="sm" variant={held === true ? "default" : "outline"} onClick={() => setHeld(true)}>
+              Yes
+            </Button>
+            <Button size="sm" variant={held === false ? "default" : "outline"} onClick={() => setHeld(false)}>
+              No, it didn&apos;t happen
+            </Button>
           </div>
         </div>
-        <div className="space-y-1.5">
-          <p className="text-sm">Agreed next step</p>
-          <div className="flex flex-wrap gap-1.5">
-            {(["Interview", "Keep in touch", "Not a fit"] as const).map((s) => (
-              <Button
-                key={s}
-                size="sm"
-                variant={next === s ? "default" : "outline"}
-                onClick={() => setNext(s)}
-              >
-                {s}
-              </Button>
-            ))}
-          </div>
-        </div>
+        {held && (
+          <>
+            <div className="space-y-1.5">
+              <p className="text-sm">{q.usefulness}</p>
+              <Stars value={usefulness} onChange={setUsefulness} label={q.usefulness} />
+            </div>
+            <div className="space-y-1.5">
+              <p className="text-sm">{q.accuracy}</p>
+              <Stars value={accuracy} onChange={setAccuracy} label={q.accuracy} />
+            </div>
+            <div className="space-y-1.5">
+              <p className="text-sm">What happens next?</p>
+              <div className="flex flex-wrap gap-1.5">
+                {NEXT_STEPS[side].map((s) => (
+                  <Button
+                    key={s.value}
+                    size="sm"
+                    variant={next === s.value ? "default" : "outline"}
+                    onClick={() => setNext(s.value)}
+                  >
+                    {s.label}
+                  </Button>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Only the organiser sees this. The other side is not told.
+              </p>
+            </div>
+          </>
+        )}
         <div className="grid gap-1.5">
-          <Label htmlFor="fb-comment">What should the organiser do differently next time? (optional)</Label>
-          <Textarea id="fb-comment" value={comment} onChange={(e) => setComment(e.target.value)} rows={2} />
+          <Label htmlFor={`improve-${side}`}>
+            What should the organiser do differently next time? (optional)
+          </Label>
+          <Textarea
+            id={`improve-${side}`}
+            value={improve}
+            onChange={(e) => setImprove(e.target.value)}
+            rows={2}
+            placeholder="About the event, not the person. No names needed."
+          />
         </div>
       </CardContent>
-      <CardFooter>
+      <CardFooter className="gap-3">
         <Button
-          disabled={!accuracy || !next}
-          onClick={() => next && onSubmit({ evidenceAccuracy: accuracy, nextStep: next, comment })}
+          disabled={!!error}
+          onClick={() =>
+            onSubmit({
+              held: !!held,
+              ...(held && { usefulness, accuracy, nextStep: next }),
+              improve: improve.trim() || undefined,
+              at: new Date().toISOString(),
+            })
+          }
         >
           {initial ? "Update feedback" : "Send feedback"}
         </Button>
+        {error && <span className="text-xs text-muted-foreground">{error}</span>}
       </CardFooter>
     </Card>
   );

@@ -110,7 +110,7 @@ describe("dashboard numbers", () => {
 
   it("counts each funnel stage from recorded human actions", () => {
     const f = funnel(SEED_NEEDS, SEED_TALENT, decisions, optIns, slots, {});
-    expect(f.map((s) => s.value).slice(1)).toEqual([2, 1, 1, 0]);
+    expect(f.map((s) => s.value).slice(1)).toEqual([2, 1, 1, 0, 0]);
   });
 
   it("labels supply per need from the same rule as suggestions", () => {

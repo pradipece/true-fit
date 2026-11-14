@@ -1,4 +1,5 @@
 import { SKILLS } from "./esco";
+import { pairOutcome } from "./impact";
 import { biasAudit, matchesForNeed, pairKey, poolCoverage } from "./match";
 import type { AuditEntry, Decision, Feedback, MatchExplanation, Need, SkillGroup, Talent } from "./types";
 
@@ -156,7 +157,14 @@ export function funnel(
     { stage: "Approved by you", value: approved.length },
     { stage: "Both said yes", value: both.length },
     { stage: "Meeting booked", value: both.filter((k) => slots[k]).length },
-    { stage: "Feedback received", value: both.filter((k) => feedback[k]).length },
+    {
+      stage: "Meeting held",
+      value: both.filter((k) => slots[k] && (feedback[k]?.company?.held || feedback[k]?.talent?.held)).length,
+    },
+    {
+      stage: "Follow-up agreed",
+      value: both.filter((k) => ["interview", "follow-up"].includes(pairOutcome(feedback[k]))).length,
+    },
   ];
 }
 

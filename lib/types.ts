@@ -158,8 +158,25 @@ export type AuditEntry = {
   note?: string;
 };
 
-export type Feedback = {
-  evidenceAccuracy: number;
-  nextStep: "Interview" | "Keep in touch" | "Not a fit";
-  comment: string;
+export type FeedbackSide = "company" | "talent";
+
+/** Next step each side can choose. "continue" = interview (company) / want to continue (candidate). */
+export type NextStep = "continue" | "keep-in-touch" | "stop";
+
+/**
+ * One side's structured feedback after a meeting. It rates the meeting and the
+ * accuracy of the card, never the person.
+ */
+export type SideFeedback = {
+  held: boolean;
+  /** 1–5: was the meeting worth the time? Only when held. */
+  usefulness?: number;
+  /** 1–5: did the card (skill card for the company, need card for the candidate) match reality? */
+  accuracy?: number;
+  nextStep?: NextStep;
+  /** Optional idea for the organiser. Shown to organisers with identifying details removed. */
+  improve?: string;
+  at: string;
 };
+
+export type Feedback = Partial<Record<FeedbackSide, SideFeedback>>;

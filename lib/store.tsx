@@ -5,7 +5,7 @@ import { SEED_NEEDS, SEED_TALENT } from "./data";
 import { pairKey } from "./match";
 import { actionFor, auditEntry } from "./oversight";
 import { withOptIn, type OptIn, type OptInAnswer } from "./schedule";
-import type { AuditEntry, Decision, Feedback, Need, Talent } from "./types";
+import type { AuditEntry, Decision, Feedback, FeedbackSide, Need, SideFeedback, Talent } from "./types";
 
 type DemoState = {
   needs: Need[];
@@ -45,11 +45,31 @@ const SEED_STATE: DemoState = {
     [pairKey("N-02", "T-12")]: { company: true, talent: true },
   },
   slots: { [pairKey("N-02", "T-12")]: "10:20" },
-  feedback: {},
+  // Demo data: the one meeting already booked, as if both sides answered after the event.
+  feedback: {
+    [pairKey("N-02", "T-12")]: {
+      company: {
+        held: true,
+        usefulness: 5,
+        accuracy: 4,
+        nextStep: "continue",
+        improve: "Send the skill cards a day earlier so we can prepare questions.",
+        at: "2026-12-03T10:35:00.000Z",
+      },
+      talent: {
+        held: true,
+        usefulness: 4,
+        accuracy: 5,
+        nextStep: "continue",
+        improve: "A quiet corner for meetings would help, the hall was loud.",
+        at: "2026-12-03T10:40:00.000Z",
+      },
+    },
+  },
 };
 
 // Bump when seeds change so stale persisted state does not hide new personas.
-const STORAGE_KEY = "truefit-demo-v3";
+const STORAGE_KEY = "truefit-demo-v4";
 
 type Ctx = DemoState & {
   addNeed: (n: Need) => void;
@@ -62,7 +82,8 @@ type Ctx = DemoState & {
   setOptIn: (key: string, side: "company" | "talent", value: OptInAnswer) => void;
   bookSlot: (key: string, slot: string) => void;
   cancelSlot: (key: string) => void;
-  giveFeedback: (key: string, f: Feedback) => void;
+  /** Save one side's feedback for a meeting; the other side's answer is kept. */
+  giveFeedback: (key: string, side: FeedbackSide, f: SideFeedback) => void;
   reset: () => void;
 };
 
@@ -152,7 +173,8 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     [],
   );
   const giveFeedback = useCallback(
-    (key: string, f: Feedback) => setState((s) => ({ ...s, feedback: { ...s.feedback, [key]: f } })),
+    (key: string, side: FeedbackSide, f: SideFeedback) =>
+      setState((s) => ({ ...s, feedback: { ...s.feedback, [key]: { ...s.feedback[key], [side]: f } } })),
     [],
   );
   const reset = useCallback(() => setState(SEED_STATE), []);

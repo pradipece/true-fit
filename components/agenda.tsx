@@ -92,7 +92,7 @@ export function Agenda({ who, name }: { who: Participant; name: string }) {
           items={toAnswer}
           action={
             toAnswer.length > 0 && (
-              <Button size="sm" nativeButton={false} render={<Link href="/meetings" />}>
+              <Button size="sm" nativeButton={false} render={<Link href={`/meetings/${who.kind}`} />}>
                 Answer now <ArrowRightIcon data-icon="inline-end" />
               </Button>
             )
@@ -104,7 +104,12 @@ export function Agenda({ who, name }: { who: Participant; name: string }) {
           items={toBook}
           action={
             toBook.length > 0 && (
-              <Button size="sm" variant="outline" nativeButton={false} render={<Link href="/meetings" />}>
+              <Button
+                size="sm"
+                variant="outline"
+                nativeButton={false}
+                render={<Link href={`/meetings/${who.kind}`} />}
+              >
                 Pick a slot <ArrowRightIcon data-icon="inline-end" />
               </Button>
             )
