@@ -3,6 +3,7 @@ import { impactMetrics } from "./impact";
 import { matchesForNeed, pairKey } from "./match";
 import { fairnessSummary, funnel, overview, poolProfile } from "./oversight";
 import { companyOf, rooms, SLOT_TIMES } from "./schedule";
+import type { PipelineState } from "./pipeline";
 import type { Decision, Feedback, Need, Talent } from "./types";
 
 /**
@@ -15,14 +16,25 @@ export type DashboardInput = {
   decisions: Record<string, Decision>;
   optIns: Record<string, { company?: boolean; talent?: boolean }>;
   slots: Record<string, string>;
+  screening: PipelineState["screening"];
+  offers: PipelineState["offers"];
   feedback: Record<string, Feedback>;
 };
 
 const pct = (part: number, whole: number) => (whole ? Math.round((part / whole) * 100) : 0);
 
-export function dashboardData({ needs, talent, decisions, optIns, slots, feedback }: DashboardInput) {
+export function dashboardData({
+  needs,
+  talent,
+  decisions,
+  optIns,
+  slots,
+  screening,
+  offers,
+  feedback,
+}: DashboardInput) {
   const o = overview(needs, talent, decisions, optIns, slots);
-  const stages = funnel(needs, talent, decisions, optIns, slots, feedback);
+  const stages = funnel(needs, talent, { decisions, optIns, slots, screening, offers });
   const profile = poolProfile(talent);
   const impact = impactMetrics(slots, feedback);
 

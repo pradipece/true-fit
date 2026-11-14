@@ -36,44 +36,28 @@ import {
   type InterestStatus,
 } from "@/lib/explore";
 import { pairKey, SUGGEST_THRESHOLD } from "@/lib/match";
+import { stageOf, TALENT_LABEL, type Stage } from "@/lib/pipeline";
 import { useDemo } from "@/lib/store";
 import type { MatchExplanation, Need } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const pct = (x: number) => `${Math.round(x * 100)}%`;
 
-const STATUS: Record<Exclude<InterestStatus, "none">, { label: string; className: string }> = {
-  asked: {
-    label: "You asked to meet · the organiser decides",
-    className: "border-primary/30 bg-accent text-accent-foreground",
-  },
-  invited: {
-    label: "The organiser introduced you",
-    className: "border-evidence/30 bg-evidence-soft text-evidence",
-  },
-  accepted: {
-    label: "You said yes · waiting for the company",
-    className: "border-primary/30 bg-accent text-accent-foreground",
-  },
-  both: {
-    label: "You both said yes · pick a time",
-    className: "border-evidence/30 bg-evidence-soft text-evidence",
-  },
-  booked: { label: "Meeting booked", className: "bg-evidence text-white" },
-  passed: {
-    label: "Not this time for this role",
-    className: "border-border bg-secondary text-secondary-foreground",
-  },
-  declined: { label: "You said no", className: "border-dashed" },
+const STATUS: Record<Exclude<InterestStatus, "none">, string> = {
+  asked: "border-primary/30 bg-accent text-accent-foreground",
+  action: "border-evidence/30 bg-evidence-soft text-evidence",
+  progress: "border-primary/30 bg-accent text-accent-foreground",
+  hired: "bg-evidence text-white",
+  passed: "border-border bg-secondary text-secondary-foreground",
+  declined: "border-dashed",
 };
 
 /** Short status for the company ranking's role rows. */
 const SHORT: Record<Exclude<InterestStatus, "none">, string> = {
   asked: "Asked",
-  invited: "Introduced",
-  accepted: "You said yes",
-  both: "Both said yes",
-  booked: "Booked",
+  action: "Your move",
+  progress: "In progress",
+  hired: "Hired",
   passed: "Not this time",
   declined: "You said no",
 };
@@ -85,7 +69,7 @@ const SHORT: Record<Exclude<InterestStatus, "none">, string> = {
  * introduce and the company still answers yes or no.
  */
 export function ExploreRoles() {
-  const { needs, talent, decisions, optIns, slots, setOptIn } = useDemo();
+  const { needs, talent, decisions, optIns, slots, screening, offers, setOptIn } = useDemo();
   const { id, me } = useIdentity("talent");
   const profile = talent.find((t) => t.id === id);
   const [filter, setFilter] = useState<"all" | "strong" | "asked">("all");
@@ -124,9 +108,11 @@ export function ExploreRoles() {
     );
   }
 
+  const stageFor = (n: Need) =>
+    stageOf(pairKey(n.id, profile.id), { decisions, optIns, slots, screening, offers }).stage;
   const statusOf = (n: Need) => {
     const key = pairKey(n.id, profile.id);
-    return interestStatus(optIns[key], decisions[key], slots[key]);
+    return interestStatus(stageOf(key, { decisions, optIns, slots, screening, offers }));
   };
   const strong = roles.filter((r) => r.m.suggested).length;
   const asked = roles.filter((r) => statusOf(r.need) !== "none").length;
@@ -140,7 +126,7 @@ export function ExploreRoles() {
     setOptIn(pairKey(n.id, profile.id), "talent", true);
     toast.success(`You asked to meet ${n.company}`, {
       description:
-        "The organiser sees your request next to your skill card. If it introduces you and the company says yes, you pick a time in Meetings.",
+        "Espoo sees your request next to your skill card. If your skills fit, it invites you to a short interview; if you pass, it sends your profile to the company.",
     });
   };
   const withdraw = (n: Need) => {
@@ -265,7 +251,7 @@ export function ExploreRoles() {
                   <HandIcon data-icon="inline-start" /> Ask to meet
                 </Button>
               ) : (
-                <Badge variant="outline" className={cn("font-normal", STATUS[st].className)}>
+                <Badge variant="outline" className={cn("font-normal", STATUS[st])}>
                   {SHORT[st]}
                 </Badge>
               );
@@ -324,6 +310,7 @@ export function ExploreRoles() {
             need={need}
             m={m}
             status={statusOf(need)}
+            stage={stageFor(need)}
             boost={boosts.find((b) => b.need.id === need.id)?.boost ?? null}
             pair={pairKey(need.id, profile.id)}
             onAsk={() => ask(need)}
@@ -388,6 +375,7 @@ function RoleCard({
   need,
   m,
   status,
+  stage,
   boost,
   pair,
   onAsk,
@@ -396,6 +384,7 @@ function RoleCard({
   need: Need;
   m: MatchExplanation;
   status: InterestStatus;
+  stage: Stage;
   boost: ReturnType<typeof proofBoost>;
   pair: string;
   onAsk: () => void;
@@ -456,15 +445,15 @@ function RoleCard({
       </CardContent>
       <CardFooter className="flex-wrap items-center gap-2">
         {status !== "none" && (
-          <Badge variant="outline" className={cn("font-normal", STATUS[status].className)}>
-            {status === "booked" ? (
+          <Badge variant="outline" className={cn("font-normal", STATUS[status])}>
+            {status === "hired" ? (
               <CalendarCheckIcon data-icon="inline-start" />
-            ) : status === "invited" ? (
+            ) : status === "action" ? (
               <MailOpenIcon data-icon="inline-start" />
-            ) : status === "asked" || status === "accepted" || status === "both" ? (
+            ) : status === "asked" || status === "progress" ? (
               <CheckIcon data-icon="inline-start" />
             ) : null}
-            {STATUS[status].label}
+            {TALENT_LABEL[stage]}
           </Badge>
         )}
         <span className="ml-auto flex gap-1">
@@ -478,20 +467,14 @@ function RoleCard({
               <Undo2Icon data-icon="inline-start" /> Withdraw
             </Button>
           )}
-          {(status === "invited" || status === "accepted" || status === "both" || status === "booked") && (
+          {status !== "none" && status !== "asked" && (
             <Button
               size="sm"
-              variant={status === "booked" ? "outline" : "default"}
+              variant={status === "action" ? "default" : "outline"}
               nativeButton={false}
               render={<Link href={`/meetings/talent?pair=${encodeURIComponent(pair)}`} />}
             >
-              {status === "invited"
-                ? "Answer"
-                : status === "both"
-                  ? "Pick a time"
-                  : status === "accepted"
-                    ? "See introduction"
-                    : "See meeting"}
+              {status === "action" ? "Open" : "See progress"}
               <ArrowRightIcon data-icon="inline-end" />
             </Button>
           )}

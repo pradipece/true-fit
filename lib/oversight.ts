@@ -1,7 +1,7 @@
 import { SKILLS } from "./esco";
-import { pairOutcome } from "./impact";
 import { biasAudit, matchesForNeed, pairKey, poolCoverage } from "./match";
-import type { AuditEntry, Decision, Feedback, MatchExplanation, Need, SkillGroup, Talent } from "./types";
+import { activeKeys, stageOf, type PairStage, type PipelineState } from "./pipeline";
+import type { AuditEntry, Decision, MatchExplanation, Need, SkillGroup, Talent } from "./types";
 
 /**
  * Human oversight by the organiser, the event's broker: reasons, the append-only audit log
@@ -25,6 +25,16 @@ export const REASONS = {
     "Level of experience doesn't fit the need",
     "Way of working or start date doesn't fit",
     "Already introduced to this company",
+  ],
+  pass: [
+    "Skills confirmed in the interview",
+    "Transferable skills confirmed",
+    "Motivated and the role fits what they want",
+  ],
+  fail: [
+    "Key must-have skill not confirmed",
+    "The role isn't what they're looking for",
+    "Way of working or start date doesn't fit",
   ],
   edit: [
     "New information from the candidate",
@@ -54,7 +64,8 @@ export function auditEntry(
 ): AuditEntry {
   const [needId, talentId] = key.split("::");
   return {
-    id: `A-${Date.parse(at).toString(36)}-${(seq++).toString(36)}`,
+    // Time + counter + random part: unique even when two browsers save in the same millisecond.
+    id: `A-${Date.parse(at).toString(36)}-${(seq++).toString(36)}${Math.random().toString(36).slice(2, 7)}`,
     at,
     actor: ACTOR,
     action,
@@ -139,34 +150,23 @@ export function auditCsv(entries: AuditEntry[], needs: Need[], pool: Talent[]) {
 // ── Dashboard data (plain numbers for the overview charts) ─────────────────
 
 /** From suggestion to meeting: each stage counts pairs that reached it. */
-export function funnel(
-  needs: Need[],
-  pool: Talent[],
-  decisions: Record<string, Decision>,
-  optIns: Record<string, { company?: boolean; talent?: boolean }>,
-  slots: Record<string, string>,
-  feedback: Record<string, Feedback>,
-) {
-  const approved = Object.entries(decisions)
-    .filter(([, d]) => d.status === "approved")
-    .map(([k]) => k);
-  const both = approved.filter((k) => optIns[k]?.company && optIns[k]?.talent);
+export function funnel(needs: Need[], pool: Talent[], state: PipelineState) {
+  const stages = activeKeys(state).map((k) => stageOf(k, state));
+  const reached = (step: number, extra: (p: PairStage) => boolean = () => true) =>
+    stages.filter((p) => (p.step > step || (p.step === step && !p.stopped) || p.hired) && extra(p)).length;
   return [
     {
       stage: "Suggested by skills",
       value: needs.flatMap((n) => matchesForNeed(n, pool).filter((m) => m.suggested)).length,
     },
-    { stage: "Introduced by the organiser", value: approved.length },
-    { stage: "Both said yes", value: both.length },
-    { stage: "Meeting booked", value: both.filter((k) => slots[k]).length },
+    { stage: "Invited to Espoo interview", value: stages.filter((p) => p.step >= 2).length },
+    { stage: "Passed, sent to company", value: stages.filter((p) => p.step >= 3).length },
+    { stage: "Company interview agreed", value: reached(4, (p) => p.stage !== "interview-invited") },
     {
-      stage: "Meeting held",
-      value: both.filter((k) => slots[k] && (feedback[k]?.company?.held || feedback[k]?.talent?.held)).length,
+      stage: "Job offer made",
+      value: stages.filter((p) => p.stage === "offered" || p.hired || p.stage === "offer-declined").length,
     },
-    {
-      stage: "Follow-up agreed",
-      value: both.filter((k) => ["interview", "follow-up"].includes(pairOutcome(feedback[k]))).length,
-    },
+    { stage: "Offer accepted", value: stages.filter((p) => p.hired).length },
   ];
 }
 

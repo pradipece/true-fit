@@ -10,7 +10,7 @@ export default function TalentPage() {
     <div className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6">
       <PageHeader
         eyebrow="Talent · before the event"
-        title="Show what you can do. No CV needed."
+        title="Show what you can do."
         description="Translate your past job or unusual path into local skills, answer four short real-life questions, and see which answer supports which skill. You edit everything; companies first see an anonymised skill card."
       />
       <PageGuide
@@ -22,11 +22,11 @@ export default function TalentPage() {
           },
           {
             title: "Show what you can do",
-            text: "Pick your skills and answer a few short questions. No CV needed.",
+            text: "Pick your skills and answer a few short questions.",
           },
           {
             title: "Check and join",
-            text: "Your card is anonymous. Your name is only shared when you and a company both agree to meet.",
+            text: "Your card is anonymous. Espoo shares your name with a company only after you pass its short interview.",
           },
         ]}
       />

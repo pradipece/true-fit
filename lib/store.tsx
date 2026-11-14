@@ -1,10 +1,20 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { OWN_COMPANY } from "./data";
+import {
+  applyPatch,
+  diffSnapshot,
+  EMPTY_SNAPSHOT,
+  fromSnapshot,
+  patchIsEmpty,
+  toSnapshot,
+  type Snapshot,
+} from "./demo-state";
 import { setEsco, type EscoSnapshot } from "./esco";
 import { pairKey } from "./match";
 import { actionFor, auditEntry } from "./oversight";
+import type { Offer, Screening } from "./pipeline";
 import { withOptIn, type OptIn, type OptInAnswer } from "./schedule";
 import { setSeed, type Seed } from "./seed";
 import type { AuditEntry, Decision, Feedback, FeedbackSide, Need, SideFeedback, Talent } from "./types";
@@ -16,7 +26,12 @@ type DemoState = {
   /** Append-only: every approve, reject, edit and revert, never removed. */
   audit: AuditEntry[];
   optIns: Record<string, OptIn>;
+  /** Company interview times. */
   slots: Record<string, string>;
+  /** Espoo interview per pair: the candidate's answer, the time and the organiser's result. */
+  screening: Record<string, Screening>;
+  /** The company's job offer (or no offer) and the candidate's answer. */
+  offers: Record<string, Offer>;
   feedback: Record<string, Feedback>;
   /** Demo stand-in for signing in: who is using each side's pages. Unset = default (lib/identity.ts). */
   actingAs: Partial<Record<FeedbackSide, string>>;
@@ -37,6 +52,24 @@ const SEED_DECISIONS: Record<string, Decision> = {
   },
 };
 
+const SEED_SCREENING: Record<string, Screening> = {
+  [pairKey("N-01", "T-30")]: {
+    answer: true,
+    slot: "10:10",
+    result: "passed",
+    reason: "Skills confirmed in the interview",
+    at: "2026-11-12T10:30:00.000Z",
+  },
+  [pairKey("N-02", "T-12")]: {
+    answer: true,
+    slot: "10:00",
+    result: "passed",
+    reason: "Transferable skills confirmed",
+    note: "Clear examples of cleaning messy operations data.",
+    at: "2026-11-12T11:15:00.000Z",
+  },
+};
+
 /** Seed rows the server loaded from the database (lib/seed-db.ts). */
 export type DemoSeed = Seed;
 
@@ -44,14 +77,22 @@ const seedState = ({ needs, talent }: Pick<Seed, "needs" | "talent">): DemoState
   needs,
   talent,
   decisions: SEED_DECISIONS,
-  audit: Object.entries(SEED_DECISIONS).map(([key, d]) =>
-    auditEntry(key, "approved", "none", "approved", d.reason, d.note, d.at),
-  ),
+  audit: [
+    ...Object.entries(SEED_DECISIONS).map(([key, d]) =>
+      auditEntry(key, "approved", "none", "approved", d.reason, d.note, d.at),
+    ),
+    ...Object.entries(SEED_SCREENING).map(([key, sc]) =>
+      auditEntry(key, "passed", "approved", "passed", sc.reason!, sc.note, sc.at),
+    ),
+  ],
   optIns: {
     [pairKey("N-01", "T-30")]: { company: true },
     [pairKey("N-02", "T-12")]: { company: true, talent: true },
   },
   slots: { [pairKey("N-02", "T-12")]: "10:20" },
+  // Both seeded candidates already passed their Espoo interview, so the company sees them.
+  screening: SEED_SCREENING,
+  offers: {},
   actingAs: {},
   // Demo data: the one meeting already booked, as if both sides answered after the event.
   feedback: {
@@ -77,7 +118,7 @@ const seedState = ({ needs, talent }: Pick<Seed, "needs" | "talent">): DemoState
 });
 
 // Bump when the state's shape changes so stale persisted state is dropped.
-const STORAGE_KEY = "truefit-demo-v4";
+const STORAGE_KEY = "truefit-demo-v5";
 
 /**
  * Restore persisted demo state over the fresh seed. Seed needs and talent always come from
@@ -103,7 +144,27 @@ export function hydrate(initial: DemoState, saved: Partial<DemoState>): DemoStat
   };
 }
 
+/**
+ * When the organiser passes on a pair or undoes its invitation, everything after the
+ * assessment goes too (Espoo interview, company interview, offer). Requests and feedback stay.
+ */
+function withoutDownstream(s: DemoState, key: string): DemoState {
+  const screening = { ...s.screening };
+  const slots = { ...s.slots };
+  const offers = { ...s.offers };
+  delete screening[key];
+  delete slots[key];
+  delete offers[key];
+  return { ...s, screening, slots, offers };
+}
+
+/** Where the shared database copy stands: loading, saved, saving, or not reachable. */
+export type SyncStatus = "loading" | "saved" | "saving" | "error";
+
+const POLL_MS = 4000;
+
 type Ctx = DemoState & {
+  sync: SyncStatus;
   addNeed: (n: Need) => void;
   addTalent: (t: Talent) => void;
   /** Approve, reject or edit a pair's decision. Always logged with a reason. */
@@ -116,6 +177,15 @@ type Ctx = DemoState & {
   cancelSlot: (key: string) => void;
   /** Save one side's feedback for a meeting; the other side's answer is kept. */
   giveFeedback: (key: string, side: FeedbackSide, f: SideFeedback) => void;
+  /** Candidate's answer to Espoo's interview invitation. A no or a withdrawal frees the time. */
+  answerScreening: (key: string, value: OptInAnswer) => void;
+  /** Book (or, with undefined, cancel) the Espoo interview time. */
+  bookScreening: (key: string, slot: string | undefined) => void;
+  /** The organiser records the Espoo interview result, with a reason; undefined withdraws it. Logged. */
+  recordScreening: (key: string, result: Screening["result"], reason: string, note?: string) => void;
+  /** The company's offer decision (undefined withdraws it), or the candidate's answer to an offer. */
+  setOffer: (key: string, offer: Offer | undefined) => void;
+  answerOffer: (key: string, value: OptInAnswer) => void;
   /** Demo only: switch who is using a side's pages. */
   setActingAs: (side: FeedbackSide, id: string) => void;
   reset: () => void;
@@ -182,7 +252,8 @@ export function DemoProvider({
           d.note,
           at,
         );
-        return { ...s, decisions: { ...s.decisions, [key]: { ...d, at } }, audit: [...s.audit, entry] };
+        const next = { ...s, decisions: { ...s.decisions, [key]: { ...d, at } }, audit: [...s.audit, entry] };
+        return d.status === "rejected" ? withoutDownstream(next, key) : next;
       }),
     [],
   );
@@ -193,11 +264,10 @@ export function DemoProvider({
         if (!prev) return s;
         const decisions = { ...s.decisions };
         delete decisions[key];
-        return {
-          ...s,
-          decisions,
-          audit: [...s.audit, auditEntry(key, "reverted", prev.status, "none", reason)],
-        };
+        return withoutDownstream(
+          { ...s, decisions, audit: [...s.audit, auditEntry(key, "reverted", prev.status, "none", reason)] },
+          key,
+        );
       }),
     [],
   );
@@ -224,15 +294,214 @@ export function DemoProvider({
       setState((s) => ({ ...s, feedback: { ...s.feedback, [key]: { ...s.feedback[key], [side]: f } } })),
     [],
   );
+  const answerScreening = useCallback(
+    (key: string, value: OptInAnswer) =>
+      setState((s) => {
+        const prev = s.screening[key] ?? {};
+        const sc: Screening = { ...prev, answer: value, ...(value !== true && { slot: undefined }) };
+        return { ...s, screening: { ...s.screening, [key]: sc } };
+      }),
+    [],
+  );
+  const bookScreening = useCallback(
+    (key: string, slot: string | undefined) =>
+      setState((s) => ({ ...s, screening: { ...s.screening, [key]: { ...s.screening[key], slot } } })),
+    [],
+  );
+  const recordScreening = useCallback(
+    (key: string, result: Screening["result"], reason: string, note?: string) =>
+      setState((s) => {
+        const prev = s.screening[key] ?? {};
+        const at = new Date().toISOString();
+        const entry = auditEntry(
+          key,
+          result ?? "reverted",
+          prev.result ?? "approved",
+          result ?? "approved",
+          reason,
+          note,
+          at,
+        );
+        const sc: Screening = { ...prev, result, reason: result && reason, note: result && note?.trim(), at };
+        const next = { ...s, screening: { ...s.screening, [key]: sc }, audit: [...s.audit, entry] };
+        // Without a pass, nothing reaches the company: drop its interview and offer for this pair.
+        if (result === "passed") return next;
+        const slots = { ...next.slots };
+        const offers = { ...next.offers };
+        delete slots[key];
+        delete offers[key];
+        return { ...next, slots, offers };
+      }),
+    [],
+  );
+  const setOffer = useCallback(
+    (key: string, offer: Offer | undefined) =>
+      setState((s) => {
+        const offers = { ...s.offers };
+        if (offer) offers[key] = offer;
+        else delete offers[key];
+        return { ...s, offers };
+      }),
+    [],
+  );
+  const answerOffer = useCallback(
+    (key: string, value: OptInAnswer) =>
+      setState((s) => {
+        const prev = s.offers[key];
+        if (!prev) return s;
+        const offer = {
+          ...prev,
+          answer: value,
+          answeredAt: value === undefined ? undefined : new Date().toISOString(),
+        };
+        return { ...s, offers: { ...s.offers, [key]: offer } };
+      }),
+    [],
+  );
   const setActingAs = useCallback(
     (side: FeedbackSide, id: string) => setState((s) => ({ ...s, actingAs: { ...s.actingAs, [side]: id } })),
     [],
   );
-  const reset = useCallback(() => setState(initial), [initial]);
+  // ── Database sync (app/api/demo-state) ──────────────────────────────────────
+  // The database is the shared copy: every browser loads it, saves its own changes per pair,
+  // and polls for other people's. localStorage only gives a fast first paint.
+  const [sync, setSync] = useState<SyncStatus>("loading");
+  const [tick, setTick] = useState(0);
+  const stateRef = useRef(state);
+  const syncedRef = useRef<Snapshot | null>(null); // what the database holds, as far as we know
+  const versionRef = useRef(0);
+  const busyRef = useRef(false);
+  const againRef = useRef(false);
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+
+  const applyRemote = useCallback(
+    (snap: Snapshot) =>
+      setState((s) => ({
+        ...hydrate(initial, {
+          ...fromSnapshot(snap),
+          audit: snap.audit,
+          needs: snap.needs,
+          talent: snap.talent,
+        }),
+        actingAs: s.actingAs,
+      })),
+    [initial],
+  );
+
+  const pull = useCallback(
+    async (force = false) => {
+      const res = await fetch(`/api/demo-state${force ? "" : `?since=${versionRef.current}`}`, {
+        cache: "no-store",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Database error");
+      if (data.unchanged) return;
+      // Never drop unsaved local changes: they are saved first, then the next poll catches up.
+      if (busyRef.current) return;
+      const pending =
+        syncedRef.current && !patchIsEmpty(diffSnapshot(syncedRef.current, toSnapshot(stateRef.current)));
+      if (pending && !data.empty) return;
+      versionRef.current = data.version;
+      if (data.empty) {
+        // First run against an empty database: write the starting state (seed + this browser's).
+        syncedRef.current = EMPTY_SNAPSHOT;
+        setTick((t) => t + 1);
+      } else {
+        syncedRef.current = data.snapshot;
+        applyRemote(data.snapshot);
+      }
+      setSync("saved");
+    },
+    [applyRemote],
+  );
+
+  const save = useCallback(async () => {
+    if (!syncedRef.current) return;
+    if (busyRef.current) {
+      againRef.current = true;
+      return;
+    }
+    const patch = diffSnapshot(syncedRef.current, toSnapshot(stateRef.current));
+    if (patchIsEmpty(patch)) return;
+    busyRef.current = true;
+    setSync("saving");
+    try {
+      const res = await fetch("/api/demo-state", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(patch),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Save failed");
+      syncedRef.current = applyPatch(syncedRef.current, patch);
+      // Someone else saved in between: reload after this, so their changes aren't skipped.
+      const missed = data.version !== versionRef.current + 1;
+      versionRef.current = missed ? versionRef.current : data.version;
+      setSync("saved");
+      if (missed) againRef.current = true;
+    } catch {
+      setSync("error");
+    } finally {
+      busyRef.current = false;
+      if (againRef.current) {
+        againRef.current = false;
+        void save().then(() => pull().catch(() => setSync("error")));
+      }
+    }
+  }, [pull]);
+
+  // Load once the local copy is in place.
+  useEffect(() => {
+    if (!loaded) return;
+    pull(true).catch(() => setSync("error"));
+  }, [loaded, pull]);
+
+  // Save changes shortly after they happen.
+  useEffect(() => {
+    if (!loaded || !syncedRef.current) return;
+    const t = setTimeout(() => void save(), 400);
+    return () => clearTimeout(t);
+  }, [state, loaded, tick, save]);
+
+  // Pick up other people's changes: poll while the tab is visible, and on focus.
+  useEffect(() => {
+    if (!loaded) return;
+    const poll = () => {
+      if (document.visibilityState !== "visible" || !syncedRef.current) return;
+      // Retry anything a failed save left behind, then fetch other people's changes.
+      save()
+        .then(() => pull())
+        .catch(() => setSync("error"));
+    };
+    const id = window.setInterval(poll, POLL_MS);
+    window.addEventListener("focus", poll);
+    return () => {
+      window.clearInterval(id);
+      window.removeEventListener("focus", poll);
+    };
+  }, [loaded, pull, save]);
+
+  const reset = useCallback(() => {
+    syncedRef.current = null; // pause saving until the database is emptied
+    setState(initial);
+    setSync("saving");
+    fetch("/api/demo-state", { method: "DELETE" })
+      .then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        versionRef.current = data.version;
+        syncedRef.current = EMPTY_SNAPSHOT; // the save effect now writes the fresh seed
+        setTick((t) => t + 1);
+      })
+      .catch(() => setSync("error"));
+  }, [initial]);
 
   const value = useMemo(
     () => ({
       ...state,
+      sync,
       addNeed,
       addTalent,
       decide,
@@ -241,10 +510,21 @@ export function DemoProvider({
       bookSlot,
       cancelSlot,
       giveFeedback,
+      answerScreening,
+      bookScreening,
+      recordScreening,
+      setOffer,
+      answerOffer,
       setActingAs,
       reset,
     }),
     [
+      sync,
+      answerScreening,
+      bookScreening,
+      recordScreening,
+      setOffer,
+      answerOffer,
       state,
       addNeed,
       addTalent,

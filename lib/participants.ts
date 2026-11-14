@@ -21,13 +21,13 @@ export function participants(): ParticipantEntry[] {
       name: OWN_COMPANY.name,
       sub: "Need card created in the company view",
     },
-    { kind: "talent", id: "T-YOU", name: "Candidate T-YOU", sub: "Skill card created in the talent view" },
+    { kind: "talent", id: "T-YOU", name: "You (T-YOU)", sub: "Skill card created in the talent view" },
   ];
-  // Candidates appear by alias: the agenda never needs their name until both sides opt in.
+  // The demo "signed in as" list: each candidate is shown to themselves, so by name and id.
   const candidates: ParticipantEntry[] = SEED_TALENT.map((t) => ({
     kind: "talent",
     id: t.id,
-    name: t.alias,
+    name: `${t.contact?.fullName ?? t.revealName} (${t.id})`,
     sub: t.headline,
   }));
   return [...companies, ...candidates, ...own];

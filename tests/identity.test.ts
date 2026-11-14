@@ -29,9 +29,22 @@ describe("one identity per side", () => {
 
   it("an agenda only ever lists the participant's own pairs", () => {
     const company = n1.companyId!;
-    const items = agendaFor({ kind: "company", id: company }, [k1, k2], SEED_NEEDS, SEED_TALENT, {}, {});
+    const passed = { answer: true, slot: "10:00", result: "passed" as const };
+    const state = {
+      needs: SEED_NEEDS,
+      talent: SEED_TALENT,
+      decisions: {
+        [k1]: { status: "approved" as const, reason: "x", at: "" },
+        [k2]: { status: "approved" as const, reason: "x", at: "" },
+      },
+      optIns: {},
+      slots: {},
+      screening: { [k1]: passed, [k2]: passed },
+      offers: {},
+    };
+    const items = agendaFor({ kind: "company", id: company }, state);
     expect(items.map((i) => i.key)).toEqual(n2.companyId === company ? [k1, k2] : [k1]);
-    const t = agendaFor({ kind: "talent", id: "T-12" }, [k1, k2], SEED_NEEDS, SEED_TALENT, {}, {});
-    expect(t.map((i) => i.key)).toEqual([k2]);
+    const t = agendaFor({ kind: "talent", id: "T-12" }, state);
+    expect(new Set(t.map((i) => i.key))).toEqual(new Set([k2]));
   });
 });

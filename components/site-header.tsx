@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDaysIcon, RotateCcwIcon } from "lucide-react";
+import { CalendarDaysIcon, CloudAlertIcon, CloudCheckIcon, CloudIcon, RotateCcwIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-provider";
@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 
 export function SiteHeader() {
   const pathname = usePathname();
-  const { reset } = useDemo();
+  const { reset, sync } = useDemo();
   const role = roleOf(pathname);
   const page = role && activePage(role, pathname);
 
@@ -56,13 +56,16 @@ export function SiteHeader() {
           <CalendarDaysIcon className="size-3.5" />
           {EVENT.date} · {EVENT.place}
         </div>
+        <SyncBadge status={sync} />
         <Button
           variant="ghost"
           size="icon"
           aria-label="Reset demo data"
           onClick={() => {
             reset();
-            toast("Demo data reset to the synthetic seed.");
+            toast("Demo data reset to the synthetic seed.", {
+              description: "The shared database copy is reset too.",
+            });
           }}
         >
           <RotateCcwIcon />
@@ -95,5 +98,41 @@ export function SiteHeader() {
         </div>
       )}
     </header>
+  );
+}
+
+/** Whether the demo state is saved to the shared database (app/api/demo-state). */
+function SyncBadge({ status }: { status: ReturnType<typeof useDemo>["sync"] }) {
+  const {
+    icon: Icon,
+    label,
+    title,
+  } = {
+    loading: { icon: CloudIcon, label: "Loading…", title: "Loading the shared demo data from the database" },
+    saving: { icon: CloudIcon, label: "Saving…", title: "Saving your changes to the database" },
+    saved: {
+      icon: CloudCheckIcon,
+      label: "Saved",
+      title: "Everything is saved to the database and shared with other browsers",
+    },
+    error: {
+      icon: CloudAlertIcon,
+      label: "Not saved",
+      title: "The database can't be reached. Changes stay in this browser until it can.",
+    },
+  }[status];
+  return (
+    <span
+      title={title}
+      role="status"
+      className={cn(
+        "flex items-center gap-1 text-xs text-muted-foreground",
+        status === "error" && "text-destructive",
+        status === "saved" && "text-evidence",
+      )}
+    >
+      <Icon className="size-4" />
+      <span className="hidden sm:inline">{label}</span>
+    </span>
   );
 }

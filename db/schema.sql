@@ -175,6 +175,54 @@ CREATE TABLE IF NOT EXISTS scraped_items (
 
 CREATE INDEX IF NOT EXISTS scraped_items_data_gin ON scraped_items USING gin (data jsonb_path_ops);
 
+-- ── Demo pipeline state (written by the app at runtime) ──────────────────────
+-- Everything people do in the demo: the organiser's decisions, requests and yeses, Espoo
+-- interviews, company interviews, offers, feedback, the audit log and the cards they create.
+-- Synthetic data only. `yarn db:migrate` creates these tables and never empties them.
+
+CREATE TABLE IF NOT EXISTS pipeline_pairs (
+  pair_key       text PRIMARY KEY,                -- "<need id>::<talent id>"
+  need_id        text NOT NULL,
+  talent_id      text NOT NULL,
+  decision       jsonb,                           -- organiser: invited to Espoo interview / not now, with reason
+  opt_in         jsonb,                           -- { company?: bool, talent?: bool }
+  screening      jsonb,                           -- Espoo interview: answer, slot, result, reason
+  interview_slot text,                            -- company interview time
+  offer          jsonb,                           -- job offer and the candidate's answer
+  feedback       jsonb,                           -- both sides' feedback after the interview
+  updated_at     timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS pipeline_pairs_talent ON pipeline_pairs (talent_id);
+CREATE INDEX IF NOT EXISTS pipeline_pairs_need ON pipeline_pairs (need_id);
+
+CREATE TABLE IF NOT EXISTS pipeline_audit (
+  id          text PRIMARY KEY,
+  at          timestamptz NOT NULL,
+  actor       text NOT NULL,
+  action      text NOT NULL,
+  need_id     text NOT NULL,
+  talent_id   text NOT NULL,
+  from_status text NOT NULL,
+  to_status   text NOT NULL,
+  reason      text NOT NULL,
+  note        text
+);
+
+CREATE TABLE IF NOT EXISTS demo_cards (
+  id         text PRIMARY KEY,
+  kind       text NOT NULL CHECK (kind IN ('need', 'talent')),
+  data       jsonb NOT NULL,
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS demo_state_meta (
+  id      int PRIMARY KEY CHECK (id = 1),
+  version bigint NOT NULL DEFAULT 0
+);
+
+INSERT INTO demo_state_meta (id, version) VALUES (1, 0) ON CONFLICT (id) DO NOTHING;
+
 -- ── Lock the tables away from the public API ────────────────────────────────
 
 ALTER TABLE esco_meta              ENABLE ROW LEVEL SECURITY;
@@ -193,3 +241,7 @@ ALTER TABLE talent_audit           ENABLE ROW LEVEL SECURITY;
 ALTER TABLE talent_contact         ENABLE ROW LEVEL SECURITY;
 ALTER TABLE scraped_sources        ENABLE ROW LEVEL SECURITY;
 ALTER TABLE scraped_items          ENABLE ROW LEVEL SECURITY;
+ALTER TABLE pipeline_pairs         ENABLE ROW LEVEL SECURITY;
+ALTER TABLE pipeline_audit         ENABLE ROW LEVEL SECURITY;
+ALTER TABLE demo_cards             ENABLE ROW LEVEL SECURITY;
+ALTER TABLE demo_state_meta        ENABLE ROW LEVEL SECURITY;

@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { pairKey } from "@/lib/match";
 import { SEED_NEEDS, SEED_TALENT } from "@/lib/data";
+import { stageOf, type PipelineState } from "@/lib/pipeline";
 import { companiesFor, interestStatus, proofBoost, rolesFor, unlockSkills } from "@/lib/explore";
 import type { MatchNeed, MatchTalent } from "@/lib/match";
 
@@ -97,15 +99,18 @@ describe("unlockSkills", () => {
 });
 
 describe("interestStatus", () => {
-  it("follows the candidate's view of the pair", () => {
-    expect(interestStatus(undefined, undefined, undefined)).toBe("none");
-    expect(interestStatus({ talent: true }, undefined, undefined)).toBe("asked");
-    expect(interestStatus({ company: true }, { status: "approved" }, undefined)).toBe("invited");
-    expect(interestStatus(undefined, { status: "approved" }, undefined)).toBe("invited");
-    expect(interestStatus({ talent: true }, { status: "approved" }, undefined)).toBe("accepted");
-    expect(interestStatus({ company: true, talent: true }, { status: "approved" }, undefined)).toBe("both");
-    expect(interestStatus({ company: true, talent: true }, { status: "approved" }, "10:20")).toBe("booked");
-    expect(interestStatus({ talent: true }, { status: "rejected" }, undefined)).toBe("passed");
-    expect(interestStatus({ talent: false }, { status: "approved" }, undefined)).toBe("declined");
+  it("follows the pipeline from the candidate's point of view", () => {
+    const key = pairKey("N-01", "T-30");
+    const approved = { [key]: { status: "approved" as const, reason: "x", at: "" } };
+    const st = (s: Partial<PipelineState>) =>
+      interestStatus(stageOf(key, { decisions: {}, optIns: {}, slots: {}, screening: {}, offers: {}, ...s }));
+    expect(st({})).toBe("none");
+    expect(st({ optIns: { [key]: { talent: true } } })).toBe("asked");
+    expect(st({ decisions: approved })).toBe("action");
+    expect(st({ decisions: approved, screening: { [key]: { answer: true, slot: "10:00" } } })).toBe(
+      "progress",
+    );
+    expect(st({ decisions: approved, screening: { [key]: { answer: false } } })).toBe("declined");
+    expect(st({ decisions: { [key]: { status: "rejected", reason: "x", at: "" } } })).toBe("passed");
   });
 });

@@ -1,5 +1,6 @@
 import { COMPANIES, EVENT, OWN_COMPANY } from "./data";
 import { modeKind } from "./need-terms";
+import { activeKeys, myTurn, ownedBy, stageOf, visibleTo, type PipelineState } from "./pipeline";
 import type { Need, Talent } from "./types";
 
 /**
@@ -75,28 +76,79 @@ const parse = (key: string) => {
   return { needId, talentId };
 };
 
-export type SlotState = { time: string; free: boolean; mine: boolean; reason?: "company" | "candidate" };
+export type SlotState = {
+  time: string;
+  free: boolean;
+  mine: boolean;
+  /** Why a time is blocked: the company's table, the candidate, or it isn't after the Espoo interview. */
+  reason?: "company" | "candidate" | "order";
+};
 
-/** Which slots this pair can book: busy only if the same company or the same candidate is booked. */
-export function slotAvailability(key: string, slots: Record<string, string>, needs: Need[]): SlotState[] {
+/** Every time this candidate is already booked: company interviews and Espoo interviews. */
+function candidateTimes(
+  talentId: string,
+  slots: Record<string, string>,
+  screening: Record<string, { slot?: string }>,
+  except: { company?: string; espoo?: string },
+) {
+  const busy = new Set<string>();
+  for (const [k, t] of Object.entries(slots))
+    if (k !== except.company && parse(k).talentId === talentId) busy.add(t);
+  for (const [k, s] of Object.entries(screening))
+    if (k !== except.espoo && s.slot && parse(k).talentId === talentId) busy.add(s.slot);
+  return busy;
+}
+
+/**
+ * Which company-interview times this pair can book: busy if the same company's table or the
+ * same candidate is booked (Espoo interviews included), and only after this pair's Espoo interview.
+ */
+export function slotAvailability(
+  key: string,
+  slots: Record<string, string>,
+  needs: Need[],
+  screening: Record<string, { slot?: string }> = {},
+): SlotState[] {
   const { needId, talentId } = parse(key);
   const need = needs.find((n) => n.id === needId);
   const company = need ? companyOf(need) : "";
   const others = Object.entries(slots).filter(([k]) => k !== key);
+  const candidate = candidateTimes(talentId, slots, screening, { company: key });
+  const after = screening[key]?.slot;
   return SLOT_TIMES.map((time) => {
-    const at = others.filter(([, t]) => t === time).map(([k]) => parse(k));
-    const companyBusy = at.some((p) => {
-      const n = needs.find((x) => x.id === p.needId);
-      return n && companyOf(n) === company;
+    const companyBusy = others.some(([k, t]) => {
+      if (t !== time) return false;
+      const n = needs.find((x) => x.id === parse(k).needId);
+      return !!n && companyOf(n) === company;
     });
-    const candidateBusy = at.some((p) => p.talentId === talentId);
+    const candidateBusy = candidate.has(time);
+    const tooEarly = !!after && toMinutes(time) <= toMinutes(after);
     return {
       time,
       mine: slots[key] === time,
-      free: !companyBusy && !candidateBusy,
-      reason: companyBusy ? "company" : candidateBusy ? "candidate" : undefined,
+      free: !companyBusy && !candidateBusy && !tooEarly,
+      reason: companyBusy ? "company" : candidateBusy ? "candidate" : tooEarly ? "order" : undefined,
     };
   });
+}
+
+/** Where Espoo holds its interviews: several interviewers, so only the candidate can clash. */
+export const ESPOO_DESK = "Espoo Esbo desk, Otaniemi hall (or online)";
+
+/** Which Espoo-interview times this candidate can book: only their own bookings block a time. */
+export function screeningAvailability(
+  key: string,
+  slots: Record<string, string>,
+  screening: Record<string, { slot?: string }>,
+): SlotState[] {
+  const { talentId } = parse(key);
+  const busy = candidateTimes(talentId, slots, screening, { espoo: key });
+  return SLOT_TIMES.map((time) => ({
+    time,
+    mine: screening[key]?.slot === time,
+    free: !busy.has(time),
+    reason: busy.has(time) ? "candidate" : undefined,
+  }));
 }
 
 export const earliestFree = (states: SlotState[]) => states.find((s) => s.free && !s.mine)?.time;
@@ -131,49 +183,65 @@ export type Participant = { kind: "company"; id: string } | { kind: "talent"; id
 
 export type AgendaItem = {
   key: string;
+  /** An Espoo interview (candidate only) or the company interview. */
+  kind: "espoo" | "company";
   needTitle: string;
   company: string;
-  /** The other side: a revealed name only after both opted in. */
+  /** Who the meeting is with. */
   counterpart: string;
-  status: PairStatus;
+  /** booked = in the calendar; answer / book = this participant's move; waiting = someone else's. */
+  bucket: "booked" | "answer" | "book" | "waiting";
   time?: string;
   room?: string;
-  myAnswer: OptInAnswer;
 };
 
+/**
+ * One participant's agenda, from the pipeline: booked Espoo and company interviews, plus what
+ * they still have to answer or book. Only their own pairs are read; the company sees a pair
+ * only once Espoo has passed the candidate.
+ */
 export function agendaFor(
   who: Participant,
-  approvedKeys: string[],
-  needs: Need[],
-  talent: Talent[],
-  optIns: Record<string, OptIn>,
-  slots: Record<string, string>,
+  state: PipelineState & { needs: Need[]; talent: Talent[] },
 ): AgendaItem[] {
+  const { needs, talent, slots, screening } = state;
   const items: AgendaItem[] = [];
-  for (const key of approvedKeys) {
+  for (const key of activeKeys(state)) {
     const { needId, talentId } = parse(key);
     const need = needs.find((n) => n.id === needId);
     const t = talent.find((x) => x.id === talentId);
-    if (!need || !t) continue;
-    const mine = who.kind === "company" ? companyOf(need) === who.id : talentId === who.id;
-    if (!mine) continue;
-    const o = optIns[key];
-    const status = pairStatus(o, slots[key]);
-    const revealed = status === "mutual" || status === "booked";
-    items.push({
-      key,
-      needTitle: need.title,
-      company: need.company,
-      counterpart: who.kind === "company" ? (revealed ? t.revealName : t.alias) : need.company,
-      status,
-      time: status === "booked" ? slots[key] : undefined,
-      room: status === "booked" ? roomFor(need, needs).label : undefined,
-      myAnswer: o?.[who.kind],
-    });
+    if (!need || !t || !ownedBy(who.kind, who.id, key, needs) || !visibleTo(who.kind, key, state)) continue;
+    const p = stageOf(key, state);
+    if (p.stopped) continue;
+    const base = { key, needTitle: need.title, company: need.company };
+    const company = {
+      ...base,
+      kind: "company" as const,
+      counterpart: who.kind === "company" ? t.revealName : need.company,
+    };
+    if (who.kind === "talent" && screening[key]?.slot)
+      items.push({
+        ...base,
+        kind: "espoo",
+        counterpart: "Espoo Esbo interview",
+        bucket: "booked",
+        time: screening[key].slot,
+        room: ESPOO_DESK,
+      });
+    if (slots[key])
+      items.push({ ...company, bucket: "booked", time: slots[key], room: roomFor(need, needs).label });
+    if (p.stage === "interview-booked" || p.stage === "offered" || p.hired) continue;
+    const espoo = { ...base, kind: "espoo" as const, counterpart: "Espoo Esbo interview" };
+    if (p.stage === "invited" || p.stage === "applied")
+      items.push({ ...espoo, bucket: myTurn(who.kind, p) ? "answer" : "waiting" });
+    else if (p.stage === "screen-to-book") items.push({ ...espoo, bucket: "book" });
+    else if (p.stage === "shared" || p.stage === "interview-invited")
+      items.push({ ...company, bucket: myTurn(who.kind, p) ? "answer" : "waiting" });
+    else if (p.stage === "interview-to-book") items.push({ ...company, bucket: "book" });
   }
-  const order: Record<PairStatus, number> = { booked: 0, mutual: 1, waiting: 2, declined: 3 };
+  const order = { booked: 0, answer: 1, book: 2, waiting: 3 };
   return items.sort(
-    (a, b) => order[a.status] - order[b.status] || (a.time ?? "").localeCompare(b.time ?? ""),
+    (a, b) => order[a.bucket] - order[b.bucket] || (a.time ?? "").localeCompare(b.time ?? ""),
   );
 }
 
@@ -188,10 +256,10 @@ export function agendaIcs(items: AgendaItem[], ownerName: string) {
     .map((i) =>
       [
         "BEGIN:VEVENT",
-        `UID:${i.key.replace("::", "-")}@truefit.demo`,
+        `UID:${i.kind}-${i.key.replace("::", "-")}@truefit.demo`,
         `DTSTART;TZID=Europe/Helsinki:${stamp(i.time!)}`,
         `DTEND;TZID=Europe/Helsinki:${stamp(end(i.time!))}`,
-        `SUMMARY:${esc(`${EVENT.slotMinutes}-min meeting: ${i.needTitle} · ${i.counterpart}`)}`,
+        `SUMMARY:${esc(`${EVENT.slotMinutes}-min ${i.kind === "espoo" ? "Espoo interview" : "interview"}: ${i.needTitle} · ${i.counterpart}`)}`,
         `LOCATION:${esc(i.room ?? "")}`,
         "END:VEVENT",
       ].join("\r\n"),

@@ -1,3 +1,4 @@
+import { myTurn, type PairStage } from "./pipeline";
 import { adjacency } from "./esco";
 import { explainMatch, type MatchNeed, type MatchTalent } from "./match";
 import type { MatchExplanation, SkillClaim } from "./types";
@@ -127,22 +128,16 @@ export function unlockSkills(needs: MatchNeed[], talent: MatchTalent, limit = 3)
     .slice(0, limit);
 }
 
-export type InterestStatus =
-  "none" | "asked" | "invited" | "accepted" | "both" | "booked" | "passed" | "declined";
+export type InterestStatus = "none" | "asked" | "action" | "progress" | "hired" | "passed" | "declined";
 
-/** Where a candidate stands with one role, from their own point of view. */
-export function interestStatus(
-  optIn: { company?: boolean; talent?: boolean } | undefined,
-  decision: { status: "approved" | "rejected" } | undefined,
-  slot: string | undefined,
-): InterestStatus {
-  if (optIn?.talent === false) return "declined";
-  if (decision?.status === "rejected" || optIn?.company === false) return "passed";
-  // Only a standing introduction by the organiser counts; then both sides still have to say yes.
-  const invited = decision?.status === "approved";
-  if (invited && optIn?.talent && optIn?.company) return slot ? "booked" : "both";
-  if (invited && optIn?.talent) return "accepted";
-  if (invited) return "invited";
-  if (optIn?.talent) return "asked";
-  return "none";
+/** Where a candidate stands with one role, from their own point of view (lib/pipeline.ts). */
+export function interestStatus(p: PairStage): InterestStatus {
+  if (p.stage === "none") return "none";
+  if (p.stage === "applied") return "asked";
+  if (p.hired) return "hired";
+  if (p.stopped)
+    return ["screen-declined", "candidate-declined", "offer-declined"].includes(p.stage)
+      ? "declined"
+      : "passed";
+  return myTurn("talent", p) ? "action" : "progress";
 }

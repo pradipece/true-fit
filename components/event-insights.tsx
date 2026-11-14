@@ -22,7 +22,7 @@ import { useDemo } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 const DECISIONS: Series[] = [
-  { key: "approved", label: "Introduced", color: CHART.blue },
+  { key: "approved", label: "Invited to Espoo interview", color: CHART.blue },
   { key: "waiting", label: "Not decided yet", color: CHART.amber },
   { key: "rejected", label: "Not now", color: CHART.magenta },
 ];
@@ -36,10 +36,10 @@ const fmtRating = (v: number | null) => (v === null ? "–" : `${v.toFixed(1)} /
 
 /** Event insights for companies: headline numbers and charts. Counts and averages only, never individuals. */
 export function EventInsights() {
-  const { needs, talent, decisions, optIns, slots, feedback } = useDemo();
+  const { needs, talent, decisions, optIns, slots, screening, offers, feedback } = useDemo();
   const d = useMemo(
-    () => dashboardData({ needs, talent, decisions, optIns, slots, feedback }),
-    [needs, talent, decisions, optIns, slots, feedback],
+    () => dashboardData({ needs, talent, decisions, optIns, slots, screening, offers, feedback }),
+    [needs, talent, decisions, optIns, slots, screening, offers, feedback],
   );
 
   const tiles = [

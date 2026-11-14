@@ -109,8 +109,15 @@ describe("dashboard numbers", () => {
   const slots = { [pairKey("N-02", "T-12")]: "10:20" };
 
   it("counts each funnel stage from recorded human actions", () => {
-    const f = funnel(SEED_NEEDS, SEED_TALENT, decisions, optIns, slots, {});
+    const screening = {
+      [pairKey("N-01", "T-30")]: { answer: true, slot: "10:00" },
+      [pairKey("N-02", "T-12")]: { answer: true, slot: "10:00", result: "passed" as const },
+    };
+    const f = funnel(SEED_NEEDS, SEED_TALENT, { decisions, optIns, slots, screening, offers: {} });
     expect(f.map((s) => s.value).slice(1)).toEqual([2, 1, 1, 0, 0]);
+    const offers = { [pairKey("N-02", "T-12")]: { status: "offered" as const, at: "", answer: true } };
+    const hired = funnel(SEED_NEEDS, SEED_TALENT, { decisions, optIns, slots, screening, offers });
+    expect(hired.map((s) => s.value).slice(1)).toEqual([2, 1, 1, 1, 1]);
   });
 
   it("labels supply per need from the same rule as suggestions", () => {

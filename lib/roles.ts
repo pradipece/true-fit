@@ -13,7 +13,7 @@ export const ROLES = [
     pages: [
       { href: "/talent", label: "Skill card" },
       { href: "/talent/explore", label: "Explore roles" },
-      { href: "/meetings/talent", label: "Meetings" },
+      { href: "/meetings/talent", label: "Applications" },
       { href: "/talent/agenda", label: "My agenda" },
     ],
   },
@@ -32,7 +32,7 @@ export const ROLES = [
     title: "Hiring companies",
     pages: [
       { href: "/company", label: "Find candidates" },
-      { href: "/meetings/company", label: "Introductions" },
+      { href: "/meetings/company", label: "Candidates from Espoo" },
       { href: "/company/agenda", label: "My agenda" },
     ],
   },

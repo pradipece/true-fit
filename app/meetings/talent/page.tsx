@@ -11,21 +11,24 @@ export default function TalentMeetingsPage() {
     <div className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6">
       <PageHeader
         eyebrow="Candidates · your skill card"
-        title="Candidate view"
-        description="Companies the event organiser introduced you to. You see their need card and why your skills fit; say yes or no to each."
+        title="Your applications"
+        description="Every role you asked about or Espoo invited you to, step by step: Espoo interview, company interview and job offer."
       />
       <PageGuide
         id="meetings-talent"
         steps={[
           {
-            title: "See who wants to meet",
-            text: "The organiser matched your skill card to these companies' needs and introduced you.",
+            title: "Espoo interview",
+            text: "Espoo reviews your skill card and invites you to a short interview. Accept and book a time.",
           },
           {
-            title: "Say yes or no",
-            text: "You decide, and so does the company. A no is never explained to the other side.",
+            title: "Company interview",
+            text: "If you pass, Espoo sends your profile to the company. If it wants to meet, you say yes or no.",
           },
-          { title: "Meet and give feedback", text: "Book a 10-minute slot, then tell us how it went." },
+          {
+            title: "Job offer",
+            text: "After the interview, give feedback. If the company offers the job, you answer here.",
+          },
         ]}
       />
       {/* Selected pair lives in ?pair=, read on the client. */}

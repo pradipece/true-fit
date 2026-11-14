@@ -7,8 +7,10 @@ import {
   Building2Icon,
   CheckIcon,
   ChevronDownIcon,
+  ClipboardCheckIcon,
   ClipboardListIcon,
   DownloadIcon,
+  EyeIcon,
   HandIcon,
   HandshakeIcon,
   LanguagesIcon,
@@ -48,12 +50,15 @@ import { MatchPanel, type CompanyScore } from "@/components/candidate-profile";
 import { CompanyRanking } from "@/components/company-ranking";
 import { MatchExplanationView } from "@/components/match-explanation";
 import { SkillChip, SkillLegend } from "@/components/skill-chip";
+import { useViewAs } from "@/components/identity";
+import { MiniSteps, Stepper } from "@/components/pipeline-steps";
 import { WhyThisMatch } from "@/components/why-this-match";
 import { companiesFor } from "@/lib/explore";
 import { pairKey, SUGGEST_THRESHOLD } from "@/lib/match";
 import { auditCsv, OTHER, REASONS, reasonError, reviewList } from "@/lib/oversight";
+import { activeKeys, STAGE_LABEL, stageOf, STEPS, type PairStage } from "@/lib/pipeline";
 import { useDemo } from "@/lib/store";
-import type { AuditEntry, Decision, Feedback, MatchExplanation, Need, Talent } from "@/lib/types";
+import type { AuditEntry, Decision, MatchExplanation, Need, Talent } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type DialogType = "approve" | "reject" | "edit" | "revert";
@@ -87,23 +92,13 @@ const ACTION_STYLE: Record<AuditEntry["action"], string> = {
   rejected: "border-border bg-secondary text-secondary-foreground",
   edited: "border-transfer/30 bg-transfer-soft text-transfer",
   reverted: "border-dashed",
+  passed: "border-evidence/30 bg-evidence-soft text-evidence",
+  "not-passed": "border-border bg-secondary text-secondary-foreground",
 };
 
 type OptInRow = { company?: boolean; talent?: boolean };
 
 const answerLabel = (v: boolean | undefined) => (v === true ? "Yes" : v === false ? "No" : "Not yet");
-
-/** Where an introduction stands after the organiser made it. */
-function pipelineLabel(o: OptInRow | undefined, slot: string | undefined, fb: Feedback | undefined) {
-  if (fb?.company && fb?.talent) return "Feedback from both sides";
-  if (fb?.company || fb?.talent) return "Feedback from one side";
-  if (slot) return `Meeting at ${slot}`;
-  if (o?.company === false || o?.talent === false) return "One side said no";
-  if (o?.company && o?.talent) return "Both said yes, time to book";
-  if (o?.company) return "Company said yes, waiting for the candidate";
-  if (o?.talent) return "Candidate said yes, waiting for the company";
-  return "Waiting for both to answer";
-}
 
 /**
  * The organiser, the event's broker (City of Espoo), reviews the people suggested for every
@@ -112,7 +107,21 @@ function pipelineLabel(o: OptInRow | undefined, slot: string | undefined, fb: Fe
  * company and the candidate each say yes or no in their own Introductions / Meetings view.
  */
 export function OrganiserReview() {
-  const { needs, talent, decisions, audit, optIns, slots, feedback, decide, undoDecision } = useDemo();
+  const {
+    needs,
+    talent,
+    decisions,
+    audit,
+    optIns,
+    slots,
+    screening,
+    offers,
+    decide,
+    undoDecision,
+    recordScreening,
+  } = useDemo();
+  const viewAs = useViewAs();
+  const [resultFor, setResultFor] = useState<{ key: string; name: string } | null>(null);
   const [selected, setSelected] = useState<string>(needs[0]?.id ?? "");
   const [showOthers, setShowOthers] = useState(false);
   const [dialog, setDialog] = useState<DialogState | null>(null);
@@ -136,7 +145,11 @@ export function OrganiserReview() {
     0,
   );
 
-  const pipeline = (key: string) => pipelineLabel(optIns[key], slots[key], feedback[key]);
+  const pipelineState = useMemo(
+    () => ({ decisions, optIns, slots, screening, offers }),
+    [decisions, optIns, slots, screening, offers],
+  );
+  const stage = (key: string) => stageOf(key, pipelineState);
   // Every company ranked for each person, so a card can show where this need's company stands.
   const companyScores = useMemo(
     () =>
@@ -153,18 +166,20 @@ export function OrganiserReview() {
       ),
     [needs, talent],
   );
+  // Every pair with any activity, newest first: the whole pipeline from request to offer.
   const introductions = useMemo(
     () =>
-      Object.entries(decisions)
-        .filter(([, d]) => d.status === "approved")
-        .map(([key, d]) => {
+      activeKeys(pipelineState)
+        .map((key) => {
           const [needId, talentId] = key.split("::");
+          const d = decisions[key];
           return { key, d, need: needs.find((n) => n.id === needId), t: talentById.get(talentId) };
         })
         .filter((r) => r.need && r.t)
-        .sort((a, b) => b.d.at.localeCompare(a.d.at)),
-    [decisions, needs, talentById],
+        .sort((a, b) => (b.d?.at ?? "").localeCompare(a.d?.at ?? "")),
+    [pipelineState, decisions, needs, talentById],
   );
+  const toRecord = introductions.filter((r) => stage(r.key).stage === "screen-booked").length;
 
   const confirm = (reason: string, note: string, status?: Decision["status"]) => {
     if (!dialog) return;
@@ -176,18 +191,21 @@ export function OrganiserReview() {
     } else {
       const next = dialog.type === "edit" ? status! : dialog.type === "approve" ? "approved" : "rejected";
       decide(key, { status: next, reason, note: n });
-      // An introduction is not a yes from either side: both answer in their own view.
+      // An invitation is to Espoo's own interview: the company sees nothing until the candidate passes.
       toast.success(
         dialog.type === "edit"
-          ? `Decision changed to ${next === "approved" ? "introduced" : "not now"}`
+          ? `Decision changed to ${next === "approved" ? "invited" : "not now"}`
           : next === "approved"
-            ? "Introduction sent"
+            ? "Espoo interview invitation sent"
             : "Passed for this need, with reason logged",
         {
           description:
             next === "approved"
-              ? "The company and the candidate each see it in their own view and answer yes or no."
-              : "The candidate can still be introduced for other needs.",
+              ? "The candidate sees it in their Meetings view, accepts and books a time."
+              : "The candidate can still be invited for other needs.",
+          ...(next === "approved" && {
+            action: { label: "Open as the candidate", onClick: () => viewAs("talent", key) },
+          }),
         },
       );
     }
@@ -216,7 +234,10 @@ export function OrganiserReview() {
         m={m}
         t={t}
         decision={d}
-        status={d?.status === "approved" ? pipeline(key) : undefined}
+        status={d?.status === "approved" ? stage(key) : undefined}
+        result={screening[key]}
+        onRecord={() => setResultFor({ key, name: displayName(t) ?? t.alias })}
+        onView={(side) => viewAs(side, key)}
         asked={!d && optIns[key]?.talent === true}
         companyAsked={!d && optIns[key]?.company === true}
         companies={companyScores.get(m.talentId) ?? []}
@@ -237,11 +258,17 @@ export function OrganiserReview() {
           )}
         </TabsTrigger>
         <TabsTrigger value="pipeline" className="px-3">
-          <NetworkIcon /> All introductions
-          {introductions.length > 0 && (
-            <Badge variant="secondary" className="ml-1 h-5 min-w-5 px-1.5 tabular-nums">
-              {introductions.length}
+          <NetworkIcon /> Pipeline
+          {toRecord > 0 ? (
+            <Badge className="ml-1 h-5 min-w-5 px-1.5 tabular-nums" title="Espoo interview results to record">
+              {toRecord}
             </Badge>
+          ) : (
+            introductions.length > 0 && (
+              <Badge variant="secondary" className="ml-1 h-5 min-w-5 px-1.5 tabular-nums">
+                {introductions.length}
+              </Badge>
+            )
           )}
         </TabsTrigger>
         <TabsTrigger value="log" className="px-3">
@@ -253,11 +280,14 @@ export function OrganiserReview() {
         <p className="flex items-start gap-2 rounded-xl border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
           <ScaleIcon className="mt-0.5 size-4 shrink-0 text-primary" />
           <span>
-            <span className="font-medium text-foreground">You decide whom to introduce.</span> The company and
-            the candidate then each say yes or no; nobody meets without both. Nobody is rejected
-            automatically: people below the {Math.round(SUGGEST_THRESHOLD * 100)}% suggestion line are listed
-            too. The order comes from skills only; there are no hidden scores, and every percentage is a skill
-            match you can open. Names and contact details are fictional demo data.
+            <span className="font-medium text-foreground">
+              You decide whom to invite to an Espoo interview.
+            </span>{" "}
+            Only candidates who pass it are sent to the company, which then decides on its own interview and a
+            job offer. Nobody is rejected automatically: people below the{" "}
+            {Math.round(SUGGEST_THRESHOLD * 100)}% suggestion line are listed too. The order comes from skills
+            only; there are no hidden scores, and every percentage is a skill match you can open. Names and
+            contact details are fictional demo data.
           </span>
         </p>
 
@@ -422,15 +452,29 @@ export function OrganiserReview() {
       </TabsContent>
 
       <TabsContent value="pipeline">
-        <IntroductionsTable
+        <PipelineTable
           rows={introductions.map(({ key, d, need: n, t }) => ({
             key,
             d,
             need: n!,
             name: displayName(t) ?? t!.alias,
             o: optIns[key],
-            status: pipeline(key),
+            p: stage(key),
+            espoo: screening[key]?.slot,
+            interview: slots[key],
+            offer:
+              offers[key]?.status === "offered"
+                ? offers[key].answer === undefined
+                  ? "Offered"
+                  : offers[key].answer
+                    ? "Accepted"
+                    : "Declined"
+                : offers[key]
+                  ? "No offer"
+                  : undefined,
           }))}
+          onRecord={(key, name) => setResultFor({ key, name })}
+          onView={viewAs}
         />
       </TabsContent>
 
@@ -446,6 +490,28 @@ export function OrganiserReview() {
         />
       </TabsContent>
 
+      <ResultDialog
+        key={resultFor?.key ?? "closed"}
+        target={resultFor}
+        current={resultFor ? screening[resultFor.key]?.result : undefined}
+        onClose={() => setResultFor(null)}
+        onConfirm={(result, reason, note) => {
+          if (!resultFor) return;
+          const key = resultFor.key;
+          recordScreening(key, result, reason, note);
+          if (result === "passed")
+            toast.success("Passed: profile sent to the company", {
+              description: "The company now sees the candidate and decides on an interview.",
+              action: { label: "Open as the company", onClick: () => viewAs("company", key) },
+            });
+          else if (result === "not-passed")
+            toast("Result logged: not passed", {
+              description: "The candidate sees the reason. Nothing reaches the company.",
+            });
+          else toast("Result withdrawn", { description: "Logged in the audit trail." });
+          setResultFor(null);
+        }}
+      />
       <DecisionDialog
         key={dialog ? `${dialog.type}:${dialog.m.needId}:${dialog.m.talentId}` : "closed"}
         state={dialog}
@@ -494,6 +560,9 @@ function MatchCard({
   t,
   decision: d,
   status,
+  result,
+  onRecord,
+  onView,
   asked,
   companyAsked,
   companies,
@@ -505,7 +574,10 @@ function MatchCard({
   m: MatchExplanation;
   t: ReturnType<typeof useDemo>["talent"][number];
   decision?: Decision;
-  status?: string;
+  status?: PairStage;
+  result?: { result?: "passed" | "not-passed"; reason?: string; slot?: string };
+  onRecord: () => void;
+  onView: (side: "company" | "talent") => void;
   /** The candidate asked to meet for this need (from Explore roles). Not part of the score. */
   asked?: boolean;
   /** The company asked the organiser to introduce this person (from Find candidates). Not part of the score. */
@@ -639,15 +711,46 @@ function MatchCard({
               ) : (
                 <XIcon data-icon="inline-start" />
               )}
-              {d.status === "approved" ? "Introduced" : "Not now"} · {d.reason}
+              {d.status === "approved" ? "Invited to Espoo interview" : "Not now"} · {d.reason}
             </Badge>
-            {status && <span className="text-xs text-muted-foreground">{status}</span>}
+            {status && (
+              <span className="flex w-full items-center gap-2 text-xs text-muted-foreground">
+                <MiniSteps p={status} /> {STAGE_LABEL[status.stage]}
+                {result?.slot && ` · Espoo interview ${result.slot}`}
+              </span>
+            )}
+            {result?.result && (
+              <span className="w-full text-xs text-muted-foreground">
+                Espoo result: {result.result === "passed" ? "passed" : "not passed"} · {result.reason}
+              </span>
+            )}
             {d.note && (
               <span className="flex items-center gap-1 text-xs text-muted-foreground">
                 <MessageSquareIcon className="size-3" /> {d.note}
               </span>
             )}
-            <span className="ml-auto flex gap-1">
+            <span className="ml-auto flex flex-wrap gap-1">
+              {(status && ["screen-booked", "not-passed"].includes(status.stage)) ||
+              (status && status.step >= 3 && !status.hired) ? (
+                <Button
+                  size="sm"
+                  variant={status.stage === "screen-booked" ? "default" : "outline"}
+                  onClick={onRecord}
+                >
+                  <ClipboardCheckIcon data-icon="inline-start" />{" "}
+                  {status.stage === "screen-booked" ? "Record Espoo result" : "Change result"}
+                </Button>
+              ) : null}
+              {d.status === "approved" && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => onView(status && status.step >= 3 ? "company" : "talent")}
+                >
+                  <EyeIcon data-icon="inline-start" /> View as{" "}
+                  {status && status.step >= 3 ? "company" : "candidate"}
+                </Button>
+              )}
               <Button size="sm" variant="outline" onClick={() => onAction("edit")}>
                 <PencilIcon data-icon="inline-start" /> Edit
               </Button>
@@ -659,7 +762,7 @@ function MatchCard({
         ) : (
           <>
             <Button size="sm" onClick={() => onAction("approve")}>
-              <CheckIcon data-icon="inline-start" /> Introduce
+              <CheckIcon data-icon="inline-start" /> Invite to Espoo interview
             </Button>
             <Button size="sm" variant="outline" onClick={() => onAction("reject")}>
               <XIcon data-icon="inline-start" /> Not now
@@ -677,9 +780,9 @@ function MatchCard({
 
 const DIALOG_COPY: Record<DialogType, { title: string; body: string; cta: string }> = {
   approve: {
-    title: "Introduce this candidate to the company?",
-    body: "The company sees the candidate in its Introductions view, and the candidate sees the role in their Meetings view. Each answers yes or no; a slot can be booked once both say yes.",
-    cta: "Introduce with reason",
+    title: "Invite this candidate to an Espoo interview?",
+    body: "The candidate sees the invitation in their Meetings view, accepts and books a 10-minute interview with Espoo. The company sees nothing until you record a pass.",
+    cta: "Invite with reason",
   },
   reject: {
     title: "Not now for this need?",
@@ -693,7 +796,7 @@ const DIALOG_COPY: Record<DialogType, { title: string; body: string; cta: string
   },
   revert: {
     title: "Undo this decision?",
-    body: "The pair goes back to the review list and drops out of both sides' views. The withdrawal is logged; nothing is erased.",
+    body: "The pair goes back to the review list and drops out of both sides' views, with any Espoo interview, company interview and offer. The withdrawal is logged; nothing is erased.",
     cta: "Undo decision",
   },
 };
@@ -745,7 +848,7 @@ function DecisionDialog({
                     setReason("");
                   }}
                 >
-                  {s === "approved" ? "Introduced" : "Not now"}
+                  {s === "approved" ? "Invited" : "Not now"}
                   {state?.current?.status === s && " (current)"}
                 </Button>
               ))}
@@ -777,7 +880,7 @@ function DecisionDialog({
 
         <div className="grid gap-1.5">
           <Label htmlFor="note">
-            Note {type === "approve" ? "for the company" : "(internal)"}
+            Note {type === "approve" ? "for the company, shared if they pass" : "(internal)"}
             {reason === OTHER ? " (required)" : " (optional)"}
           </Label>
           <Textarea
@@ -829,8 +932,8 @@ function AuditLog({
           <ClipboardListIcon className="size-4" /> Decisions log
         </CardTitle>
         <CardDescription>
-          Every introduction, pass, edit and undo, with when and why. Append-only: entries are never changed
-          or deleted.
+          Every invitation, pass, Espoo interview result, edit and undo, with when and why. Append-only:
+          entries are never changed or deleted.
         </CardDescription>
         <div className="col-start-2 row-span-2 row-start-1 flex flex-wrap gap-2 self-start justify-self-end">
           <Button size="sm" variant="outline" onClick={onExport} disabled={!entries.length}>
@@ -896,62 +999,283 @@ function AuditLog({
   );
 }
 
-function IntroductionsTable({
+type PipelineRow = {
+  key: string;
+  d?: Decision;
+  need: Need;
+  name: string;
+  o?: OptInRow;
+  p: PairStage;
+  espoo?: string;
+  interview?: string;
+  offer?: string;
+};
+
+const WAITING_LABEL: Record<NonNullable<PairStage["waiting"]>, string> = {
+  organiser: "You",
+  candidate: "Candidate",
+  company: "Company",
+  either: "Either side",
+};
+
+/** Every pair from request to offer: the whole workflow and all its data in one table. */
+function PipelineTable({
   rows,
+  onRecord,
+  onView,
 }: {
-  rows: { key: string; d: Decision; need: Need; name: string; o?: OptInRow; status: string }[];
+  rows: PipelineRow[];
+  onRecord: (key: string, name: string) => void;
+  onView: (side: "company" | "talent", key: string) => void;
 }) {
+  const [filter, setFilter] = useState<"all" | "open" | "mine">("all");
+  const shown = rows.filter((r) =>
+    filter === "mine" ? r.p.waiting === "organiser" : filter === "open" ? !r.p.stopped && !r.p.hired : true,
+  );
+  const reached = STEPS.map(
+    (_, i) => rows.filter((r) => r.p.step > i || (r.p.step === i && !r.p.stopped) || r.p.hired).length,
+  );
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
-          <NetworkIcon className="size-4" /> All introductions
+          <NetworkIcon className="size-4" /> Pipeline
         </CardTitle>
         <CardDescription>
-          Every introduction you made, newest first, and where it stands. The company and the candidate answer
-          in their own views; you only see whether they said yes, never a reason for a no.
+          Every request and invitation, from the first ask to a job offer. Apply or match → Espoo assessment →
+          Espoo interview → profile sent to the company → company interview → job offer. You only see whether
+          someone said yes, never a reason for a no.
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
+        <ol className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+          {STEPS.map((s, i) => (
+            <li key={s.id} className="rounded-lg border px-2.5 py-2">
+              <p className="text-lg font-semibold tabular-nums">{reached[i]}</p>
+              <p className="text-xs text-muted-foreground">{s.label}</p>
+            </li>
+          ))}
+          <li className="rounded-lg border border-evidence/30 bg-evidence-soft px-2.5 py-2 text-evidence">
+            <p className="text-lg font-semibold tabular-nums">{rows.filter((r) => r.p.hired).length}</p>
+            <p className="text-xs">Hired</p>
+          </li>
+        </ol>
+        <div className="flex w-fit gap-1 rounded-lg border p-0.5 text-sm" role="group" aria-label="Filter">
+          {(
+            [
+              ["all", `All (${rows.length})`],
+              ["open", "In progress"],
+              ["mine", `Waiting for you (${rows.filter((r) => r.p.waiting === "organiser").length})`],
+            ] as const
+          ).map(([v, label]) => (
+            <button
+              key={v}
+              type="button"
+              aria-pressed={filter === v}
+              onClick={() => setFilter(v)}
+              className={cn(
+                "rounded-md px-2.5 py-1 text-muted-foreground hover:text-foreground",
+                filter === v && "bg-secondary text-foreground",
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Introduced</TableHead>
-              <TableHead>Need</TableHead>
               <TableHead>Candidate</TableHead>
-              <TableHead>Company&apos;s answer</TableHead>
-              <TableHead>Candidate&apos;s answer</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>Need</TableHead>
+              <TableHead>Asked by</TableHead>
+              <TableHead>Progress</TableHead>
+              <TableHead>Espoo interview</TableHead>
+              <TableHead>Company</TableHead>
+              <TableHead>Candidate</TableHead>
+              <TableHead>Interview</TableHead>
+              <TableHead>Offer</TableHead>
+              <TableHead>Waiting for</TableHead>
+              <TableHead />
             </TableRow>
           </TableHeader>
           <TableBody>
-            {rows.length === 0 && (
+            {shown.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="py-6 text-center text-muted-foreground">
-                  No introductions yet. Introduce people from the Suitable candidates tab.
+                <TableCell colSpan={11} className="py-6 text-center text-muted-foreground">
+                  Nothing here yet. Invite people from the Suitable candidates tab.
                 </TableCell>
               </TableRow>
             )}
-            {rows.map((r) => (
+            {shown.map((r) => (
               <TableRow key={r.key}>
-                <TableCell className="text-muted-foreground tabular-nums">{fmtTime(r.d.at)}</TableCell>
-                <TableCell className="max-w-56 truncate" title={`${r.need.title} · ${r.need.company}`}>
+                <TableCell className="font-medium whitespace-nowrap">{r.name}</TableCell>
+                <TableCell className="max-w-48 truncate" title={`${r.need.title} · ${r.need.company}`}>
                   {r.need.title} <span className="text-muted-foreground">· {r.need.company}</span>
                 </TableCell>
-                <TableCell>{r.name}</TableCell>
+                <TableCell className="text-xs text-muted-foreground">
+                  {[r.o?.talent && "Candidate", r.o?.company && r.p.step < 3 && "Company"]
+                    .filter(Boolean)
+                    .join(", ") || "Espoo"}
+                </TableCell>
+                <TableCell className="min-w-56">
+                  <div className="space-y-1">
+                    <MiniSteps p={r.p} />
+                    <p className="text-xs text-muted-foreground">{STAGE_LABEL[r.p.stage]}</p>
+                  </div>
+                </TableCell>
+                <TableCell className="text-xs tabular-nums">{r.espoo ?? "—"}</TableCell>
                 <TableCell>
-                  <AnswerBadge value={r.o?.company} />
+                  {r.p.step >= 3 ? (
+                    <AnswerBadge value={r.o?.company} />
+                  ) : (
+                    <span className="text-xs text-muted-foreground">—</span>
+                  )}
                 </TableCell>
                 <TableCell>
-                  <AnswerBadge value={r.o?.talent} />
+                  {r.p.step >= 3 && r.o?.company ? (
+                    <AnswerBadge value={r.o?.talent} />
+                  ) : (
+                    <span className="text-xs text-muted-foreground">—</span>
+                  )}
                 </TableCell>
-                <TableCell className="text-xs text-muted-foreground">{r.status}</TableCell>
+                <TableCell className="text-xs tabular-nums">{r.interview ?? "—"}</TableCell>
+                <TableCell className="text-xs">{r.offer ?? "—"}</TableCell>
+                <TableCell className="text-xs">{r.p.waiting ? WAITING_LABEL[r.p.waiting] : "—"}</TableCell>
+                <TableCell className="text-right whitespace-nowrap">
+                  {r.p.stage === "screen-booked" && (
+                    <Button size="xs" onClick={() => onRecord(r.key, r.name)}>
+                      Record result
+                    </Button>
+                  )}
+                  {r.d?.status === "approved" && (
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      onClick={() => onView(r.p.step >= 3 ? "company" : "talent", r.key)}
+                    >
+                      <EyeIcon data-icon="inline-start" /> {r.p.step >= 3 ? "Company" : "Candidate"} view
+                    </Button>
+                  )}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
+        <details className="text-xs text-muted-foreground">
+          <summary className="cursor-pointer select-none hover:text-foreground">What each step means</summary>
+          <Stepper
+            p={{ stage: "interview-to-book", step: 4, stopped: false, hired: false, waiting: "either" }}
+            className="mt-2"
+          />
+        </details>
       </CardContent>
     </Card>
+  );
+}
+
+/** The organiser records the Espoo interview result, always with a reason. Logged. */
+function ResultDialog({
+  target,
+  current,
+  onClose,
+  onConfirm,
+}: {
+  target: { key: string; name: string } | null;
+  current?: "passed" | "not-passed";
+  onClose: () => void;
+  onConfirm: (result: "passed" | "not-passed" | undefined, reason: string, note: string) => void;
+}) {
+  const [result, setResult] = useState<"passed" | "not-passed" | undefined>(
+    current === "passed" ? "not-passed" : "passed",
+  );
+  const [reason, setReason] = useState("");
+  const [note, setNote] = useState("");
+  const [tried, setTried] = useState(false);
+  const error = reasonError(reason, note);
+  const options =
+    result === "passed" ? REASONS.pass : result === "not-passed" ? REASONS.fail : REVERT_REASONS;
+  return (
+    <Dialog open={!!target} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Espoo interview result · {target?.name}</DialogTitle>
+          <DialogDescription>
+            A pass sends the candidate&apos;s profile and contact details to the company. Not passed ends this
+            role for them; they see the reason and stay open for other roles. Always logged.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex flex-wrap gap-1.5">
+          {(
+            [
+              ["passed", "Passed"],
+              ["not-passed", "Not passed"],
+              ...(current ? ([[undefined, "Withdraw result"]] as const) : []),
+            ] as const
+          ).map(([v, label]) => (
+            <Button
+              key={label}
+              size="sm"
+              variant={result === v ? "default" : "outline"}
+              aria-pressed={result === v}
+              onClick={() => {
+                setResult(v);
+                setReason("");
+              }}
+            >
+              {label}
+              {current === v && " (current)"}
+            </Button>
+          ))}
+        </div>
+        <fieldset className="grid gap-1.5">
+          <legend className="mb-1.5 text-sm font-medium">Reason (required, logged)</legend>
+          {[...options, OTHER].map((r) => (
+            <label
+              key={r}
+              className={cn(
+                "flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm",
+                reason === r && "border-primary bg-accent",
+              )}
+            >
+              <input
+                type="radio"
+                name="result-reason"
+                className="accent-(--primary)"
+                checked={reason === r}
+                onChange={() => setReason(r)}
+              />
+              {r}
+            </label>
+          ))}
+        </fieldset>
+        <div className="grid gap-1.5">
+          <Label htmlFor="result-note">
+            Note {result === "passed" ? "for the company" : "(shown to the candidate)"}
+            {reason === OTHER ? " (required)" : " (optional)"}
+          </Label>
+          <Textarea id="result-note" value={note} onChange={(e) => setNote(e.target.value)} />
+        </div>
+        {tried && error && <p className="text-sm text-destructive">{error}</p>}
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            variant={result === "passed" ? "default" : "destructive"}
+            onClick={() => {
+              setTried(true);
+              if (!error) onConfirm(result, reason, note);
+            }}
+          >
+            {result === "passed"
+              ? "Pass and send to company"
+              : result === "not-passed"
+                ? "Record not passed"
+                : "Withdraw result"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -1093,8 +1417,13 @@ function ByCandidate({
                 <li className="flex items-center gap-1.5 text-muted-foreground">
                   <MapPinIcon className="size-3.5" /> {t.contact.city}
                 </li>
-                <li className="flex items-center gap-1.5">
-                  <MailIcon className="size-3.5 text-muted-foreground" /> {t.contact.email}
+                <li>
+                  <a
+                    href={`mailto:${t.contact.email}`}
+                    className="flex items-center gap-1.5 underline-offset-4 hover:underline"
+                  >
+                    <MailIcon className="size-3.5 text-muted-foreground" /> {t.contact.email}
+                  </a>
                 </li>
               </ul>
             )}
@@ -1136,7 +1465,7 @@ function ByCandidate({
                     className={cn("font-normal", d.status === "approved" && "bg-evidence text-white")}
                     title={d.reason}
                   >
-                    {d.status === "approved" ? "Introduced" : "Not now"}
+                    {d.status === "approved" ? "Invited" : "Not now"}
                   </Badge>
                   <Button
                     size="xs"
@@ -1168,7 +1497,7 @@ function ByCandidate({
                   />
                 )}
                 <Button size="xs" onClick={() => onAction("approve", m)}>
-                  <CheckIcon data-icon="inline-start" /> Introduce
+                  <CheckIcon data-icon="inline-start" /> Invite to Espoo interview
                 </Button>
                 <Button size="xs" variant="outline" onClick={() => onAction("reject", m)}>
                   Not now
@@ -1209,7 +1538,8 @@ function IntroduceTo({
     <Card className="border-primary/30">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
-          <HandshakeIcon className="size-4 text-primary" /> Introduce {name} to a company
+          <HandshakeIcon className="size-4 text-primary" /> Invite {name} to an Espoo interview for any
+          company
         </CardTitle>
         <CardDescription>
           Choose any company and role, best skill match first. The company and {name} then each say yes or no.
@@ -1239,7 +1569,7 @@ function IntroduceTo({
                         {need.title} · {Math.round(m.score * 100)}%
                         {d
                           ? d.status === "approved"
-                            ? " · introduced"
+                            ? " · invited"
                             : " · not now"
                           : m.suggested
                             ? ""
@@ -1251,7 +1581,7 @@ function IntroduceTo({
               ))}
             </select>
             <Button onClick={() => picked && onIntroduce(picked.m)} disabled={!picked}>
-              <CheckIcon data-icon="inline-start" /> Introduce
+              <CheckIcon data-icon="inline-start" /> Invite
             </Button>
           </div>
         ) : (

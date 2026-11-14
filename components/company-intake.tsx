@@ -47,6 +47,7 @@ import { explainMatch, matchesForNeed, pairKey } from "@/lib/match";
 import { companyOf } from "@/lib/schedule";
 import { companiesFor } from "@/lib/explore";
 import type { Need, Talent } from "@/lib/types";
+import { COMPANY_LABEL, stageOf, type PairStage } from "@/lib/pipeline";
 import { useDemo } from "@/lib/store";
 import { cn, isSubmitEnter } from "@/lib/utils";
 
@@ -69,7 +70,7 @@ const GREETING: Msg = {
 };
 
 export function CompanyIntake() {
-  const { talent, needs, addNeed, decisions, optIns, setOptIn } = useDemo();
+  const { talent, needs, addNeed, decisions, optIns, slots, screening, offers, setOptIn } = useDemo();
   const [messages, setMessages] = useState<Msg[]>([GREETING]);
   // Opening suggestions tailored by Gemini to who is registered; fixed ones until they arrive.
   const [starters, setStarters] = useState<string[]>(DEFAULT_STARTERS);
@@ -644,8 +645,7 @@ export function CompanyIntake() {
                   footer={
                     <IntroRequest
                       pair={key}
-                      introduced={decisions[key]?.status === "approved"}
-                      passed={decisions[key]?.status === "rejected"}
+                      stage={stageOf(key, { decisions, optIns, slots, screening, offers })}
                       asked={optIns[key]?.company === true}
                       onAsk={(v) => setOptIn(key, "company", v)}
                     />
@@ -701,33 +701,38 @@ const closeBubble = (m: Msg): Msg => ({ ...m, live: false, content: m.content.tr
  */
 function IntroRequest({
   pair,
-  introduced,
-  passed,
+  stage: p,
   asked,
   onAsk,
 }: {
   pair: string;
-  introduced: boolean;
-  passed: boolean;
+  stage: PairStage;
   asked: boolean;
   onAsk: (v: true | undefined) => void;
 }) {
-  if (introduced)
+  // Passed the Espoo interview: the profile is the company's to act on.
+  if (p.step >= 3)
     return (
       <Button
         size="sm"
         className="ml-auto"
+        variant={p.waiting === "company" || p.waiting === "either" ? "default" : "outline"}
         nativeButton={false}
         render={<Link href={`/meetings/company?pair=${encodeURIComponent(pair)}`} />}
       >
-        Introduced by the organiser · answer <ArrowRightIcon data-icon="inline-end" />
+        {COMPANY_LABEL[p.stage]} <ArrowRightIcon data-icon="inline-end" />
       </Button>
     );
-  if (passed)
+  if (p.stopped)
+    return <span className="ml-auto text-xs text-muted-foreground">Espoo didn&apos;t take this forward</span>;
+  if (p.step === 2)
     return (
-      <span className="ml-auto text-xs text-muted-foreground">
-        The organiser didn&apos;t introduce this time
-      </span>
+      <Badge
+        variant="outline"
+        className="ml-auto border-primary/30 bg-accent font-normal text-accent-foreground"
+      >
+        <CheckIcon data-icon="inline-start" /> Espoo is interviewing this candidate
+      </Badge>
     );
   return asked ? (
     <>
@@ -754,7 +759,7 @@ function IntroRequest({
         onAsk(true);
         toast.success("Introduction requested", {
           description:
-            "The organiser sees your request and decides. If they introduce you, the candidate answers yes or no.",
+            "Espoo sees your request. If it fits, Espoo interviews the candidate and sends you their profile when they pass.",
         });
       }}
     >

@@ -10,6 +10,7 @@ import {
   pairStatus,
   preGeneratedSchedule,
   rooms,
+  screeningAvailability,
   SLOT_TIMES,
   slotAvailability,
   withOptIn,
@@ -86,21 +87,48 @@ describe("mutual opt-in", () => {
     expect(withOptIn(optIns, slots, key, "company", false).slots).toEqual({});
     expect(withOptIn(optIns, slots, key, "company", true).slots).toEqual(slots);
   });
+});
 
-  it("hides the candidate's name from the company until both say yes", () => {
-    const t = SEED_TALENT.find((x) => x.id === "T-30")!;
-    const company = { kind: "company" as const, id: SEED_NEEDS.find((n) => n.id === "N-01")!.companyId! };
-    const before = agendaFor(company, [key], SEED_NEEDS, SEED_TALENT, { [key]: { company: true } }, {});
-    expect(before[0].counterpart).toBe(t.alias);
-    const after = agendaFor(
-      company,
-      [key],
-      SEED_NEEDS,
-      SEED_TALENT,
-      { [key]: { company: true, talent: true } },
-      { [key]: "10:30" },
-    );
-    expect(after[0]).toMatchObject({ counterpart: t.revealName, time: "10:30", status: "booked" });
+const approved = (...keys: string[]) =>
+  Object.fromEntries(keys.map((key) => [key, { status: "approved" as const, reason: "x", at: "" }]));
+const passed = (slot = "10:00") => ({ answer: true, slot, result: "passed" as const });
+const pipe = (s: Partial<Parameters<typeof agendaFor>[1]>) => ({
+  needs: SEED_NEEDS,
+  talent: SEED_TALENT,
+  decisions: {},
+  optIns: {},
+  slots: {},
+  screening: {},
+  offers: {},
+  ...s,
+});
+
+describe("Espoo interview comes first", () => {
+  const key = k("N-01", "T-30");
+  const company = { kind: "company" as const, id: SEED_NEEDS.find((n) => n.id === "N-01")!.companyId! };
+
+  it("keeps the candidate off the company's agenda until Espoo passes them", () => {
+    const invited = pipe({ decisions: approved(key), screening: { [key]: { answer: true, slot: "10:00" } } });
+    expect(agendaFor(company, invited)).toEqual([]);
+    expect(agendaFor({ kind: "talent", id: "T-30" }, invited)[0]).toMatchObject({
+      kind: "espoo",
+      time: "10:00",
+    });
+    const shared = pipe({ decisions: approved(key), screening: { [key]: passed() } });
+    expect(agendaFor(company, shared)[0]).toMatchObject({
+      bucket: "answer",
+      counterpart: expect.any(String),
+    });
+  });
+
+  it("books the company interview only after the Espoo interview, never at a clashing time", () => {
+    const s = slotAvailability(key, {}, SEED_NEEDS, { [key]: passed("10:20") });
+    expect(s.slice(0, 3).map((x) => x.reason)).toEqual(["order", "order", "candidate"]);
+    expect(earliestFree(s)).toBe("10:30");
+    const other = k("N-02", "T-30");
+    const espoo = screeningAvailability(other, { [key]: "10:40" }, { [key]: passed("10:20") });
+    expect(espoo.find((x) => x.time === "10:20")).toMatchObject({ free: false, reason: "candidate" });
+    expect(espoo.find((x) => x.time === "10:40")).toMatchObject({ free: false });
   });
 });
 
@@ -109,16 +137,18 @@ describe("agenda", () => {
     const a = k("N-01", "T-30");
     const b = k("N-02", "T-30");
     const c = k("N-03", "T-30");
+    const both = { company: true, talent: true };
     const items = agendaFor(
       { kind: "talent", id: "T-30" },
-      [a, b, c],
-      SEED_NEEDS,
-      SEED_TALENT,
-      { [a]: { company: true, talent: true }, [b]: { company: true, talent: true }, [c]: { company: true } },
-      { [a]: "11:00", [b]: "10:10" },
+      pipe({
+        decisions: approved(a, b, c),
+        screening: { [a]: passed("10:00"), [b]: passed("10:10") },
+        optIns: { [a]: both, [b]: both },
+        slots: { [a]: "11:00", [b]: "10:30" },
+      }),
     );
-    expect(items.map((i) => i.status)).toEqual(["booked", "booked", "waiting"]);
-    expect(items[0].time).toBe("10:10");
+    expect(items.map((i) => i.bucket)).toEqual(["booked", "booked", "booked", "booked", "answer"]);
+    expect(items.map((i) => i.time).slice(0, 4)).toEqual(["10:00", "10:10", "10:30", "11:00"]);
     expect(items[0].room).toBeTruthy();
   });
 
@@ -126,12 +156,13 @@ describe("agenda", () => {
     const key = k("N-01", "T-30");
     const items = agendaFor(
       { kind: "talent", id: "T-30" },
-      [key],
-      SEED_NEEDS,
-      SEED_TALENT,
-      { [key]: { company: true, talent: true } },
-      { [key]: "10:40" },
-    );
+      pipe({
+        decisions: approved(key),
+        screening: { [key]: passed("10:00") },
+        optIns: { [key]: { company: true, talent: true } },
+        slots: { [key]: "10:40" },
+      }),
+    ).filter((i) => i.kind === "company");
     const ics = agendaIcs(items, "Candidate T-30");
     expect(ics).toContain("BEGIN:VCALENDAR");
     expect(ics).toContain("DTSTART;TZID=Europe/Helsinki:20261203T104000");

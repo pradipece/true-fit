@@ -5,14 +5,19 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeftRightIcon,
+  BadgeCheckIcon,
+  BriefcaseBusinessIcon,
   Building2Icon,
   CalendarDaysIcon,
   CheckCircle2Icon,
+  CircleSlashIcon,
   ClockIcon,
-  EyeIcon,
-  EyeOffIcon,
+  HourglassIcon,
+  LandmarkIcon,
   LockIcon,
+  MailIcon,
   MapPinIcon,
+  PhoneIcon,
   StarIcon,
   UserRoundIcon,
 } from "lucide-react";
@@ -22,368 +27,579 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { IdentitySwitch, useIdentity } from "@/components/identity";
+import { IdentitySwitch, useIdentity, useViewAs } from "@/components/identity";
 import { MatchExplanationView, ScoreMeter } from "@/components/match-explanation";
+import { MiniSteps, Stepper } from "@/components/pipeline-steps";
 import { SkillChip } from "@/components/skill-chip";
 import { EVENT } from "@/lib/data";
 import { pairOwner } from "@/lib/identity";
+import { feedbackError, NEXT_STEPS, pairOutcome, QUESTIONS } from "@/lib/impact";
 import { explainMatch } from "@/lib/match";
+import { participantById } from "@/lib/participants";
+import {
+  activeKeys,
+  COMPANY_LABEL,
+  myTurn,
+  ownedBy,
+  stageOf,
+  TALENT_LABEL,
+  visibleTo,
+  type PairStage,
+} from "@/lib/pipeline";
 import {
   earliestFree,
-  pairStatus,
+  ESPOO_DESK,
   roomFor,
+  screeningAvailability,
   slotAvailability,
   type OptInAnswer,
-  type PairStatus,
+  type SlotState,
 } from "@/lib/schedule";
 import { useDemo } from "@/lib/store";
-import { feedbackError, NEXT_STEPS, pairOutcome, QUESTIONS } from "@/lib/impact";
 import type { FeedbackSide, NextStep, SideFeedback } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export type MeetingSide = "company" | "talent";
 
-const OTHER: Record<MeetingSide, string> = { company: "the candidate", talent: "the company" };
-
 /**
- * One side's view of the meetings. Company and candidate each get their own route
- * (/meetings/company, /meetings/talent) and only see their own answers.
+ * One side's view of the recruitment pipeline (lib/pipeline.ts). The candidate follows every
+ * step from Espoo's interview invitation to a job offer; the company sees a candidate only
+ * after Espoo passes them, then decides on an interview and an offer. Each route
+ * (/meetings/company, /meetings/talent) shows only the signed-in participant's own pairs.
  */
 export function Meetings({ side }: { side: MeetingSide }) {
-  const { needs, talent, decisions, optIns, slots, feedback, setOptIn, bookSlot, cancelSlot, giveFeedback } =
-    useDemo();
+  const demo = useDemo();
+  const { needs, talent, decisions, optIns, slots, screening, offers, feedback } = demo;
   const router = useRouter();
   const searchParams = useSearchParams();
+  const viewAs = useViewAs();
+  const { id: myId, set: switchTo } = useIdentity(side);
 
-  // Only the signed-in participant's own pairs: never other companies' or candidates'.
-  const { id: myId } = useIdentity(side);
+  const state = useMemo(
+    () => ({ decisions, optIns, slots, screening, offers }),
+    [decisions, optIns, slots, screening, offers],
+  );
+  const mine = useMemo(
+    () => activeKeys(state).filter((k) => ownedBy(side, myId, k, needs)),
+    [state, side, myId, needs],
+  );
   const pairs = useMemo(
     () =>
-      Object.entries(decisions)
-        .filter(([key, d]) => d.status === "approved" && pairOwner(side, key, needs) === myId)
-        .map(([key, d]) => {
+      mine
+        .filter((k) => visibleTo(side, k, state))
+        .map((key) => {
           const [needId, talentId] = key.split("::");
           const need = needs.find((n) => n.id === needId);
           const t = talent.find((x) => x.id === talentId);
-          return need && t ? { key, need, t, d, m: explainMatch(need, t) } : null;
+          return need && t ? { key, need, t, p: stageOf(key, state), m: explainMatch(need, t) } : null;
         })
-        .filter((x) => x !== null),
-    [decisions, needs, talent, side, myId],
+        .filter((x) => x !== null)
+        // Your move first, finished or stopped last.
+        .sort((a, b) => rank(side, a.p) - rank(side, b.p)),
+    [mine, state, needs, talent, side],
+  );
+  // The company's own requests that haven't reached it yet: stage only.
+  const requests = useMemo(
+    () =>
+      side === "company"
+        ? mine
+            .filter((k) => !visibleTo(side, k, state) && optIns[k]?.company === true)
+            .map((key) => {
+              const [needId, talentId] = key.split("::");
+              return {
+                key,
+                need: needs.find((n) => n.id === needId),
+                t: talent.find((x) => x.id === talentId),
+                p: stageOf(key, state),
+              };
+            })
+        : [],
+    [side, mine, state, optIns, needs, talent],
   );
 
   const selected = searchParams.get("pair");
   const current = pairs.find((p) => p.key === selected) ?? pairs[0];
   const select = (key: string) =>
     router.replace(`/meetings/${side}?pair=${encodeURIComponent(key)}`, { scroll: false });
+  // A link to a pair of another demo participant (e.g. from the organiser view).
+  const foreignOwner =
+    selected && !pairs.some((p) => p.key === selected) ? pairOwner(side, selected, needs) : undefined;
+  const foreign =
+    foreignOwner && foreignOwner !== myId && visibleTo(side, selected!, state) ? foreignOwner : undefined;
+
+  const banner = foreign && (
+    <p className="flex flex-wrap items-center gap-2 rounded-lg border border-primary/30 bg-accent px-3 py-2 text-sm text-accent-foreground">
+      This link is for {participantById(foreign)?.name ?? foreign}, not the participant you&apos;re signed in
+      as.
+      <Button size="xs" onClick={() => switchTo(foreign)}>
+        Switch to them (demo)
+      </Button>
+    </p>
+  );
 
   if (!current) {
     return (
       <div className="space-y-4">
         <IdentitySwitch side={side} />
+        {banner}
         <Card>
           <CardContent className="space-y-3 py-12 text-center">
             <p className="text-muted-foreground">
               {side === "company"
-                ? "No introductions yet. The event organiser introduces people whose skills fit your needs; you can ask for anyone on Find candidates."
-                : "No introductions yet. The event organiser introduces you to companies whose needs fit your skills; build your skill card so they can find you."}
+                ? "No candidates yet. Espoo sends you a candidate's profile once they pass its interview. Ask for anyone on Find candidates."
+                : "Nothing yet. Ask to meet a company on Explore roles, or wait for Espoo to invite you to an interview."}
             </p>
             <Button
               variant="outline"
               nativeButton={false}
-              render={<Link href={side === "company" ? "/company" : "/talent"} />}
+              render={<Link href={side === "company" ? "/company" : "/talent/explore"} />}
             >
-              {side === "company" ? "Find candidates" : "Build your skill card"}
+              {side === "company" ? "Find candidates" : "Explore roles"}
             </Button>
           </CardContent>
         </Card>
+        {requests.length > 0 && <Requests rows={requests} />}
       </div>
     );
   }
 
-  const o = optIns[current.key] ?? {};
-  const mine = o[side];
-  const status = pairStatus(o, slots[current.key]);
-  const mutual = status === "mutual" || status === "booked";
-  const declined = status === "declined";
-  const slot = slots[current.key];
-  const availability = slotAvailability(current.key, slots, needs);
-  const firstFree = earliestFree(availability);
-  const room = roomFor(current.need, needs);
-  const fb = feedback[current.key];
-  // Companies already see the candidate's name on Find candidates; candidates see their own alias until it's mutual.
-  const talentName = side === "company" || mutual ? current.t.revealName : current.t.alias;
-  const me = side === "company" ? current.need.company : talentName;
+  const { key, need, t, p, m } = current;
+  const o = optIns[key] ?? {};
+  const sc = screening[key] ?? {};
+  const offer = offers[key];
+  const slot = slots[key];
+  const fb = feedback[key];
+  const room = roomFor(need, needs);
+  const passed = p.step >= 3;
   const otherSide: MeetingSide = side === "company" ? "talent" : "company";
+  const who = side === "company" ? need.company : (t.contact?.fullName ?? t.revealName);
 
-  const answer = (v: OptInAnswer) => {
+  const companyAvailability = slotAvailability(key, slots, needs, screening);
+  const espooAvailability = screeningAvailability(key, slots, screening);
+
+  const answerInterview = (v: OptInAnswer) => {
+    demo.setOptIn(key, side, v);
     const other = o[otherSide];
-    setOptIn(current.key, side, v);
-    if (v === true && other === true) toast.success("It's mutual! Pick a slot.");
-    else if (v === true) toast(`Saved. You'll hear back when ${OTHER[side]} answers.`);
-    else if (v === false)
-      toast(
-        `Declined. ${OTHER[side][0].toUpperCase() + OTHER[side].slice(1)} is not told who said no, or why.`,
-      );
-    else if (v === undefined && slot) toast("Withdrawn. The booked slot was released.");
-  };
-
-  const book = (time: string) => {
-    bookSlot(current.key, time);
-    toast.success(`Booked ${time} · ${room.label}`, { description: "Added to both agendas." });
+    if (v === true && other === true) toast.success("Both said yes. Pick an interview time.");
+    else if (v === true)
+      toast(side === "company" ? "Saved. The candidate is asked next." : "Saved. Waiting for the company.");
+    else if (v === false) toast("Declined. The other side is not told why.");
+    else if (slot) toast("Withdrawn. The booked time was released.");
   };
 
   return (
     <div className="space-y-4">
       <IdentitySwitch side={side} />
+      {banner}
       <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
         <div className="space-y-2">
           <p className="px-1 text-xs font-medium text-muted-foreground">
-            {side === "company"
-              ? "Candidates the organiser introduced"
-              : "Companies the organiser introduced"}
+            {side === "company" ? "Candidates Espoo sent you" : "Your applications and invitations"}
           </p>
-          {pairs.map((p) => {
-            const po = optIns[p.key] ?? {};
-            const ps = pairStatus(po, slots[p.key]);
-            const pm = ps === "mutual" || ps === "booked";
-            const label = feedback[p.key]?.[side]
-              ? "Feedback sent"
-              : ps === "waiting" && po[side] !== undefined
-                ? `Waiting for ${OTHER[side]}`
-                : STATUS_LABEL[ps](slots[p.key]);
+          {pairs.map((x) => {
+            const turn = myTurn(side, x.p);
             return (
               <button
-                key={p.key}
+                key={x.key}
                 type="button"
-                onClick={() => select(p.key)}
+                onClick={() => select(x.key)}
                 className={cn(
                   "w-full rounded-xl border bg-card p-3 text-left transition-colors hover:bg-muted/50",
-                  current.key === p.key && "border-primary ring-2 ring-primary/20",
+                  current.key === x.key && "border-primary ring-2 ring-primary/20",
+                  x.p.stopped && "opacity-60",
                 )}
               >
                 <p className="truncate text-sm font-medium">
-                  {side === "company" ? p.t.revealName : p.need.title}
+                  {side === "company" ? (x.t.contact?.fullName ?? x.t.revealName) : x.need.title}
                 </p>
                 <p className="truncate text-xs text-muted-foreground">
                   {side === "company"
-                    ? `${Math.round(p.m.score * 100)}% match for ${p.need.title}`
-                    : `${p.need.company} · as ${pm ? p.t.revealName : p.t.alias}`}
+                    ? `${Math.round(x.m.score * 100)}% skill match · ${x.need.title}`
+                    : `${x.need.company} · ${Math.round(x.m.score * 100)}% skill match`}
                 </p>
                 <div className="mt-2 flex items-center gap-1.5">
-                  <Dot value={po[side]} label="Your answer" />
-                  <span className="ml-auto text-xs text-muted-foreground">{label}</span>
+                  <MiniSteps p={x.p} />
+                  <span
+                    className={cn(
+                      "ml-auto truncate text-xs",
+                      turn ? "font-medium text-primary" : "text-muted-foreground",
+                    )}
+                  >
+                    {(side === "company" ? COMPANY_LABEL : TALENT_LABEL)[x.p.stage]}
+                  </span>
                 </div>
               </button>
             );
           })}
+          {requests.length > 0 && <Requests rows={requests} />}
         </div>
 
         <div className="space-y-6">
-          {/* Step A: opt in */}
-          <section className="space-y-3">
-            <StepTitle
-              n="A"
-              title={
-                side === "company"
-                  ? "Do you want to meet this candidate?"
-                  : "Do you want to meet this company?"
-              }
-              done={mutual}
+          {/* Who / what this is about */}
+          {side === "company" ? (
+            <Card>
+              <CardHeader>
+                <CardDescription className="flex items-center gap-1.5">
+                  <Building2Icon className="size-3.5" /> {need.company} · {need.title}
+                </CardDescription>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <BadgeCheckIcon className="size-4 text-evidence" /> {t.contact?.fullName ?? t.revealName}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <ScoreMeter score={m.score} role={need.title} />
+                <p className="text-sm text-muted-foreground">{t.headline}</p>
+                {t.contact && (
+                  <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm" aria-label="Contact details">
+                    <li className="flex items-center gap-1.5 text-muted-foreground">
+                      <MapPinIcon className="size-3.5" /> {t.contact.city}
+                    </li>
+                    <li>
+                      <a
+                        href={`mailto:${t.contact.email}`}
+                        className="flex items-center gap-1.5 hover:underline"
+                      >
+                        <MailIcon className="size-3.5 text-muted-foreground" /> {t.contact.email}
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        href={`tel:${t.contact.phone.replace(/\s+/g, "")}`}
+                        className="flex items-center gap-1.5 tabular-nums hover:underline"
+                      >
+                        <PhoneIcon className="size-3.5 text-muted-foreground" /> {t.contact.phone}
+                      </a>
+                    </li>
+                  </ul>
+                )}
+                <dl className="grid gap-x-4 gap-y-1 text-xs sm:grid-cols-2">
+                  <Fact label="Background" value={t.previousField} />
+                  <Fact
+                    label="Languages"
+                    value={t.languages.map((l) => `${l.lang} (${l.level.toLowerCase()})`).join(", ")}
+                  />
+                  <Fact label="Prefers" value={t.mode} />
+                  <Fact label="Available" value={t.availability} />
+                </dl>
+                <EspooResult reason={sc.reason} note={sc.note} at={sc.at} />
+                <MatchExplanationView m={m} />
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardDescription className="flex items-center gap-1.5">
+                  <UserRoundIcon className="size-3.5" /> {who}
+                </CardDescription>
+                <CardTitle className="text-base">{need.title}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm">
+                  {need.company} <span className="text-muted-foreground">· {need.companyBlurb}</span>
+                </p>
+                <p className="text-sm text-muted-foreground">{need.summary}</p>
+                <div className="space-y-1.5">
+                  <p className="text-xs font-medium text-muted-foreground">Why your skills fit</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {m.shared.map((s) => (
+                      <SkillChip key={s.skill} id={s.skill} kind={s.level} must={s.must} />
+                    ))}
+                    {m.transferable.map((x) => (
+                      <SkillChip key={x.to} id={x.to} from={x.from} kind="transfer" must={x.must} />
+                    ))}
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                  <span>{need.mode}</span>
+                  <span>{need.language}</span>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          <Stepper p={p} />
+
+          <div className="flex flex-wrap gap-2 text-xs">
+            <Button
+              size="xs"
+              variant="outline"
+              nativeButton={false}
+              render={<Link href={`/${side}/agenda`} />}
             >
-              The event organiser introduced you and you see why. A meeting is booked only when both sides say
-              yes, and nobody is told who said no.
-            </StepTitle>
-            {side === "company" ? (
-              <Card>
-                <CardHeader>
-                  <CardDescription className="flex items-center gap-1.5">
-                    <Building2Icon className="size-3.5" /> {current.need.company} · {current.need.title}
-                  </CardDescription>
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    {mutual ? (
-                      <EyeIcon className="size-4 text-evidence" />
-                    ) : (
-                      <EyeOffIcon className="size-4 text-muted-foreground" />
-                    )}
-                    {talentName}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <ScoreMeter score={current.m.score} role={current.need.title} />
-                  <p className="text-sm text-muted-foreground">{current.t.headline}</p>
-                  <MatchExplanationView m={current.m} />
-                  {current.d.note && (
-                    <p className="rounded-lg bg-accent p-2.5 text-xs text-accent-foreground">
-                      Organiser note: {current.d.note}
-                    </p>
-                  )}
-                </CardContent>
-                <CardFooter className="gap-2">
-                  <OptInButtons value={mine} onChange={answer} />
-                </CardFooter>
-              </Card>
-            ) : (
-              <Card>
-                <CardHeader>
-                  <CardDescription className="flex items-center gap-1.5">
-                    <UserRoundIcon className="size-3.5" /> Introduced to {talentName} by the organiser
-                  </CardDescription>
-                  <CardTitle className="text-base">{current.need.title}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <p className="text-sm">
-                    {current.need.company}{" "}
-                    <span className="text-muted-foreground">· {current.need.companyBlurb}</span>
-                  </p>
-                  <p className="text-sm text-muted-foreground">{current.need.summary}</p>
-                  <div className="space-y-1.5">
-                    <p className="text-xs font-medium text-muted-foreground">Why you were suggested</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {current.m.shared.map((s) => (
-                        <SkillChip key={s.skill} id={s.skill} kind={s.level} must={s.must} />
-                      ))}
-                      {current.m.transferable.map((t) => (
-                        <SkillChip key={t.to} id={t.to} from={t.from} kind="transfer" must={t.must} />
-                      ))}
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                    <span>{current.need.mode}</span>
-                    <span>{current.need.language}</span>
-                  </div>
-                </CardContent>
-                <CardFooter className="gap-2">
-                  <OptInButtons value={mine} onChange={answer} />
-                </CardFooter>
-              </Card>
-            )}
-            {mine === true && status === "waiting" && (
-              <p className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
-                Waiting for {OTHER[side]} to answer. You&apos;ll be notified if it&apos;s mutual.
-              </p>
-            )}
-            {declined && (
-              <p className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
-                No meeting this time. Neither side is told who said no or why, and both can still be matched
-                for other matches.
-              </p>
-            )}
-            <div className="flex flex-wrap gap-2 text-xs">
-              <Button
-                size="xs"
-                variant="outline"
-                nativeButton={false}
-                render={<Link href={`/${side}/agenda`} />}
-              >
-                <CalendarDaysIcon data-icon="inline-start" /> Your agenda
-              </Button>
-              <Button
-                size="xs"
-                variant="ghost"
-                nativeButton={false}
-                render={<Link href={`/meetings/${otherSide}?pair=${encodeURIComponent(current.key)}`} />}
-              >
+              <CalendarDaysIcon data-icon="inline-start" /> Your agenda
+            </Button>
+            {(otherSide === "talent" || passed) && (
+              <Button size="xs" variant="ghost" onClick={() => viewAs(otherSide, key)}>
                 <ArrowLeftRightIcon data-icon="inline-start" /> Demo: switch to the{" "}
                 {otherSide === "company" ? "company" : "candidate"}&apos;s view
               </Button>
-            </div>
-          </section>
+            )}
+          </div>
 
-          {/* Step B: slot */}
-          <section className={cn("space-y-3", !mutual && "pointer-events-none opacity-50")}>
-            <StepTitle n="B" title={`Book a ${EVENT.slotMinutes}-minute slot`} done={!!slot}>
-              The schedule is generated before the event and served as static files, so the login rush at the
-              start can&apos;t overload it. A time is only blocked if{" "}
-              {side === "company" ? "you or the candidate" : "you or the company"} are busy.
-            </StepTitle>
-            <Card>
-              <CardContent className="space-y-4">
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                  <span className="flex items-center gap-1.5">
-                    <ClockIcon className="size-4" /> {EVENT.date}, {EVENT.time}
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <MapPinIcon className="size-4" /> {room.label}
-                  </span>
-                  {!mutual && (
-                    <span className="flex items-center gap-1.5">
-                      <LockIcon className="size-4" /> Unlocks when both say yes
-                    </span>
+          {/* Steps 2–3: Espoo assessment and interview (the candidate acts; the company only sees the outcome) */}
+          {side === "talent" && (
+            <section className="space-y-3">
+              <StepTitle n="1" title="Espoo interview" done={passed} stopped={p.step <= 2 && p.stopped}>
+                The City of Espoo reviews your skill card and invites you to a short {EVENT.slotMinutes}
+                -minute interview. Only if you pass does it send your profile and contact details to the
+                company.
+              </StepTitle>
+              <Card>
+                <CardContent className="space-y-3">
+                  {p.stage === "applied" && (
+                    <Note icon={HourglassIcon}>
+                      You asked to meet {need.company}. Espoo reviews your skill card and invites you to an
+                      interview if your skills fit. No AI decides this.
+                    </Note>
                   )}
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  {slot ? (
+                  {p.stage === "not-selected" && (
+                    <Note icon={CircleSlashIcon}>
+                      Espoo won&apos;t take this role forward for you right now
+                      {decisions[key]?.reason ? `: ${decisions[key].reason.toLowerCase()}` : ""}. You can
+                      still be invited for other roles.
+                    </Note>
+                  )}
+                  {p.stage === "invited" && (
                     <>
-                      <Badge className="bg-evidence text-white">
-                        <CheckCircle2Icon data-icon="inline-start" /> Booked {slot} · {room.label}
-                      </Badge>
-                      <Button size="sm" variant="ghost" onClick={() => cancelSlot(current.key)}>
-                        Cancel booking
+                      <p className="text-sm">
+                        <LandmarkIcon className="mr-1 inline size-4 text-primary" />
+                        Espoo invites you to a {EVENT.slotMinutes}-minute interview about{" "}
+                        <span className="font-medium">{need.title}</span> at {need.company}.
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        By accepting, you agree that if you pass, Espoo shares your profile, name and contact
+                        details with {need.company}. Nothing is shared before that.
+                      </p>
+                      <div className="flex gap-2">
+                        <Button size="sm" onClick={() => demo.answerScreening(key, true)}>
+                          Accept the invitation
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => demo.answerScreening(key, false)}>
+                          No, thanks
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                  {p.stage === "screen-declined" && (
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary">You declined</Badge>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="ml-auto"
+                        onClick={() => demo.answerScreening(key, undefined)}
+                      >
+                        Change my mind
+                      </Button>
+                    </div>
+                  )}
+                  {(p.stage === "screen-to-book" || p.stage === "screen-booked") && (
+                    <>
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                        <span className="flex items-center gap-1.5">
+                          <ClockIcon className="size-4" /> {EVENT.date}
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <MapPinIcon className="size-4" /> {ESPOO_DESK}
+                        </span>
+                      </div>
+                      {sc.slot ? (
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge className="bg-evidence text-white">
+                            <CheckCircle2Icon data-icon="inline-start" /> Espoo interview at {sc.slot}
+                          </Badge>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => demo.bookScreening(key, undefined)}
+                          >
+                            Change time
+                          </Button>
+                          <span className="text-xs text-muted-foreground">
+                            Espoo records the result after the interview.
+                          </span>
+                        </div>
+                      ) : (
+                        <SlotGrid
+                          side="talent"
+                          availability={espooAvailability}
+                          onBook={(time) => {
+                            demo.bookScreening(key, time);
+                            toast.success(`Espoo interview booked at ${time}`, {
+                              description: "Added to your agenda.",
+                            });
+                          }}
+                        />
+                      )}
+                      <Button size="xs" variant="ghost" onClick={() => demo.answerScreening(key, undefined)}>
+                        Withdraw my acceptance
                       </Button>
                     </>
-                  ) : (
-                    firstFree && (
-                      <Button size="sm" onClick={() => book(firstFree)}>
-                        Book earliest free time ({firstFree})
-                      </Button>
-                    )
                   )}
-                </div>
-                <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
-                  {availability.map((a) => {
-                    const mineBusy = (a.reason === "company") === (side === "company");
-                    return (
-                      <Button
-                        key={a.time}
-                        variant={a.mine ? "default" : "outline"}
-                        disabled={!a.free}
-                        title={
-                          a.free
-                            ? undefined
-                            : mineBusy
-                              ? `You already have a meeting at ${a.time}`
-                              : `${OTHER[side]} is busy at ${a.time}`
-                        }
-                        className="h-auto flex-col gap-0 py-1.5 tabular-nums"
-                        onClick={() => book(a.time)}
-                      >
-                        <span className={cn(!a.free && "line-through")}>{a.time}</span>
-                        {!a.free && (
-                          <span className="text-[10px] font-normal no-underline">
-                            {mineBusy
-                              ? "you're busy"
-                              : side === "company"
-                                ? "candidate busy"
-                                : "company busy"}
-                          </span>
+                  {p.stage === "not-passed" && (
+                    <Note icon={CircleSlashIcon}>
+                      Thanks for the interview. Espoo won&apos;t send your profile to {need.company} this time
+                      {sc.reason ? `: ${sc.reason.toLowerCase()}` : ""}. Your profile stays open for other
+                      roles.
+                    </Note>
+                  )}
+                  {passed && (
+                    <p className="flex items-center gap-2 text-sm text-evidence">
+                      <BadgeCheckIcon className="size-4" /> You passed the Espoo interview
+                      {sc.slot ? ` (${sc.slot})` : ""}. Espoo sent your profile to {need.company}.
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            </section>
+          )}
+
+          {/* Steps 4–5: the company decides, then the interview */}
+          <section className={cn("space-y-3", !passed && "pointer-events-none opacity-50")}>
+            <StepTitle
+              n={side === "talent" ? "2" : "1"}
+              title={side === "company" ? "Do you want to interview this candidate?" : "Company interview"}
+              done={!!slot}
+              stopped={p.stage === "company-passed" || p.stage === "candidate-declined"}
+            >
+              {side === "company"
+                ? "Espoo interviewed this candidate and sent you their profile. Invite them to a 10-minute interview at your table; they say yes or no too. Nobody is told why someone says no."
+                : `${need.company} has your profile now and decides whether to interview you. You say yes or no too.`}
+            </StepTitle>
+            <Card>
+              <CardContent className="space-y-3">
+                {!passed && (
+                  <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                    <LockIcon className="size-4" /> Unlocks when the candidate passes the Espoo interview
+                  </p>
+                )}
+                {passed && side === "company" && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-sm">Your decision:</span>
+                    <AnswerButtons
+                      value={o.company}
+                      yes="Invite to interview"
+                      no="Not now"
+                      onChange={answerInterview}
+                    />
+                  </div>
+                )}
+                {passed && side === "talent" && o.company === undefined && (
+                  <Note icon={HourglassIcon}>Waiting for {need.company} to decide on an interview.</Note>
+                )}
+                {passed && side === "talent" && o.company === false && (
+                  <Note icon={CircleSlashIcon}>
+                    {need.company} won&apos;t interview this time. Companies don&apos;t give reasons, and it
+                    doesn&apos;t affect other roles.
+                  </Note>
+                )}
+                {passed && side === "talent" && o.company === true && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-sm">{need.company} wants to interview you. Your answer:</span>
+                    <AnswerButtons
+                      value={o.talent}
+                      yes="Yes, let's meet"
+                      no="No, thanks"
+                      onChange={answerInterview}
+                    />
+                  </div>
+                )}
+                {passed && side === "company" && o.company === true && (
+                  <p className="text-sm text-muted-foreground">
+                    Candidate&apos;s answer:{" "}
+                    <span className="font-medium text-foreground">
+                      {o.talent === true ? "Yes" : o.talent === false ? "Declined" : "Not yet"}
+                    </span>
+                    {o.talent === true && optIns[key]?.talent && !slot && " · book a time below"}
+                  </p>
+                )}
+
+                {o.company === true && o.talent === true && (
+                  <div className="space-y-3 border-t pt-3">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                      <span className="flex items-center gap-1.5">
+                        <ClockIcon className="size-4" /> {EVENT.date}, {EVENT.time}
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <MapPinIcon className="size-4" /> {room.label}
+                      </span>
+                    </div>
+                    {slot ? (
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge className="bg-evidence text-white">
+                          <CheckCircle2Icon data-icon="inline-start" /> Interview at {slot} · {room.label}
+                        </Badge>
+                        {!offer && (
+                          <Button size="sm" variant="ghost" onClick={() => demo.cancelSlot(key)}>
+                            Cancel booking
+                          </Button>
                         )}
-                      </Button>
-                    );
-                  })}
-                </div>
+                      </div>
+                    ) : (
+                      <SlotGrid
+                        side={side}
+                        availability={companyAvailability}
+                        onBook={(time) => {
+                          demo.bookSlot(key, time);
+                          toast.success(`Interview booked at ${time} · ${room.label}`, {
+                            description: "Added to both agendas.",
+                          });
+                        }}
+                      />
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </section>
 
-          {/* Step C: feedback */}
+          {/* Step 6: feedback and job offer */}
           <section className={cn("space-y-3", !slot && "pointer-events-none opacity-50")}>
-            <StepTitle n="C" title="After the meeting: 30-second feedback" done={!!fb?.[side]}>
-              You answer on your own. It rates the meeting and the cards, never the person, and helps improve
-              the next event.
+            <StepTitle
+              n={side === "talent" ? "3" : "2"}
+              title="After the interview: feedback and job offer"
+              done={p.hired || offer?.answer !== undefined}
+              stopped={p.stage === "no-offer" || p.stage === "offer-declined"}
+            >
+              {side === "company"
+                ? "Give 30-second feedback, then decide whether to offer the job. The candidate answers the offer here."
+                : "Give 30-second feedback. If the company offers you the job, you accept or decline it here."}
             </StepTitle>
             {fb?.company && fb?.talent && (
               <p className="rounded-lg border border-evidence/30 bg-evidence-soft p-3 text-sm text-evidence">
                 {OUTCOME_LABEL[pairOutcome(fb)]}
               </p>
             )}
-            <div className="max-w-xl">
-              <FeedbackForm
-                key={`${current.key}:${side}`}
+            <div className="grid gap-4 xl:grid-cols-2">
+              <OfferCard
                 side={side}
-                who={me}
+                company={need.company}
+                offer={offer}
+                onOffer={(status, note) => {
+                  demo.setOffer(key, {
+                    status,
+                    note: note.trim() || undefined,
+                    at: new Date().toISOString(),
+                  });
+                  toast.success(status === "offered" ? "Job offer sent" : "Saved: no offer", {
+                    description:
+                      status === "offered" ? "The candidate answers in their own view." : undefined,
+                  });
+                }}
+                onWithdraw={() => demo.setOffer(key, undefined)}
+                onAnswer={(v) => {
+                  demo.answerOffer(key, v);
+                  if (v === true) toast.success("Congratulations! You accepted the offer.");
+                  else if (v === false) toast("Offer declined. The company is told you declined, not why.");
+                }}
+              />
+              <FeedbackForm
+                key={`${key}:${side}`}
+                side={side}
+                who={who}
                 initial={fb?.[side]}
                 onSubmit={(f) => {
-                  giveFeedback(current.key, side, f);
+                  demo.giveFeedback(key, side, f);
                   toast.success("Thanks, feedback saved", {
                     description: "Your answers are only counted in totals, never shown to the other side.",
                   });
@@ -397,42 +613,222 @@ export function Meetings({ side }: { side: MeetingSide }) {
   );
 }
 
-function Dot({ value, label }: { value: OptInAnswer; label: string }) {
+/** Your move first, then in progress, then finished or stopped. */
+function rank(side: MeetingSide, p: PairStage) {
+  if (p.stopped) return 3;
+  if (p.hired) return 2;
+  return myTurn(side, p) ? 0 : 1;
+}
+
+function Fact({ label, value }: { label: string; value: string }) {
   return (
-    <span
-      className={cn(
-        "flex items-center gap-1 text-[11px]",
-        value === true ? "text-evidence" : value === false ? "text-destructive" : "text-muted-foreground",
-      )}
-      title={`${label}: ${value === true ? "yes" : value === false ? "declined" : "no answer yet"}`}
-    >
-      <span
-        className={cn(
-          "size-1.5 rounded-full",
-          value === true ? "bg-evidence" : value === false ? "bg-destructive" : "bg-muted-foreground/40",
-        )}
-      />
-      {label}
-    </span>
+    <div>
+      <dt className="inline text-muted-foreground">{label}: </dt>
+      <dd className="inline">{value}</dd>
+    </div>
   );
 }
 
-const STATUS_LABEL: Record<PairStatus, (slot?: string) => string> = {
-  waiting: () => "Awaiting answers",
-  declined: () => "Not going ahead",
-  mutual: () => "Pick a slot",
-  booked: (slot) => `Booked ${slot}`,
-};
+function Note({ icon: Icon, children }: { icon: typeof HourglassIcon; children: React.ReactNode }) {
+  return (
+    <p className="flex items-start gap-2 text-sm text-muted-foreground">
+      <Icon className="mt-0.5 size-4 shrink-0" /> <span>{children}</span>
+    </p>
+  );
+}
+
+function EspooResult({ reason, note, at }: { reason?: string; note?: string; at?: string }) {
+  if (!reason) return null;
+  return (
+    <p className="rounded-lg bg-evidence-soft p-2.5 text-xs text-evidence">
+      <LandmarkIcon className="mr-1 inline size-3.5" />
+      Passed the Espoo interview
+      {at ? ` on ${new Date(at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}` : ""}:{" "}
+      {reason}
+      {note ? ` — ${note}` : ""}
+    </p>
+  );
+}
+
+function Requests({
+  rows,
+}: {
+  rows: {
+    key: string;
+    need?: { title: string };
+    t?: { revealName: string; contact?: { fullName: string } };
+    p: PairStage;
+  }[];
+}) {
+  return (
+    <Card size="sm">
+      <CardHeader>
+        <CardTitle className="text-sm">Your requests with Espoo ({rows.length})</CardTitle>
+        <CardDescription className="text-xs">
+          You see the full profile here once Espoo has interviewed and passed the candidate.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <ul className="space-y-2">
+          {rows.map((r) => (
+            <li key={r.key} className="space-y-1 text-sm">
+              <p className="truncate">
+                {r.t?.contact?.fullName ?? r.t?.revealName}{" "}
+                <span className="text-muted-foreground">· {r.need?.title}</span>
+              </p>
+              <div className="flex items-center gap-1.5">
+                <MiniSteps p={r.p} />
+                <span className="truncate text-xs text-muted-foreground">{COMPANY_LABEL[r.p.stage]}</span>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </CardContent>
+    </Card>
+  );
+}
+
+function SlotGrid({
+  side,
+  availability,
+  onBook,
+}: {
+  side: MeetingSide;
+  availability: SlotState[];
+  onBook: (time: string) => void;
+}) {
+  const first = earliestFree(availability);
+  const why = (a: SlotState) => {
+    if (a.reason === "order") return "before Espoo interview";
+    const mineBusy = (a.reason === "company") === (side === "company");
+    return mineBusy ? "you're busy" : side === "company" ? "candidate busy" : "company busy";
+  };
+  return (
+    <div className="space-y-2">
+      {first ? (
+        <Button size="sm" onClick={() => onBook(first)}>
+          Book earliest free time ({first})
+        </Button>
+      ) : (
+        <p className="text-sm text-muted-foreground">No free time left today.</p>
+      )}
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+        {availability.map((a) => (
+          <Button
+            key={a.time}
+            variant={a.mine ? "default" : "outline"}
+            disabled={!a.free}
+            title={a.free ? undefined : why(a)}
+            className="h-auto flex-col gap-0 py-1.5 tabular-nums"
+            onClick={() => onBook(a.time)}
+          >
+            <span className={cn(!a.free && "line-through")}>{a.time}</span>
+            {!a.free && <span className="text-[10px] font-normal">{why(a)}</span>}
+          </Button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function OfferCard({
+  side,
+  company,
+  offer,
+  onOffer,
+  onWithdraw,
+  onAnswer,
+}: {
+  side: MeetingSide;
+  company: string;
+  offer?: { status: "offered" | "no-offer"; note?: string; answer?: boolean };
+  onOffer: (status: "offered" | "no-offer", note: string) => void;
+  onWithdraw: () => void;
+  onAnswer: (v: OptInAnswer) => void;
+}) {
+  const [note, setNote] = useState("");
+  return (
+    <Card>
+      <CardHeader>
+        <CardDescription className="flex items-center gap-1.5">
+          <BriefcaseBusinessIcon className="size-3.5" /> {company}
+        </CardDescription>
+        <CardTitle className="text-base">Job offer</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3 text-sm">
+        {!offer && side === "talent" && (
+          <Note icon={HourglassIcon}>Waiting for {company} to decide after the interview.</Note>
+        )}
+        {!offer && side === "company" && (
+          <div className="grid gap-1.5">
+            <Label htmlFor="offer-note">Message to the candidate (optional)</Label>
+            <Textarea
+              id="offer-note"
+              rows={2}
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="e.g. Start in January, 6-month contract, salary range in the email."
+            />
+          </div>
+        )}
+        {offer?.status === "no-offer" && (
+          <Note icon={CircleSlashIcon}>
+            {side === "company"
+              ? "You decided not to offer the job this time."
+              : `${company} won't offer the job this time. Thank you for interviewing.`}
+          </Note>
+        )}
+        {offer?.status === "offered" && (
+          <>
+            <p className="flex items-center gap-2 font-medium text-evidence">
+              <BadgeCheckIcon className="size-4" />{" "}
+              {side === "company" ? "You offered the job." : `${company} offers you the job!`}
+            </p>
+            {offer.note && <p className="rounded-lg bg-muted p-2.5 text-xs">{offer.note}</p>}
+            <p className="text-muted-foreground">
+              {side === "company" ? "Candidate's answer: " : "Your answer: "}
+              <span className="font-medium text-foreground">
+                {offer.answer === true ? "Accepted" : offer.answer === false ? "Declined" : "Not yet"}
+              </span>
+            </p>
+          </>
+        )}
+      </CardContent>
+      <CardFooter className="flex-wrap gap-2">
+        {!offer && side === "company" && (
+          <>
+            <Button size="sm" onClick={() => onOffer("offered", note)}>
+              Offer the job
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => onOffer("no-offer", note)}>
+              No offer
+            </Button>
+          </>
+        )}
+        {offer && side === "company" && offer.answer === undefined && (
+          <Button size="sm" variant="ghost" onClick={onWithdraw}>
+            Change decision
+          </Button>
+        )}
+        {offer?.status === "offered" && side === "talent" && (
+          <AnswerButtons value={offer.answer} yes="Accept the offer" no="Decline" onChange={onAnswer} />
+        )}
+      </CardFooter>
+    </Card>
+  );
+}
 
 function StepTitle({
   n,
   title,
   done,
+  stopped,
   children,
 }: {
   n: string;
   title: string;
   done: boolean;
+  stopped?: boolean;
   children: React.ReactNode;
 }) {
   return (
@@ -441,9 +837,16 @@ function StepTitle({
         className={cn(
           "grid size-7 shrink-0 place-items-center rounded-full border text-xs font-semibold",
           done && "border-evidence bg-evidence text-white",
+          stopped && "border-destructive bg-destructive text-white",
         )}
       >
-        {done ? <CheckCircle2Icon className="size-4" /> : n}
+        {done ? (
+          <CheckCircle2Icon className="size-4" />
+        ) : stopped ? (
+          <CircleSlashIcon className="size-4" />
+        ) : (
+          n
+        )}
       </span>
       <div>
         <h3 className="font-medium">{title}</h3>
@@ -453,14 +856,24 @@ function StepTitle({
   );
 }
 
-function OptInButtons({ value, onChange }: { value: OptInAnswer; onChange: (v: OptInAnswer) => void }) {
+function AnswerButtons({
+  value,
+  yes,
+  no,
+  onChange,
+}: {
+  value: OptInAnswer;
+  yes: string;
+  no: string;
+  onChange: (v: OptInAnswer) => void;
+}) {
   if (value === true)
     return (
       <>
         <Badge className="bg-evidence text-white">
-          <CheckCircle2Icon data-icon="inline-start" /> Opted in
+          <CheckCircle2Icon data-icon="inline-start" /> {yes}
         </Badge>
-        <Button size="sm" variant="ghost" className="ml-auto" onClick={() => onChange(undefined)}>
+        <Button size="sm" variant="ghost" onClick={() => onChange(undefined)}>
           Withdraw
         </Button>
       </>
@@ -468,8 +881,8 @@ function OptInButtons({ value, onChange }: { value: OptInAnswer; onChange: (v: O
   if (value === false)
     return (
       <>
-        <Badge variant="secondary">Declined</Badge>
-        <Button size="sm" variant="ghost" className="ml-auto" onClick={() => onChange(undefined)}>
+        <Badge variant="secondary">{no}</Badge>
+        <Button size="sm" variant="ghost" onClick={() => onChange(undefined)}>
           Change my mind
         </Button>
       </>
@@ -477,10 +890,10 @@ function OptInButtons({ value, onChange }: { value: OptInAnswer; onChange: (v: O
   return (
     <>
       <Button size="sm" onClick={() => onChange(true)}>
-        Yes, I&apos;d like to meet
+        {yes}
       </Button>
       <Button size="sm" variant="ghost" onClick={() => onChange(false)}>
-        No, thanks
+        {no}
       </Button>
     </>
   );
@@ -488,8 +901,8 @@ function OptInButtons({ value, onChange }: { value: OptInAnswer; onChange: (v: O
 
 const OUTCOME_LABEL: Record<ReturnType<typeof pairOutcome>, string> = {
   awaiting: "Waiting for both answers.",
-  "no-show": "The meeting didn't take place.",
-  interview: "Both want to continue: an interview is next.",
+  "no-show": "The interview didn't take place.",
+  interview: "Both want to continue.",
   "follow-up": "Both are open to keeping in touch.",
   "no-follow-up": "No follow-up this time. Thanks for meeting!",
 };
@@ -561,7 +974,7 @@ function FeedbackForm({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-1.5">
-          <p className="text-sm">Did the meeting take place?</p>
+          <p className="text-sm">Did the interview take place?</p>
           <div className="flex gap-1.5">
             <Button size="sm" variant={held === true ? "default" : "outline"} onClick={() => setHeld(true)}>
               Yes

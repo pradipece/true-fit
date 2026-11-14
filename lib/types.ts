@@ -157,17 +157,21 @@ export type Decision = {
   at: string;
 };
 
+/** A decision status, "none", or an Espoo interview result, as logged in the audit trail. */
+export type AuditStatus = Decision["status"] | "none" | "passed" | "not-passed";
+
 /** Append-only audit trail. Entries are never edited or removed. */
 export type AuditEntry = {
   id: string;
   at: string;
   actor: string;
-  action: "approved" | "rejected" | "edited" | "reverted";
+  /** passed / not-passed = the organiser's Espoo interview result. */
+  action: "approved" | "rejected" | "edited" | "reverted" | "passed" | "not-passed";
   needId: string;
   talentId: string;
   /** Decision status before and after this action ("none" = no decision). */
-  from: Decision["status"] | "none";
-  to: Decision["status"] | "none";
+  from: AuditStatus;
+  to: AuditStatus;
   reason: string;
   note?: string;
 };
