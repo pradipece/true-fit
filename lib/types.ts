@@ -90,11 +90,22 @@ export type AuditAttributes = {
   path: "Linear" | "Career changer";
 };
 
+/** Mock personal info. Synthetic; shown to a company only after mutual opt-in, never scored or sent to the AI. */
+export type TalentContact = {
+  fullName: string;
+  /** Always an @example.com address. */
+  email: string;
+  phone: string;
+  city: string;
+};
+
 export type Talent = {
   id: string;
   alias: string;
   /** Revealed only after mutual opt-in. Synthetic. */
   revealName: string;
+  /** Seeds always have it; profiles made in the demo may not. */
+  contact?: TalentContact;
   headline: string;
   previousField: string;
   skills: SkillClaim[];
@@ -138,7 +149,7 @@ export type MatchExplanation = {
   suggested: boolean;
 };
 
-/** A human decision on one suggested pair. Only an organiser creates one; nothing is automatic. */
+/** A company's decision on one suggested pair (invite or not now). Only a person creates one; nothing is automatic. */
 export type Decision = {
   status: "approved" | "rejected";
   reason: string;
@@ -177,7 +188,7 @@ export type SideFeedback = {
   /** 1–5: did the card (skill card for the company, need card for the candidate) match reality? */
   accuracy?: number;
   nextStep?: NextStep;
-  /** Optional idea for the organiser. Shown to organisers with identifying details removed. */
+  /** Optional idea to improve the event. Shown only in aggregate Insights, with identifying details removed. */
   improve?: string;
   at: string;
 };

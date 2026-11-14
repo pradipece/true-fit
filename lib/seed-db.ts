@@ -40,26 +40,28 @@ export async function getSeed(): Promise<LoadedSeed> {
 /** Rebuild the seed files' shape from the tables, in the files' order. */
 async function readRaw(): Promise<RawSeed> {
   const q = db();
-  const [companies, needs, needSkills, talent, skills, evidence, languages, audit] = await Promise.all([
-    q.query(`SELECT id, name, blurb, sector, location FROM companies ORDER BY position NULLS LAST, id`),
-    q.query(
-      `SELECT id, company_id, title, occupation_id, summary, language, mode, submitted_weeks_before
+  const [companies, needs, needSkills, talent, skills, evidence, languages, audit, contact] =
+    await Promise.all([
+      q.query(`SELECT id, name, blurb, sector, location FROM companies ORDER BY position NULLS LAST, id`),
+      q.query(
+        `SELECT id, company_id, title, occupation_id, summary, language, mode, submitted_weeks_before
          FROM needs ORDER BY position NULLS LAST, id`,
-    ),
-    q.query(`SELECT need_id, skill_id, kind FROM need_skills ORDER BY need_id, kind, position`),
-    q.query(
-      `SELECT id, reveal_name, headline, previous_field, availability, mode
+      ),
+      q.query(`SELECT need_id, skill_id, kind FROM need_skills ORDER BY need_id, kind, position`),
+      q.query(
+        `SELECT id, reveal_name, headline, previous_field, availability, mode
          FROM talent ORDER BY position NULLS LAST, id`,
-    ),
-    q.query(`SELECT talent_id, skill_id, level FROM talent_skills ORDER BY talent_id, position`),
-    q.query(
-      `SELECT talent_id, kind, prompt, excerpt, skills FROM talent_evidence ORDER BY talent_id, position`,
-    ),
-    q.query(
-      `SELECT talent_id, lang, level FROM talent_languages ORDER BY talent_id, position NULLS LAST, lang`,
-    ),
-    q.query(`SELECT talent_id, origin, education, path FROM talent_audit`),
-  ]);
+      ),
+      q.query(`SELECT talent_id, skill_id, level FROM talent_skills ORDER BY talent_id, position`),
+      q.query(
+        `SELECT talent_id, kind, prompt, excerpt, skills FROM talent_evidence ORDER BY talent_id, position`,
+      ),
+      q.query(
+        `SELECT talent_id, lang, level FROM talent_languages ORDER BY talent_id, position NULLS LAST, lang`,
+      ),
+      q.query(`SELECT talent_id, origin, education, path FROM talent_audit`),
+      q.query(`SELECT talent_id, full_name, email, phone, city FROM talent_contact`),
+    ]);
   if (!companies.rows.length || !talent.rows.length)
     throw new Error("Supabase tables are empty; run `yarn db:migrate`");
 
@@ -75,6 +77,7 @@ async function readRaw(): Promise<RawSeed> {
   const evidenceOf = group(evidence.rows, "talent_id");
   const languagesOf = group(languages.rows, "talent_id");
   const auditOf = new Map(audit.rows.map((a) => [a.talent_id, a]));
+  const contactOf = new Map(contact.rows.map((c) => [c.talent_id, c]));
 
   return {
     companies: companies.rows.map((c) => ({
@@ -102,9 +105,11 @@ async function readRaw(): Promise<RawSeed> {
     talent: talent.rows.map((t) => {
       const a = auditOf.get(t.id);
       if (!a) throw new Error(`talent ${t.id} has no talent_audit row`);
+      const c = contactOf.get(t.id);
       return {
         id: t.id,
         revealName: t.reveal_name,
+        contact: c ? { fullName: c.full_name, email: c.email, phone: c.phone, city: c.city } : undefined,
         headline: opt(t.headline),
         previousField: opt(t.previous_field),
         skills: skillsOf(t.id).map((s) => ({ id: s.skill_id, level: s.level })),

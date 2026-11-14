@@ -100,6 +100,15 @@ export function loadSeed(raw = { companies: companiesJson.companies, talent: tal
     });
     t.languages.forEach((l) => oneOf(l.level, LANG_LEVELS, `${at} language ${l.lang}`));
     oneOf(t.mode, TALENT_MODES, `${at} mode`);
+    const c = (t as { contact?: Partial<Record<string, unknown>> }).contact;
+    if (!c) problems.push(`${at}: missing contact`);
+    else {
+      for (const k of ["fullName", "email", "phone", "city"])
+        if (typeof c[k] !== "string" || !(c[k] as string).trim())
+          problems.push(`${at} contact.${k}: missing`);
+      if (typeof c.email === "string" && !/^[a-z0-9.-]+@example\.com$/.test(c.email))
+        problems.push(`${at} contact.email: must be a mock @example.com address`);
+    }
     (Object.keys(AUDIT) as (keyof AuditAttributes)[]).forEach((k) =>
       oneOf(t.audit[k], AUDIT[k], `${at} audit.${k}`),
     );

@@ -15,7 +15,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "db:migrate": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/db/migrate.mjs",
-    "db:sql": "node scripts/db/migrate.mjs --sql"
+    "db:sql": "node scripts/db/migrate.mjs --sql",
+    "db:talent-sql": "node scripts/db/migrate.mjs --talent-only --sql db/seed-talent.sql"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

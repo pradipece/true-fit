@@ -16,6 +16,8 @@ type DemoState = {
   optIns: Record<string, OptIn>;
   slots: Record<string, string>;
   feedback: Record<string, Feedback>;
+  /** Demo stand-in for signing in: who is using each side's pages. Unset = default (lib/identity.ts). */
+  actingAs: Partial<Record<FeedbackSide, string>>;
 };
 
 const SEED_DECISIONS: Record<string, Decision> = {
@@ -48,6 +50,7 @@ const seedState = ({ needs, talent }: DemoSeed = { needs: SEED_NEEDS, talent: SE
     [pairKey("N-02", "T-12")]: { company: true, talent: true },
   },
   slots: { [pairKey("N-02", "T-12")]: "10:20" },
+  actingAs: {},
   // Demo data: the one meeting already booked, as if both sides answered after the event.
   feedback: {
     [pairKey("N-02", "T-12")]: {
@@ -87,6 +90,8 @@ type Ctx = DemoState & {
   cancelSlot: (key: string) => void;
   /** Save one side's feedback for a meeting; the other side's answer is kept. */
   giveFeedback: (key: string, side: FeedbackSide, f: SideFeedback) => void;
+  /** Demo only: switch who is using a side's pages. */
+  setActingAs: (side: FeedbackSide, id: string) => void;
   reset: () => void;
 };
 
@@ -181,6 +186,10 @@ export function DemoProvider({ children, seed }: { children: React.ReactNode; se
       setState((s) => ({ ...s, feedback: { ...s.feedback, [key]: { ...s.feedback[key], [side]: f } } })),
     [],
   );
+  const setActingAs = useCallback(
+    (side: FeedbackSide, id: string) => setState((s) => ({ ...s, actingAs: { ...s.actingAs, [side]: id } })),
+    [],
+  );
   const reset = useCallback(() => setState(initial), [initial]);
 
   const value = useMemo(
@@ -194,9 +203,22 @@ export function DemoProvider({ children, seed }: { children: React.ReactNode; se
       bookSlot,
       cancelSlot,
       giveFeedback,
+      setActingAs,
       reset,
     }),
-    [state, addNeed, addTalent, decide, undoDecision, setOptIn, bookSlot, cancelSlot, giveFeedback, reset],
+    [
+      state,
+      addNeed,
+      addTalent,
+      decide,
+      undoDecision,
+      setOptIn,
+      bookSlot,
+      cancelSlot,
+      giveFeedback,
+      setActingAs,
+      reset,
+    ],
   );
 
   return <DemoContext.Provider value={value}>{children}</DemoContext.Provider>;

@@ -1,16 +1,34 @@
 {
-  "$comment": "Synthetic talent profiles. All people are fictional. `audit` is self-declared group data used ONLY for the aggregate fairness check; it is never scored or shown in matching. The pool is deliberately varied by origin, language, education and career path. Skill ids refer to data/esco/skills.json. `alias` defaults to 'Candidate <id>'.",
+  "$comment": "Synthetic talent profiles. All people are fictional. `revealName` is the full name and `contact` mock personal info (example.com e-mail, placeholder phone number), revealed only after mutual opt-in. `audit` is self-declared group data used ONLY for the aggregate fairness check; it is never scored or shown in matching. The pool is deliberately varied by origin, language, education and career path. Skill ids refer to data/esco/skills.json. `alias` defaults to 'Candidate <id>'.",
   "talent": [
     {
       "id": "T-01",
-      "revealName": "Grace O.",
+      "revealName": "Grace Okafor",
+      "contact": {
+        "fullName": "Grace Okafor",
+        "email": "grace.okafor@example.com",
+        "phone": "+358 40 000 0101",
+        "city": "Espoo"
+      },
       "headline": "Registered nurse from Lagos, in the Finnish licensing process for nurses trained abroad.",
       "previousField": "Hospital nursing (surgical ward)",
       "skills": [
-        { "id": "patient-care", "level": "evidenced" },
-        { "id": "medication", "level": "evidenced" },
-        { "id": "ehr", "level": "claimed" },
-        { "id": "intercultural", "level": "evidenced" }
+        {
+          "id": "patient-care",
+          "level": "evidenced"
+        },
+        {
+          "id": "medication",
+          "level": "evidenced"
+        },
+        {
+          "id": "ehr",
+          "level": "claimed"
+        },
+        {
+          "id": "intercultural",
+          "level": "evidenced"
+        }
       ],
       "evidence": [
         {
@@ -27,24 +45,55 @@
         }
       ],
       "languages": [
-        { "lang": "English", "level": "Native" },
-        { "lang": "Yoruba", "level": "Native" },
-        { "lang": "Finnish", "level": "Learning" }
+        {
+          "lang": "English",
+          "level": "Native"
+        },
+        {
+          "lang": "Yoruba",
+          "level": "Native"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Learning"
+        }
       ],
       "availability": "From February",
       "mode": "On-site",
-      "audit": { "origin": "Outside EU", "education": "University", "path": "Linear" }
+      "audit": {
+        "origin": "Outside EU",
+        "education": "University",
+        "path": "Linear"
+      }
     },
     {
       "id": "T-02",
-      "revealName": "Pirjo K.",
+      "revealName": "Pirjo Korhonen",
+      "contact": {
+        "fullName": "Pirjo Korhonen",
+        "email": "pirjo.korhonen@example.com",
+        "phone": "+358 40 000 0102",
+        "city": "Espoo"
+      },
       "headline": "Practical nurse with 15 years in home care. Calm under pressure.",
       "previousField": "Home care (lähihoitaja)",
       "skills": [
-        { "id": "elderly-care", "level": "evidenced" },
-        { "id": "patient-care", "level": "evidenced" },
-        { "id": "medication", "level": "claimed" },
-        { "id": "team", "level": "evidenced" }
+        {
+          "id": "elderly-care",
+          "level": "evidenced"
+        },
+        {
+          "id": "patient-care",
+          "level": "evidenced"
+        },
+        {
+          "id": "medication",
+          "level": "claimed"
+        },
+        {
+          "id": "team",
+          "level": "evidenced"
+        }
       ],
       "evidence": [
         {
@@ -55,23 +104,51 @@
         }
       ],
       "languages": [
-        { "lang": "Finnish", "level": "Native" },
-        { "lang": "English", "level": "Learning" }
+        {
+          "lang": "Finnish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Learning"
+        }
       ],
       "availability": "Immediately",
       "mode": "On-site",
-      "audit": { "origin": "Finland", "education": "Vocational", "path": "Linear" }
+      "audit": {
+        "origin": "Finland",
+        "education": "Vocational",
+        "path": "Linear"
+      }
     },
     {
       "id": "T-03",
-      "revealName": "Lucía M.",
+      "revealName": "Lucía Martínez",
+      "contact": {
+        "fullName": "Lucía Martínez",
+        "email": "lucia.martinez@example.com",
+        "phone": "+358 40 000 0103",
+        "city": "Helsinki"
+      },
       "headline": "Front-end developer who tests with screen readers before shipping.",
       "previousField": "Graphic design",
       "skills": [
-        { "id": "react", "level": "evidenced" },
-        { "id": "js", "level": "evidenced" },
-        { "id": "a11y", "level": "evidenced" },
-        { "id": "ux", "level": "claimed" }
+        {
+          "id": "react",
+          "level": "evidenced"
+        },
+        {
+          "id": "js",
+          "level": "evidenced"
+        },
+        {
+          "id": "a11y",
+          "level": "evidenced"
+        },
+        {
+          "id": "ux",
+          "level": "claimed"
+        }
       ],
       "evidence": [
         {
@@ -88,23 +165,51 @@
         }
       ],
       "languages": [
-        { "lang": "Spanish", "level": "Native" },
-        { "lang": "English", "level": "Fluent" }
+        {
+          "lang": "Spanish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        }
       ],
       "availability": "From February",
       "mode": "Remote",
-      "audit": { "origin": "EU/EEA", "education": "Self-taught / bootcamp", "path": "Career changer" }
+      "audit": {
+        "origin": "EU/EEA",
+        "education": "Self-taught / bootcamp",
+        "path": "Career changer"
+      }
     },
     {
       "id": "T-04",
-      "revealName": "Ahmed H.",
+      "revealName": "Ahmed Hassan",
+      "contact": {
+        "fullName": "Ahmed Hassan",
+        "email": "ahmed.hassan@example.com",
+        "phone": "+358 40 000 0104",
+        "city": "Espoo"
+      },
       "headline": "Grew up in Espoo; six years on the warehouse floor, the last two as acting shift lead.",
       "previousField": "Warehouse operations",
       "skills": [
-        { "id": "warehouse", "level": "evidenced" },
-        { "id": "lead", "level": "evidenced" },
-        { "id": "logistics", "level": "claimed" },
-        { "id": "intercultural", "level": "evidenced" }
+        {
+          "id": "warehouse",
+          "level": "evidenced"
+        },
+        {
+          "id": "lead",
+          "level": "evidenced"
+        },
+        {
+          "id": "logistics",
+          "level": "claimed"
+        },
+        {
+          "id": "intercultural",
+          "level": "evidenced"
+        }
       ],
       "evidence": [
         {
@@ -115,24 +220,55 @@
         }
       ],
       "languages": [
-        { "lang": "Finnish", "level": "Native" },
-        { "lang": "Somali", "level": "Native" },
-        { "lang": "English", "level": "Fluent" }
+        {
+          "lang": "Finnish",
+          "level": "Native"
+        },
+        {
+          "lang": "Somali",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        }
       ],
       "availability": "From January",
       "mode": "On-site",
-      "audit": { "origin": "Finland", "education": "Vocational", "path": "Linear" }
+      "audit": {
+        "origin": "Finland",
+        "education": "Vocational",
+        "path": "Linear"
+      }
     },
     {
       "id": "T-05",
-      "revealName": "Marta W.",
+      "revealName": "Marta Wiśniewska",
+      "contact": {
+        "fullName": "Marta Wiśniewska",
+        "email": "marta.wisniewska@example.com",
+        "phone": "+358 40 000 0105",
+        "city": "Vantaa"
+      },
       "headline": "Logistics coordinator who keeps carriers, customers and the warehouse on the same page.",
       "previousField": "Freight forwarding",
       "skills": [
-        { "id": "logistics", "level": "evidenced" },
-        { "id": "supply", "level": "evidenced" },
-        { "id": "stakeholders", "level": "evidenced" },
-        { "id": "procurement", "level": "claimed" }
+        {
+          "id": "logistics",
+          "level": "evidenced"
+        },
+        {
+          "id": "supply",
+          "level": "evidenced"
+        },
+        {
+          "id": "stakeholders",
+          "level": "evidenced"
+        },
+        {
+          "id": "procurement",
+          "level": "claimed"
+        }
       ],
       "evidence": [
         {
@@ -143,25 +279,59 @@
         }
       ],
       "languages": [
-        { "lang": "Polish", "level": "Native" },
-        { "lang": "English", "level": "Fluent" },
-        { "lang": "Finnish", "level": "Learning" }
+        {
+          "lang": "Polish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Learning"
+        }
       ],
       "availability": "Immediately",
       "mode": "Hybrid",
-      "audit": { "origin": "EU/EEA", "education": "University", "path": "Linear" }
+      "audit": {
+        "origin": "EU/EEA",
+        "education": "University",
+        "path": "Linear"
+      }
     },
     {
       "id": "T-06",
-      "revealName": "Daniel F.",
+      "revealName": "Daniel Ferreira",
+      "contact": {
+        "fullName": "Daniel Ferreira",
+        "email": "daniel.ferreira@example.com",
+        "phone": "+358 40 000 0106",
+        "city": "Espoo"
+      },
       "headline": "Former chef, now a self-taught back-end developer who writes tests first.",
       "previousField": "Restaurant kitchen (chef)",
       "skills": [
-        { "id": "backend", "level": "evidenced" },
-        { "id": "python", "level": "evidenced" },
-        { "id": "testing", "level": "claimed" },
-        { "id": "sql", "level": "claimed" },
-        { "id": "team", "level": "evidenced" }
+        {
+          "id": "backend",
+          "level": "evidenced"
+        },
+        {
+          "id": "python",
+          "level": "evidenced"
+        },
+        {
+          "id": "testing",
+          "level": "claimed"
+        },
+        {
+          "id": "sql",
+          "level": "claimed"
+        },
+        {
+          "id": "team",
+          "level": "evidenced"
+        }
       ],
       "evidence": [
         {
@@ -178,24 +348,55 @@
         }
       ],
       "languages": [
-        { "lang": "Portuguese", "level": "Native" },
-        { "lang": "English", "level": "Working" }
+        {
+          "lang": "Portuguese",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Working"
+        }
       ],
       "availability": "Immediately",
       "mode": "Any",
-      "audit": { "origin": "Outside EU", "education": "Self-taught / bootcamp", "path": "Career changer" }
+      "audit": {
+        "origin": "Outside EU",
+        "education": "Self-taught / bootcamp",
+        "path": "Career changer"
+      }
     },
     {
       "id": "T-07",
-      "revealName": "Amina K.",
+      "revealName": "Amina Khalil",
+      "contact": {
+        "fullName": "Amina Khalil",
+        "email": "amina.khalil@example.com",
+        "phone": "+358 40 000 0107",
+        "city": "Helsinki"
+      },
       "headline": "Moves messy sensor data into tidy, queryable tables.",
       "previousField": "Industrial automation",
       "skills": [
-        { "id": "python", "level": "evidenced" },
-        { "id": "pipelines", "level": "evidenced" },
-        { "id": "sql", "level": "claimed" },
-        { "id": "embedded", "level": "evidenced" },
-        { "id": "problem", "level": "claimed" }
+        {
+          "id": "python",
+          "level": "evidenced"
+        },
+        {
+          "id": "pipelines",
+          "level": "evidenced"
+        },
+        {
+          "id": "sql",
+          "level": "claimed"
+        },
+        {
+          "id": "embedded",
+          "level": "evidenced"
+        },
+        {
+          "id": "problem",
+          "level": "claimed"
+        }
       ],
       "evidence": [
         {
@@ -212,24 +413,55 @@
         }
       ],
       "languages": [
-        { "lang": "English", "level": "Fluent" },
-        { "lang": "Arabic", "level": "Native" },
-        { "lang": "Finnish", "level": "Learning" }
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Arabic",
+          "level": "Native"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Learning"
+        }
       ],
       "availability": "From January",
       "mode": "Hybrid",
-      "audit": { "origin": "Outside EU", "education": "University", "path": "Linear" }
+      "audit": {
+        "origin": "Outside EU",
+        "education": "University",
+        "path": "Linear"
+      }
     },
     {
       "id": "T-08",
-      "revealName": "Liisa M.",
+      "revealName": "Liisa Mäkinen",
+      "contact": {
+        "fullName": "Liisa Mäkinen",
+        "email": "liisa.makinen@example.com",
+        "phone": "+358 40 000 0108",
+        "city": "Kauniainen"
+      },
       "headline": "Nurse turned health informatics specialist; speaks both clinician and developer.",
       "previousField": "Nursing (emergency department)",
       "skills": [
-        { "id": "ehr", "level": "evidenced" },
-        { "id": "health-regs", "level": "evidenced" },
-        { "id": "patient-care", "level": "evidenced" },
-        { "id": "analysis", "level": "claimed" }
+        {
+          "id": "ehr",
+          "level": "evidenced"
+        },
+        {
+          "id": "health-regs",
+          "level": "evidenced"
+        },
+        {
+          "id": "patient-care",
+          "level": "evidenced"
+        },
+        {
+          "id": "analysis",
+          "level": "claimed"
+        }
       ],
       "evidence": [
         {
@@ -240,24 +472,55 @@
         }
       ],
       "languages": [
-        { "lang": "Finnish", "level": "Native" },
-        { "lang": "Swedish", "level": "Working" },
-        { "lang": "English", "level": "Fluent" }
+        {
+          "lang": "Finnish",
+          "level": "Native"
+        },
+        {
+          "lang": "Swedish",
+          "level": "Working"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        }
       ],
       "availability": "From March",
       "mode": "Hybrid",
-      "audit": { "origin": "Finland", "education": "University", "path": "Career changer" }
+      "audit": {
+        "origin": "Finland",
+        "education": "University",
+        "path": "Career changer"
+      }
     },
     {
       "id": "T-09",
-      "revealName": "Elina V.",
+      "revealName": "Elina Virtanen",
+      "contact": {
+        "fullName": "Elina Virtanen",
+        "email": "elina.virtanen@example.com",
+        "phone": "+358 40 000 0109",
+        "city": "Espoo"
+      },
       "headline": "Former teacher turned junior data analyst.",
       "previousField": "Teaching (mathematics)",
       "skills": [
-        { "id": "analysis", "level": "evidenced" },
-        { "id": "python", "level": "claimed" },
-        { "id": "mentoring", "level": "evidenced" },
-        { "id": "stakeholders", "level": "evidenced" }
+        {
+          "id": "analysis",
+          "level": "evidenced"
+        },
+        {
+          "id": "python",
+          "level": "claimed"
+        },
+        {
+          "id": "mentoring",
+          "level": "evidenced"
+        },
+        {
+          "id": "stakeholders",
+          "level": "evidenced"
+        }
       ],
       "evidence": [
         {
@@ -274,23 +537,51 @@
         }
       ],
       "languages": [
-        { "lang": "Finnish", "level": "Native" },
-        { "lang": "English", "level": "Fluent" }
+        {
+          "lang": "Finnish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        }
       ],
       "availability": "From January",
       "mode": "Hybrid",
-      "audit": { "origin": "Finland", "education": "University", "path": "Career changer" }
+      "audit": {
+        "origin": "Finland",
+        "education": "University",
+        "path": "Career changer"
+      }
     },
     {
       "id": "T-10",
-      "revealName": "Wei Z.",
+      "revealName": "Wei Zhang",
+      "contact": {
+        "fullName": "Wei Zhang",
+        "email": "wei.zhang@example.com",
+        "phone": "+358 40 000 0110",
+        "city": "Espoo"
+      },
       "headline": "Recent Aalto MSc graduate; builds forecasting models people actually use.",
       "previousField": "Master's thesis (energy demand forecasting)",
       "skills": [
-        { "id": "ml", "level": "evidenced" },
-        { "id": "python", "level": "evidenced" },
-        { "id": "analysis", "level": "evidenced" },
-        { "id": "cloud", "level": "claimed" }
+        {
+          "id": "ml",
+          "level": "evidenced"
+        },
+        {
+          "id": "python",
+          "level": "evidenced"
+        },
+        {
+          "id": "analysis",
+          "level": "evidenced"
+        },
+        {
+          "id": "cloud",
+          "level": "claimed"
+        }
       ],
       "evidence": [
         {
@@ -301,24 +592,55 @@
         }
       ],
       "languages": [
-        { "lang": "Mandarin", "level": "Native" },
-        { "lang": "English", "level": "Fluent" },
-        { "lang": "Finnish", "level": "Learning" }
+        {
+          "lang": "Mandarin",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Learning"
+        }
       ],
       "availability": "Immediately",
       "mode": "Hybrid",
-      "audit": { "origin": "Outside EU", "education": "University", "path": "Linear" }
+      "audit": {
+        "origin": "Outside EU",
+        "education": "University",
+        "path": "Linear"
+      }
     },
     {
       "id": "T-11",
-      "revealName": "Kalle S.",
+      "revealName": "Kalle Sjöberg",
+      "contact": {
+        "fullName": "Kalle Sjöberg",
+        "email": "kalle.sjoberg@example.com",
+        "phone": "+358 40 000 0111",
+        "city": "Kirkkonummi"
+      },
       "headline": "HVAC technician who can explain a ventilation fault to any tenant.",
       "previousField": "HVAC maintenance",
       "skills": [
-        { "id": "hvac", "level": "evidenced" },
-        { "id": "energy", "level": "claimed" },
-        { "id": "problem", "level": "evidenced" },
-        { "id": "customer", "level": "evidenced" }
+        {
+          "id": "hvac",
+          "level": "evidenced"
+        },
+        {
+          "id": "energy",
+          "level": "claimed"
+        },
+        {
+          "id": "problem",
+          "level": "evidenced"
+        },
+        {
+          "id": "customer",
+          "level": "evidenced"
+        }
       ],
       "evidence": [
         {
@@ -329,25 +651,59 @@
         }
       ],
       "languages": [
-        { "lang": "Swedish", "level": "Native" },
-        { "lang": "Finnish", "level": "Fluent" },
-        { "lang": "English", "level": "Working" }
+        {
+          "lang": "Swedish",
+          "level": "Native"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Fluent"
+        },
+        {
+          "lang": "English",
+          "level": "Working"
+        }
       ],
       "availability": "From February",
       "mode": "On-site",
-      "audit": { "origin": "Finland", "education": "Vocational", "path": "Linear" }
+      "audit": {
+        "origin": "Finland",
+        "education": "Vocational",
+        "path": "Linear"
+      }
     },
     {
       "id": "T-12",
-      "revealName": "Jari L.",
+      "revealName": "Jari Laine",
+      "contact": {
+        "fullName": "Jari Laine",
+        "email": "jari.laine@example.com",
+        "phone": "+358 40 000 0112",
+        "city": "Vantaa"
+      },
       "headline": "Ten years running a warehouse floor, now learning to automate it with data.",
       "previousField": "Warehouse operations",
       "skills": [
-        { "id": "logistics", "level": "evidenced" },
-        { "id": "lead", "level": "evidenced" },
-        { "id": "sql", "level": "evidenced" },
-        { "id": "analysis", "level": "claimed" },
-        { "id": "stakeholders", "level": "claimed" }
+        {
+          "id": "logistics",
+          "level": "evidenced"
+        },
+        {
+          "id": "lead",
+          "level": "evidenced"
+        },
+        {
+          "id": "sql",
+          "level": "evidenced"
+        },
+        {
+          "id": "analysis",
+          "level": "claimed"
+        },
+        {
+          "id": "stakeholders",
+          "level": "claimed"
+        }
       ],
       "evidence": [
         {
@@ -364,23 +720,51 @@
         }
       ],
       "languages": [
-        { "lang": "Finnish", "level": "Native" },
-        { "lang": "English", "level": "Working" }
+        {
+          "lang": "Finnish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Working"
+        }
       ],
       "availability": "Immediately",
       "mode": "On-site",
-      "audit": { "origin": "Finland", "education": "Vocational", "path": "Career changer" }
+      "audit": {
+        "origin": "Finland",
+        "education": "Vocational",
+        "path": "Career changer"
+      }
     },
     {
       "id": "T-13",
-      "revealName": "Fatima A.",
+      "revealName": "Fatima Al-Rashid",
+      "contact": {
+        "fullName": "Fatima Al-Rashid",
+        "email": "fatima.alrashid@example.com",
+        "phone": "+358 40 000 0113",
+        "city": "Espoo"
+      },
       "headline": "Pharmacist from Baghdad retraining in Finland; strong on medication safety.",
       "previousField": "Community pharmacy",
       "skills": [
-        { "id": "medication", "level": "evidenced" },
-        { "id": "health-regs", "level": "evidenced" },
-        { "id": "customer", "level": "evidenced" },
-        { "id": "patient-care", "level": "claimed" }
+        {
+          "id": "medication",
+          "level": "evidenced"
+        },
+        {
+          "id": "health-regs",
+          "level": "evidenced"
+        },
+        {
+          "id": "customer",
+          "level": "evidenced"
+        },
+        {
+          "id": "patient-care",
+          "level": "claimed"
+        }
       ],
       "evidence": [
         {
@@ -391,24 +775,55 @@
         }
       ],
       "languages": [
-        { "lang": "Arabic", "level": "Native" },
-        { "lang": "Finnish", "level": "Working" },
-        { "lang": "English", "level": "Working" }
+        {
+          "lang": "Arabic",
+          "level": "Native"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Working"
+        },
+        {
+          "lang": "English",
+          "level": "Working"
+        }
       ],
       "availability": "From January",
       "mode": "On-site",
-      "audit": { "origin": "Outside EU", "education": "University", "path": "Career changer" }
+      "audit": {
+        "origin": "Outside EU",
+        "education": "University",
+        "path": "Career changer"
+      }
     },
     {
       "id": "T-14",
-      "revealName": "Jonas B.",
+      "revealName": "Jonas Becker",
+      "contact": {
+        "fullName": "Jonas Becker",
+        "email": "jonas.becker@example.com",
+        "phone": "+358 40 000 0114",
+        "city": "Helsinki"
+      },
       "headline": "QA engineer who automates the boring checks so humans can test the weird stuff.",
       "previousField": "Software testing (automotive)",
       "skills": [
-        { "id": "testing", "level": "evidenced" },
-        { "id": "js", "level": "evidenced" },
-        { "id": "a11y", "level": "claimed" },
-        { "id": "security", "level": "claimed" }
+        {
+          "id": "testing",
+          "level": "evidenced"
+        },
+        {
+          "id": "js",
+          "level": "evidenced"
+        },
+        {
+          "id": "a11y",
+          "level": "claimed"
+        },
+        {
+          "id": "security",
+          "level": "claimed"
+        }
       ],
       "evidence": [
         {
@@ -419,23 +834,51 @@
         }
       ],
       "languages": [
-        { "lang": "German", "level": "Native" },
-        { "lang": "English", "level": "Fluent" }
+        {
+          "lang": "German",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        }
       ],
       "availability": "From March",
       "mode": "Remote",
-      "audit": { "origin": "EU/EEA", "education": "University", "path": "Linear" }
+      "audit": {
+        "origin": "EU/EEA",
+        "education": "University",
+        "path": "Linear"
+      }
     },
     {
       "id": "T-15",
-      "revealName": "Mikko H.",
+      "revealName": "Mikko Heikkinen",
+      "contact": {
+        "fullName": "Mikko Heikkinen",
+        "email": "mikko.heikkinen@example.com",
+        "phone": "+358 40 000 0115",
+        "city": "Espoo"
+      },
       "headline": "Building services engineer, energy audits for older housing companies.",
       "previousField": "Building services",
       "skills": [
-        { "id": "energy", "level": "evidenced" },
-        { "id": "hvac", "level": "evidenced" },
-        { "id": "pm", "level": "claimed" },
-        { "id": "stakeholders", "level": "evidenced" }
+        {
+          "id": "energy",
+          "level": "evidenced"
+        },
+        {
+          "id": "hvac",
+          "level": "evidenced"
+        },
+        {
+          "id": "pm",
+          "level": "claimed"
+        },
+        {
+          "id": "stakeholders",
+          "level": "evidenced"
+        }
       ],
       "evidence": [
         {
@@ -446,24 +889,55 @@
         }
       ],
       "languages": [
-        { "lang": "Finnish", "level": "Native" },
-        { "lang": "Swedish", "level": "Working" },
-        { "lang": "English", "level": "Working" }
+        {
+          "lang": "Finnish",
+          "level": "Native"
+        },
+        {
+          "lang": "Swedish",
+          "level": "Working"
+        },
+        {
+          "lang": "English",
+          "level": "Working"
+        }
       ],
       "availability": "From March",
       "mode": "On-site",
-      "audit": { "origin": "Finland", "education": "University", "path": "Linear" }
+      "audit": {
+        "origin": "Finland",
+        "education": "University",
+        "path": "Linear"
+      }
     },
     {
       "id": "T-16",
-      "revealName": "Aino P.",
+      "revealName": "Aino Peltonen",
+      "contact": {
+        "fullName": "Aino Peltonen",
+        "email": "aino.peltonen@example.com",
+        "phone": "+358 40 000 0116",
+        "city": "Helsinki"
+      },
       "headline": "Ex-barista, bootcamp UX designer. Runs usability tests in cafés.",
       "previousField": "Hospitality",
       "skills": [
-        { "id": "ux", "level": "evidenced" },
-        { "id": "customer", "level": "evidenced" },
-        { "id": "a11y", "level": "claimed" },
-        { "id": "react", "level": "claimed" }
+        {
+          "id": "ux",
+          "level": "evidenced"
+        },
+        {
+          "id": "customer",
+          "level": "evidenced"
+        },
+        {
+          "id": "a11y",
+          "level": "claimed"
+        },
+        {
+          "id": "react",
+          "level": "claimed"
+        }
       ],
       "evidence": [
         {
@@ -480,23 +954,51 @@
         }
       ],
       "languages": [
-        { "lang": "Finnish", "level": "Native" },
-        { "lang": "English", "level": "Fluent" }
+        {
+          "lang": "Finnish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        }
       ],
       "availability": "Immediately",
       "mode": "Remote",
-      "audit": { "origin": "Finland", "education": "Self-taught / bootcamp", "path": "Career changer" }
+      "audit": {
+        "origin": "Finland",
+        "education": "Self-taught / bootcamp",
+        "path": "Career changer"
+      }
     },
     {
       "id": "T-17",
-      "revealName": "Nikolai I.",
+      "revealName": "Nikolai Ivanov",
+      "contact": {
+        "fullName": "Nikolai Ivanov",
+        "email": "nikolai.ivanov@example.com",
+        "phone": "+358 40 000 0117",
+        "city": "Vantaa"
+      },
       "headline": "Freight dispatcher from Tallinn; keeps 40 trucks moving through bad weather.",
       "previousField": "Road freight dispatching",
       "skills": [
-        { "id": "logistics", "level": "evidenced" },
-        { "id": "problem", "level": "evidenced" },
-        { "id": "adapt", "level": "evidenced" },
-        { "id": "stakeholders", "level": "claimed" }
+        {
+          "id": "logistics",
+          "level": "evidenced"
+        },
+        {
+          "id": "problem",
+          "level": "evidenced"
+        },
+        {
+          "id": "adapt",
+          "level": "evidenced"
+        },
+        {
+          "id": "stakeholders",
+          "level": "claimed"
+        }
       ],
       "evidence": [
         {
@@ -507,25 +1009,59 @@
         }
       ],
       "languages": [
-        { "lang": "Estonian", "level": "Native" },
-        { "lang": "Russian", "level": "Native" },
-        { "lang": "Finnish", "level": "Working" },
-        { "lang": "English", "level": "Working" }
+        {
+          "lang": "Estonian",
+          "level": "Native"
+        },
+        {
+          "lang": "Russian",
+          "level": "Native"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Working"
+        },
+        {
+          "lang": "English",
+          "level": "Working"
+        }
       ],
       "availability": "From January",
       "mode": "On-site",
-      "audit": { "origin": "EU/EEA", "education": "Vocational", "path": "Linear" }
+      "audit": {
+        "origin": "EU/EEA",
+        "education": "Vocational",
+        "path": "Linear"
+      }
     },
     {
       "id": "T-18",
-      "revealName": "Oleksandr P.",
+      "revealName": "Oleksandr Petrenko",
+      "contact": {
+        "fullName": "Oleksandr Petrenko",
+        "email": "oleksandr.petrenko@example.com",
+        "phone": "+358 40 000 0118",
+        "city": "Espoo"
+      },
       "headline": "Electrician with solar and battery installation experience.",
       "previousField": "Electrical installation",
       "skills": [
-        { "id": "battery", "level": "evidenced" },
-        { "id": "energy", "level": "evidenced" },
-        { "id": "hvac", "level": "claimed" },
-        { "id": "problem", "level": "evidenced" }
+        {
+          "id": "battery",
+          "level": "evidenced"
+        },
+        {
+          "id": "energy",
+          "level": "evidenced"
+        },
+        {
+          "id": "hvac",
+          "level": "claimed"
+        },
+        {
+          "id": "problem",
+          "level": "evidenced"
+        }
       ],
       "evidence": [
         {
@@ -536,24 +1072,55 @@
         }
       ],
       "languages": [
-        { "lang": "Ukrainian", "level": "Native" },
-        { "lang": "English", "level": "Working" },
-        { "lang": "Finnish", "level": "Learning" }
+        {
+          "lang": "Ukrainian",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Working"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Learning"
+        }
       ],
       "availability": "Immediately",
       "mode": "On-site",
-      "audit": { "origin": "Outside EU", "education": "Vocational", "path": "Linear" }
+      "audit": {
+        "origin": "Outside EU",
+        "education": "Vocational",
+        "path": "Linear"
+      }
     },
     {
       "id": "T-19",
-      "revealName": "Priya R.",
+      "revealName": "Priya Raman",
+      "contact": {
+        "fullName": "Priya Raman",
+        "email": "priya.raman@example.com",
+        "phone": "+358 40 000 0119",
+        "city": "Espoo"
+      },
       "headline": "Cloud security analyst; thinks about what could go wrong so others don't have to.",
       "previousField": "IT services (security operations)",
       "skills": [
-        { "id": "security", "level": "evidenced" },
-        { "id": "cloud", "level": "evidenced" },
-        { "id": "backend", "level": "claimed" },
-        { "id": "problem", "level": "claimed" }
+        {
+          "id": "security",
+          "level": "evidenced"
+        },
+        {
+          "id": "cloud",
+          "level": "evidenced"
+        },
+        {
+          "id": "backend",
+          "level": "claimed"
+        },
+        {
+          "id": "problem",
+          "level": "claimed"
+        }
       ],
       "evidence": [
         {
@@ -564,23 +1131,51 @@
         }
       ],
       "languages": [
-        { "lang": "Tamil", "level": "Native" },
-        { "lang": "English", "level": "Fluent" }
+        {
+          "lang": "Tamil",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        }
       ],
       "availability": "From February",
       "mode": "Hybrid",
-      "audit": { "origin": "Outside EU", "education": "University", "path": "Linear" }
+      "audit": {
+        "origin": "Outside EU",
+        "education": "University",
+        "path": "Linear"
+      }
     },
     {
       "id": "T-20",
-      "revealName": "Matti J.",
+      "revealName": "Matti Järvinen",
+      "contact": {
+        "fullName": "Matti Järvinen",
+        "email": "matti.jarvinen@example.com",
+        "phone": "+358 40 000 0120",
+        "city": "Kerava"
+      },
       "headline": "Ex-Defence Forces logistics NCO moving into civilian project management.",
       "previousField": "Military logistics",
       "skills": [
-        { "id": "pm", "level": "evidenced" },
-        { "id": "lead", "level": "evidenced" },
-        { "id": "logistics", "level": "evidenced" },
-        { "id": "supply", "level": "claimed" }
+        {
+          "id": "pm",
+          "level": "evidenced"
+        },
+        {
+          "id": "lead",
+          "level": "evidenced"
+        },
+        {
+          "id": "logistics",
+          "level": "evidenced"
+        },
+        {
+          "id": "supply",
+          "level": "claimed"
+        }
       ],
       "evidence": [
         {
@@ -591,23 +1186,51 @@
         }
       ],
       "languages": [
-        { "lang": "Finnish", "level": "Native" },
-        { "lang": "English", "level": "Working" }
+        {
+          "lang": "Finnish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Working"
+        }
       ],
       "availability": "From January",
       "mode": "On-site",
-      "audit": { "origin": "Finland", "education": "Vocational", "path": "Career changer" }
+      "audit": {
+        "origin": "Finland",
+        "education": "Vocational",
+        "path": "Career changer"
+      }
     },
     {
       "id": "T-21",
-      "revealName": "Ravi S.",
+      "revealName": "Ravi Sharma",
+      "contact": {
+        "fullName": "Ravi Sharma",
+        "email": "ravi.sharma@example.com",
+        "phone": "+358 40 000 0121",
+        "city": "Espoo"
+      },
       "headline": "Supply-chain planner who loves a good spreadsheet model.",
       "previousField": "Manufacturing procurement",
       "skills": [
-        { "id": "supply", "level": "evidenced" },
-        { "id": "procurement", "level": "evidenced" },
-        { "id": "analysis", "level": "evidenced" },
-        { "id": "sql", "level": "claimed" }
+        {
+          "id": "supply",
+          "level": "evidenced"
+        },
+        {
+          "id": "procurement",
+          "level": "evidenced"
+        },
+        {
+          "id": "analysis",
+          "level": "evidenced"
+        },
+        {
+          "id": "sql",
+          "level": "claimed"
+        }
       ],
       "evidence": [
         {
@@ -618,23 +1241,51 @@
         }
       ],
       "languages": [
-        { "lang": "English", "level": "Fluent" },
-        { "lang": "Hindi", "level": "Native" }
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Hindi",
+          "level": "Native"
+        }
       ],
       "availability": "Immediately",
       "mode": "Any",
-      "audit": { "origin": "Outside EU", "education": "University", "path": "Linear" }
+      "audit": {
+        "origin": "Outside EU",
+        "education": "University",
+        "path": "Linear"
+      }
     },
     {
       "id": "T-22",
-      "revealName": "Isabel C.",
+      "revealName": "Isabel Cruz",
+      "contact": {
+        "fullName": "Isabel Cruz",
+        "email": "isabel.cruz@example.com",
+        "phone": "+358 40 000 0122",
+        "city": "Espoo"
+      },
       "headline": "Caregiver with eight years in assisted living in Manila and Espoo.",
       "previousField": "Assisted living care",
       "skills": [
-        { "id": "elderly-care", "level": "evidenced" },
-        { "id": "patient-care", "level": "evidenced" },
-        { "id": "team", "level": "evidenced" },
-        { "id": "adapt", "level": "claimed" }
+        {
+          "id": "elderly-care",
+          "level": "evidenced"
+        },
+        {
+          "id": "patient-care",
+          "level": "evidenced"
+        },
+        {
+          "id": "team",
+          "level": "evidenced"
+        },
+        {
+          "id": "adapt",
+          "level": "claimed"
+        }
       ],
       "evidence": [
         {
@@ -645,24 +1296,55 @@
         }
       ],
       "languages": [
-        { "lang": "Tagalog", "level": "Native" },
-        { "lang": "English", "level": "Fluent" },
-        { "lang": "Finnish", "level": "Working" }
+        {
+          "lang": "Tagalog",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Working"
+        }
       ],
       "availability": "Immediately",
       "mode": "On-site",
-      "audit": { "origin": "Outside EU", "education": "Vocational", "path": "Linear" }
+      "audit": {
+        "origin": "Outside EU",
+        "education": "Vocational",
+        "path": "Linear"
+      }
     },
     {
       "id": "T-23",
-      "revealName": "Tuomas L.",
+      "revealName": "Tuomas Lehtonen",
+      "contact": {
+        "fullName": "Tuomas Lehtonen",
+        "email": "tuomas.lehtonen@example.com",
+        "phone": "+358 40 000 0123",
+        "city": "Helsinki"
+      },
       "headline": "Ex-musician, self-taught analyst who makes dashboards people open on Mondays.",
       "previousField": "Music & event production",
       "skills": [
-        { "id": "analysis", "level": "evidenced" },
-        { "id": "sql", "level": "evidenced" },
-        { "id": "stakeholders", "level": "evidenced" },
-        { "id": "python", "level": "claimed" }
+        {
+          "id": "analysis",
+          "level": "evidenced"
+        },
+        {
+          "id": "sql",
+          "level": "evidenced"
+        },
+        {
+          "id": "stakeholders",
+          "level": "evidenced"
+        },
+        {
+          "id": "python",
+          "level": "claimed"
+        }
       ],
       "evidence": [
         {
@@ -673,23 +1355,51 @@
         }
       ],
       "languages": [
-        { "lang": "Finnish", "level": "Native" },
-        { "lang": "English", "level": "Fluent" }
+        {
+          "lang": "Finnish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        }
       ],
       "availability": "From February",
       "mode": "Hybrid",
-      "audit": { "origin": "Finland", "education": "Self-taught / bootcamp", "path": "Career changer" }
+      "audit": {
+        "origin": "Finland",
+        "education": "Self-taught / bootcamp",
+        "path": "Career changer"
+      }
     },
     {
       "id": "T-24",
-      "revealName": "Sofia N.",
+      "revealName": "Sofia Nyström",
+      "contact": {
+        "fullName": "Sofia Nyström",
+        "email": "sofia.nystrom@example.com",
+        "phone": "+358 40 000 0124",
+        "city": "Espoo"
+      },
       "headline": "Full-stack bootcamp graduate with a background in customer support.",
       "previousField": "Customer support",
       "skills": [
-        { "id": "js", "level": "evidenced" },
-        { "id": "react", "level": "claimed" },
-        { "id": "customer", "level": "evidenced" },
-        { "id": "team", "level": "evidenced" }
+        {
+          "id": "js",
+          "level": "evidenced"
+        },
+        {
+          "id": "react",
+          "level": "claimed"
+        },
+        {
+          "id": "customer",
+          "level": "evidenced"
+        },
+        {
+          "id": "team",
+          "level": "evidenced"
+        }
       ],
       "evidence": [
         {
@@ -700,24 +1410,55 @@
         }
       ],
       "languages": [
-        { "lang": "Swedish", "level": "Native" },
-        { "lang": "Finnish", "level": "Fluent" },
-        { "lang": "English", "level": "Fluent" }
+        {
+          "lang": "Swedish",
+          "level": "Native"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Fluent"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        }
       ],
       "availability": "From January",
       "mode": "Remote",
-      "audit": { "origin": "Finland", "education": "Self-taught / bootcamp", "path": "Career changer" }
+      "audit": {
+        "origin": "Finland",
+        "education": "Self-taught / bootcamp",
+        "path": "Career changer"
+      }
     },
     {
       "id": "T-27",
-      "revealName": "Hanna R.",
+      "revealName": "Hanna Richter",
+      "contact": {
+        "fullName": "Hanna Richter",
+        "email": "hanna.richter@example.com",
+        "phone": "+358 40 000 0125",
+        "city": "Helsinki"
+      },
       "headline": "Sustainability coordinator who made ESG reporting less painful.",
       "previousField": "Retail operations",
       "skills": [
-        { "id": "esg", "level": "evidenced" },
-        { "id": "circular", "level": "claimed" },
-        { "id": "pm", "level": "evidenced" },
-        { "id": "energy", "level": "claimed" }
+        {
+          "id": "esg",
+          "level": "evidenced"
+        },
+        {
+          "id": "circular",
+          "level": "claimed"
+        },
+        {
+          "id": "pm",
+          "level": "evidenced"
+        },
+        {
+          "id": "energy",
+          "level": "claimed"
+        }
       ],
       "evidence": [
         {
@@ -728,24 +1469,55 @@
         }
       ],
       "languages": [
-        { "lang": "German", "level": "Native" },
-        { "lang": "English", "level": "Fluent" },
-        { "lang": "Finnish", "level": "Working" }
+        {
+          "lang": "German",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Working"
+        }
       ],
       "availability": "Immediately",
       "mode": "Hybrid",
-      "audit": { "origin": "EU/EEA", "education": "University", "path": "Career changer" }
+      "audit": {
+        "origin": "EU/EEA",
+        "education": "University",
+        "path": "Career changer"
+      }
     },
     {
       "id": "T-30",
-      "revealName": "Thanh N.",
+      "revealName": "Thanh Nguyen",
+      "contact": {
+        "fullName": "Thanh Nguyen",
+        "email": "thanh.nguyen@example.com",
+        "phone": "+358 40 000 0126",
+        "city": "Vantaa"
+      },
       "headline": "Cloud data engineer, likes boring reliable pipelines.",
       "previousField": "Banking IT",
       "skills": [
-        { "id": "pipelines", "level": "evidenced" },
-        { "id": "cloud", "level": "evidenced" },
-        { "id": "sql", "level": "evidenced" },
-        { "id": "python", "level": "claimed" }
+        {
+          "id": "pipelines",
+          "level": "evidenced"
+        },
+        {
+          "id": "cloud",
+          "level": "evidenced"
+        },
+        {
+          "id": "sql",
+          "level": "evidenced"
+        },
+        {
+          "id": "python",
+          "level": "claimed"
+        }
       ],
       "evidence": [
         {
@@ -756,12 +1528,22 @@
         }
       ],
       "languages": [
-        { "lang": "Vietnamese", "level": "Native" },
-        { "lang": "English", "level": "Fluent" }
+        {
+          "lang": "Vietnamese",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        }
       ],
       "availability": "From February",
       "mode": "Hybrid",
-      "audit": { "origin": "Outside EU", "education": "University", "path": "Linear" }
+      "audit": {
+        "origin": "Outside EU",
+        "education": "University",
+        "path": "Linear"
+      }
     }
   ]
 }

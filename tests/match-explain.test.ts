@@ -11,6 +11,7 @@ const identifying = (t: (typeof SEED_TALENT)[number]) => [
   t.audit.origin,
   t.audit.education,
   t.audit.path,
+  ...Object.values(t.contact ?? {}),
 ];
 
 describe("why-this-match input", () => {
@@ -58,7 +59,7 @@ describe("why-this-match input", () => {
       }
   });
 
-  it("never contains the person's name, alias, headline or audit attributes", () => {
+  it("never contains the person's name, contact details, alias, headline or audit attributes", () => {
     for (const n of SEED_NEEDS)
       for (const t of SEED_TALENT) {
         // Evidence quotes are the person's own words; check the scoring part strictly.

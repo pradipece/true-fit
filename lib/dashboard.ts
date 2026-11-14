@@ -6,7 +6,7 @@ import { companyOf, rooms, SLOT_TIMES } from "./schedule";
 import type { Decision, Feedback, Need, Talent } from "./types";
 
 /**
- * Numbers for the organiser dashboard. Everything is an aggregate count or average:
+ * Numbers for the company Insights page. Everything is an aggregate count or average:
  * nothing here ranks, scores or lists individual people.
  */
 export type DashboardInput = {

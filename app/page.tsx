@@ -9,17 +9,13 @@ const POINTS: Record<RoleId, string[]> = {
   company: [
     "Describe who you'd like to meet in a short guided chat",
     "Check and approve a short card listing the skills you need",
-    "Say yes to suggested candidates and book a 10-minute slot",
+    "See suitable candidates with their evidence and invite them, with a reason",
+    "Book a 10-minute slot once they say yes, and see how the event is going",
   ],
   talent: [
     "Translate your job title or career path into skills",
     "Show evidence with short answers instead of a CV",
-    "Say yes to suggested companies; your name stays hidden until it's mutual",
-  ],
-  organiser: [
-    "Review suggested matches and approve each one, with a reason",
-    "Follow opt-ins and the event-day schedule per table",
-    "Check fairness, the audit log and EU AI Act notes",
+    "Accept or decline invitations from companies, then meet at the event",
   ],
 };
 
@@ -35,11 +31,12 @@ export default function HomePage() {
           More signal, less noise at Espoo recruitment events
         </h1>
         <p className="text-pretty text-muted-foreground">
-          Companies describe real needs, talent shows real evidence, and organisers approve explainable
-          matches. Pick a view. For the demo you can switch between them at any time.
+          Companies describe real needs and choose whom to invite, talent shows real evidence and decides whom
+          to meet, and every match is explainable. Pick a view. For the demo you can switch between them at
+          any time.
         </p>
       </div>
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2">
         {ROLES.map((r) => {
           const Icon = ROLE_ICON[r.id];
           return (
@@ -72,9 +69,12 @@ export default function HomePage() {
         <p className="text-muted-foreground">
           Try the views in order: describe a need as a{" "}
           <strong className="font-medium text-foreground">company</strong>, build a skill card as a{" "}
-          <strong className="font-medium text-foreground">job seeker</strong>, then approve matches as the{" "}
-          <strong className="font-medium text-foreground">organiser</strong>. Each page has a short “How this
-          page works” guide at the top.
+          <strong className="font-medium text-foreground">job seeker</strong>, then invite candidates from the
+          company&apos;s Candidates page. Each page has a short “How this page works” guide at the top. See{" "}
+          <Link href="/responsible" className="font-medium text-foreground underline underline-offset-4">
+            Responsible AI
+          </Link>{" "}
+          for who decides what and the fairness check.
         </p>
       </div>
       <p className="text-xs text-muted-foreground">

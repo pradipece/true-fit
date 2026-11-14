@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * Mock reminder timeline: shows that intake happens weeks before the event, which gives
- * the organiser time to invite matching talent who haven't registered yet.
+ * time to reach matching talent who haven't registered yet.
  */
 
 const STEPS = [
@@ -28,19 +28,19 @@ const STEPS = [
     week: -3,
     icon: MessageSquareIcon,
     title: "Intake chat",
-    body: "Need card approved by you, sent to the organiser",
+    body: "Need card approved by you",
   },
   {
     week: -2,
     icon: UserPlusIcon,
     title: "Talent invited",
-    body: "Organiser invites matching people not yet registered",
+    body: "Reminder sent to matching people not yet registered",
   },
   {
     week: -1,
     icon: HandshakeIcon,
     title: "Review + opt-in",
-    body: "Organiser approves matches, both sides say yes",
+    body: "You invite suitable candidates, they say yes or no",
   },
   { week: 0, icon: CalendarCheckIcon, title: "Event day", body: "10-minute meetings, on site or online" },
   { week: 1, icon: StarIcon, title: "Feedback", body: "Did the evidence hold up? Improves next time" },

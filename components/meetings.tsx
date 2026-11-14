@@ -22,12 +22,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { IdentitySwitch, useIdentity } from "@/components/identity";
 import { MatchExplanationView } from "@/components/match-explanation";
 import { SkillChip } from "@/components/skill-chip";
 import { EVENT } from "@/lib/data";
+import { pairOwner } from "@/lib/identity";
 import { explainMatch } from "@/lib/match";
 import {
-  companyOf,
   earliestFree,
   pairStatus,
   roomFor,
@@ -54,10 +55,12 @@ export function Meetings({ side }: { side: MeetingSide }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  // Only the signed-in participant's own pairs: never other companies' or candidates'.
+  const { id: myId } = useIdentity(side);
   const pairs = useMemo(
     () =>
       Object.entries(decisions)
-        .filter(([, d]) => d.status === "approved")
+        .filter(([key, d]) => d.status === "approved" && pairOwner(side, key, needs) === myId)
         .map(([key, d]) => {
           const [needId, talentId] = key.split("::");
           const need = needs.find((n) => n.id === needId);
@@ -65,7 +68,7 @@ export function Meetings({ side }: { side: MeetingSide }) {
           return need && t ? { key, need, t, d, m: explainMatch(need, t) } : null;
         })
         .filter((x) => x !== null),
-    [decisions, needs, talent],
+    [decisions, needs, talent, side, myId],
   );
 
   const selected = searchParams.get("pair");
@@ -75,16 +78,25 @@ export function Meetings({ side }: { side: MeetingSide }) {
 
   if (!current) {
     return (
-      <Card>
-        <CardContent className="space-y-3 py-12 text-center">
-          <p className="text-muted-foreground">
-            No approved matches yet. The organiser reviews every suggestion before anything reaches you.
-          </p>
-          <Button variant="outline" nativeButton={false} render={<Link href="/organiser" />}>
-            Switch to the organiser view (demo)
-          </Button>
-        </CardContent>
-      </Card>
+      <div className="space-y-4">
+        <IdentitySwitch side={side} />
+        <Card>
+          <CardContent className="space-y-3 py-12 text-center">
+            <p className="text-muted-foreground">
+              {side === "company"
+                ? "No invitations yet. Invite suitable candidates from the Candidates page."
+                : "No invitations yet. Companies invite people whose skills fit their needs; build your skill card so they can find you."}
+            </p>
+            <Button
+              variant="outline"
+              nativeButton={false}
+              render={<Link href={side === "company" ? "/company/candidates" : "/talent"} />}
+            >
+              {side === "company" ? "See suitable candidates" : "Build your skill card"}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
@@ -98,15 +110,15 @@ export function Meetings({ side }: { side: MeetingSide }) {
   const firstFree = earliestFree(availability);
   const room = roomFor(current.need, needs);
   const fb = feedback[current.key];
-  const talentName = mutual ? current.t.revealName : current.t.alias;
+  // Companies already see the candidate's name on the Candidates page; candidates see their own alias until it's mutual.
+  const talentName = side === "company" || mutual ? current.t.revealName : current.t.alias;
   const me = side === "company" ? current.need.company : talentName;
   const otherSide: MeetingSide = side === "company" ? "talent" : "company";
-  const agendaId = side === "company" ? companyOf(current.need) : current.t.id;
 
   const answer = (v: OptInAnswer) => {
     const other = o[otherSide];
     setOptIn(current.key, side, v);
-    if (v === true && other === true) toast.success("It's mutual! Identities revealed. Pick a slot.");
+    if (v === true && other === true) toast.success("It's mutual! Pick a slot.");
     else if (v === true) toast(`Saved. You'll hear back when ${OTHER[side]} answers.`);
     else if (v === false)
       toast(
@@ -121,253 +133,262 @@ export function Meetings({ side }: { side: MeetingSide }) {
   };
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
-      <div className="space-y-2">
-        <p className="px-1 text-xs font-medium text-muted-foreground">
-          {side === "company" ? "Candidates suggested to companies" : "Companies suggested to candidates"}
-        </p>
-        {pairs.map((p) => {
-          const po = optIns[p.key] ?? {};
-          const ps = pairStatus(po, slots[p.key]);
-          const pm = ps === "mutual" || ps === "booked";
-          const label = feedback[p.key]?.[side]
-            ? "Feedback sent"
-            : ps === "waiting" && po[side] !== undefined
-              ? `Waiting for ${OTHER[side]}`
-              : STATUS_LABEL[ps](slots[p.key]);
-          return (
-            <button
-              key={p.key}
-              type="button"
-              onClick={() => select(p.key)}
-              className={cn(
-                "w-full rounded-xl border bg-card p-3 text-left transition-colors hover:bg-muted/50",
-                current.key === p.key && "border-primary ring-2 ring-primary/20",
-              )}
-            >
-              <p className="truncate text-sm font-medium">
-                {side === "company" ? (pm ? p.t.revealName : p.t.alias) : p.need.title}
-              </p>
-              <p className="truncate text-xs text-muted-foreground">
-                {side === "company"
-                  ? `for ${p.need.company} · ${p.need.title}`
-                  : `${p.need.company} · as ${pm ? p.t.revealName : p.t.alias}`}
-              </p>
-              <div className="mt-2 flex items-center gap-1.5">
-                <Dot value={po[side]} label="Your answer" />
-                <span className="ml-auto text-xs text-muted-foreground">{label}</span>
-              </div>
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="space-y-6">
-        {/* Step A: opt in */}
-        <section className="space-y-3">
-          <StepTitle
-            n="A"
-            title={
-              side === "company" ? "Do you want to meet this candidate?" : "Do you want to meet this company?"
-            }
-            done={mutual}
-          >
-            You see why the match was suggested. {side === "company" ? "Their name" : "Your name"} is revealed
-            only when both sides say yes, and nobody is told who said no.
-          </StepTitle>
-          {side === "company" ? (
-            <Card>
-              <CardHeader>
-                <CardDescription className="flex items-center gap-1.5">
-                  <Building2Icon className="size-3.5" /> {current.need.company} · {current.need.title}
-                </CardDescription>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  {mutual ? (
-                    <EyeIcon className="size-4 text-evidence" />
-                  ) : (
-                    <EyeOffIcon className="size-4 text-muted-foreground" />
-                  )}
-                  {talentName}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <p className="text-sm text-muted-foreground">{current.t.headline}</p>
-                <MatchExplanationView m={current.m} />
-                {current.d.note && (
-                  <p className="rounded-lg bg-accent p-2.5 text-xs text-accent-foreground">
-                    Organiser note: {current.d.note}
-                  </p>
+    <div className="space-y-4">
+      <IdentitySwitch side={side} />
+      <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
+        <div className="space-y-2">
+          <p className="px-1 text-xs font-medium text-muted-foreground">
+            {side === "company" ? "Candidates suggested to companies" : "Companies suggested to candidates"}
+          </p>
+          {pairs.map((p) => {
+            const po = optIns[p.key] ?? {};
+            const ps = pairStatus(po, slots[p.key]);
+            const pm = ps === "mutual" || ps === "booked";
+            const label = feedback[p.key]?.[side]
+              ? "Feedback sent"
+              : ps === "waiting" && po[side] !== undefined
+                ? `Waiting for ${OTHER[side]}`
+                : STATUS_LABEL[ps](slots[p.key]);
+            return (
+              <button
+                key={p.key}
+                type="button"
+                onClick={() => select(p.key)}
+                className={cn(
+                  "w-full rounded-xl border bg-card p-3 text-left transition-colors hover:bg-muted/50",
+                  current.key === p.key && "border-primary ring-2 ring-primary/20",
                 )}
-              </CardContent>
-              <CardFooter className="gap-2">
-                <OptInButtons value={mine} onChange={answer} />
-              </CardFooter>
-            </Card>
-          ) : (
-            <Card>
-              <CardHeader>
-                <CardDescription className="flex items-center gap-1.5">
-                  <UserRoundIcon className="size-3.5" /> Suggested to {talentName}
-                </CardDescription>
-                <CardTitle className="text-base">{current.need.title}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <p className="text-sm">
-                  {current.need.company}{" "}
-                  <span className="text-muted-foreground">· {current.need.companyBlurb}</span>
+              >
+                <p className="truncate text-sm font-medium">
+                  {side === "company" ? p.t.revealName : p.need.title}
                 </p>
-                <p className="text-sm text-muted-foreground">{current.need.summary}</p>
-                <div className="space-y-1.5">
-                  <p className="text-xs font-medium text-muted-foreground">Why you were suggested</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {current.m.shared.map((s) => (
-                      <SkillChip key={s.skill} id={s.skill} kind={s.level} must={s.must} />
-                    ))}
-                    {current.m.transferable.map((t) => (
-                      <SkillChip key={t.to} id={t.to} from={t.from} kind="transfer" must={t.must} />
-                    ))}
-                  </div>
+                <p className="truncate text-xs text-muted-foreground">
+                  {side === "company"
+                    ? `for ${p.need.company} · ${p.need.title}`
+                    : `${p.need.company} · as ${pm ? p.t.revealName : p.t.alias}`}
+                </p>
+                <div className="mt-2 flex items-center gap-1.5">
+                  <Dot value={po[side]} label="Your answer" />
+                  <span className="ml-auto text-xs text-muted-foreground">{label}</span>
                 </div>
-                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                  <span>{current.need.mode}</span>
-                  <span>{current.need.language}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="space-y-6">
+          {/* Step A: opt in */}
+          <section className="space-y-3">
+            <StepTitle
+              n="A"
+              title={
+                side === "company"
+                  ? "Do you want to meet this candidate?"
+                  : "Do you want to meet this company?"
+              }
+              done={mutual}
+            >
+              You see why the match was suggested. A meeting is booked only when both sides say yes, and
+              nobody is told who said no.
+            </StepTitle>
+            {side === "company" ? (
+              <Card>
+                <CardHeader>
+                  <CardDescription className="flex items-center gap-1.5">
+                    <Building2Icon className="size-3.5" /> {current.need.company} · {current.need.title}
+                  </CardDescription>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    {mutual ? (
+                      <EyeIcon className="size-4 text-evidence" />
+                    ) : (
+                      <EyeOffIcon className="size-4 text-muted-foreground" />
+                    )}
+                    {talentName}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <p className="text-sm text-muted-foreground">{current.t.headline}</p>
+                  <MatchExplanationView m={current.m} />
+                  {current.d.note && (
+                    <p className="rounded-lg bg-accent p-2.5 text-xs text-accent-foreground">
+                      Company note: {current.d.note}
+                    </p>
+                  )}
+                </CardContent>
+                <CardFooter className="gap-2">
+                  <OptInButtons value={mine} onChange={answer} />
+                </CardFooter>
+              </Card>
+            ) : (
+              <Card>
+                <CardHeader>
+                  <CardDescription className="flex items-center gap-1.5">
+                    <UserRoundIcon className="size-3.5" /> Suggested to {talentName}
+                  </CardDescription>
+                  <CardTitle className="text-base">{current.need.title}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <p className="text-sm">
+                    {current.need.company}{" "}
+                    <span className="text-muted-foreground">· {current.need.companyBlurb}</span>
+                  </p>
+                  <p className="text-sm text-muted-foreground">{current.need.summary}</p>
+                  <div className="space-y-1.5">
+                    <p className="text-xs font-medium text-muted-foreground">Why you were suggested</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {current.m.shared.map((s) => (
+                        <SkillChip key={s.skill} id={s.skill} kind={s.level} must={s.must} />
+                      ))}
+                      {current.m.transferable.map((t) => (
+                        <SkillChip key={t.to} id={t.to} from={t.from} kind="transfer" must={t.must} />
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                    <span>{current.need.mode}</span>
+                    <span>{current.need.language}</span>
+                  </div>
+                </CardContent>
+                <CardFooter className="gap-2">
+                  <OptInButtons value={mine} onChange={answer} />
+                </CardFooter>
+              </Card>
+            )}
+            {mine === true && status === "waiting" && (
+              <p className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
+                Waiting for {OTHER[side]} to answer. You&apos;ll be notified if it&apos;s mutual.
+              </p>
+            )}
+            {declined && (
+              <p className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
+                No meeting this time. Neither side is told who said no or why, and both can still be matched
+                for other matches.
+              </p>
+            )}
+            <div className="flex flex-wrap gap-2 text-xs">
+              <Button
+                size="xs"
+                variant="outline"
+                nativeButton={false}
+                render={<Link href={`/${side}/agenda`} />}
+              >
+                <CalendarDaysIcon data-icon="inline-start" /> Your agenda
+              </Button>
+              <Button
+                size="xs"
+                variant="ghost"
+                nativeButton={false}
+                render={<Link href={`/meetings/${otherSide}?pair=${encodeURIComponent(current.key)}`} />}
+              >
+                <ArrowLeftRightIcon data-icon="inline-start" /> Demo: switch to the{" "}
+                {otherSide === "company" ? "company" : "candidate"}&apos;s view
+              </Button>
+            </div>
+          </section>
+
+          {/* Step B: slot */}
+          <section className={cn("space-y-3", !mutual && "pointer-events-none opacity-50")}>
+            <StepTitle n="B" title={`Book a ${EVENT.slotMinutes}-minute slot`} done={!!slot}>
+              The schedule is generated before the event and served as static files, so the login rush at the
+              start can&apos;t overload it. A time is only blocked if{" "}
+              {side === "company" ? "you or the candidate" : "you or the company"} are busy.
+            </StepTitle>
+            <Card>
+              <CardContent className="space-y-4">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                  <span className="flex items-center gap-1.5">
+                    <ClockIcon className="size-4" /> {EVENT.date}, {EVENT.time}
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <MapPinIcon className="size-4" /> {room.label}
+                  </span>
+                  {!mutual && (
+                    <span className="flex items-center gap-1.5">
+                      <LockIcon className="size-4" /> Unlocks when both say yes
+                    </span>
+                  )}
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  {slot ? (
+                    <>
+                      <Badge className="bg-evidence text-white">
+                        <CheckCircle2Icon data-icon="inline-start" /> Booked {slot} · {room.label}
+                      </Badge>
+                      <Button size="sm" variant="ghost" onClick={() => cancelSlot(current.key)}>
+                        Cancel booking
+                      </Button>
+                    </>
+                  ) : (
+                    firstFree && (
+                      <Button size="sm" onClick={() => book(firstFree)}>
+                        Book earliest free time ({firstFree})
+                      </Button>
+                    )
+                  )}
+                </div>
+                <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+                  {availability.map((a) => {
+                    const mineBusy = (a.reason === "company") === (side === "company");
+                    return (
+                      <Button
+                        key={a.time}
+                        variant={a.mine ? "default" : "outline"}
+                        disabled={!a.free}
+                        title={
+                          a.free
+                            ? undefined
+                            : mineBusy
+                              ? `You already have a meeting at ${a.time}`
+                              : `${OTHER[side]} is busy at ${a.time}`
+                        }
+                        className="h-auto flex-col gap-0 py-1.5 tabular-nums"
+                        onClick={() => book(a.time)}
+                      >
+                        <span className={cn(!a.free && "line-through")}>{a.time}</span>
+                        {!a.free && (
+                          <span className="text-[10px] font-normal no-underline">
+                            {mineBusy
+                              ? "you're busy"
+                              : side === "company"
+                                ? "candidate busy"
+                                : "company busy"}
+                          </span>
+                        )}
+                      </Button>
+                    );
+                  })}
                 </div>
               </CardContent>
-              <CardFooter className="gap-2">
-                <OptInButtons value={mine} onChange={answer} />
-              </CardFooter>
             </Card>
-          )}
-          {mine === true && status === "waiting" && (
-            <p className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
-              Waiting for {OTHER[side]} to answer. You&apos;ll be notified if it&apos;s mutual.
-            </p>
-          )}
-          {declined && (
-            <p className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
-              No meeting this time. Neither side is told who said no or why, and both can still be matched for
-              other matches.
-            </p>
-          )}
-          <div className="flex flex-wrap gap-2 text-xs">
-            <Button
-              size="xs"
-              variant="outline"
-              nativeButton={false}
-              render={<Link href={`/meetings/agenda/${agendaId}`} />}
-            >
-              <CalendarDaysIcon data-icon="inline-start" /> Your agenda
-            </Button>
-            <Button
-              size="xs"
-              variant="ghost"
-              nativeButton={false}
-              render={<Link href={`/meetings/${otherSide}?pair=${encodeURIComponent(current.key)}`} />}
-            >
-              <ArrowLeftRightIcon data-icon="inline-start" /> Demo: switch to the{" "}
-              {otherSide === "company" ? "company" : "candidate"}&apos;s view
-            </Button>
-          </div>
-        </section>
+          </section>
 
-        {/* Step B: slot */}
-        <section className={cn("space-y-3", !mutual && "pointer-events-none opacity-50")}>
-          <StepTitle n="B" title={`Book a ${EVENT.slotMinutes}-minute slot`} done={!!slot}>
-            The schedule is generated before the event and served as static files, so the login rush at the
-            start can&apos;t overload it. A time is only blocked if{" "}
-            {side === "company" ? "you or the candidate" : "you or the company"} are busy.
-          </StepTitle>
-          <Card>
-            <CardContent className="space-y-4">
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                <span className="flex items-center gap-1.5">
-                  <ClockIcon className="size-4" /> {EVENT.date}, {EVENT.time}
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <MapPinIcon className="size-4" /> {room.label}
-                </span>
-                {!mutual && (
-                  <span className="flex items-center gap-1.5">
-                    <LockIcon className="size-4" /> Unlocks when both say yes
-                  </span>
-                )}
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                {slot ? (
-                  <>
-                    <Badge className="bg-evidence text-white">
-                      <CheckCircle2Icon data-icon="inline-start" /> Booked {slot} · {room.label}
-                    </Badge>
-                    <Button size="sm" variant="ghost" onClick={() => cancelSlot(current.key)}>
-                      Cancel booking
-                    </Button>
-                  </>
-                ) : (
-                  firstFree && (
-                    <Button size="sm" onClick={() => book(firstFree)}>
-                      Book earliest free time ({firstFree})
-                    </Button>
-                  )
-                )}
-              </div>
-              <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
-                {availability.map((a) => {
-                  const mineBusy = (a.reason === "company") === (side === "company");
-                  return (
-                    <Button
-                      key={a.time}
-                      variant={a.mine ? "default" : "outline"}
-                      disabled={!a.free}
-                      title={
-                        a.free
-                          ? undefined
-                          : mineBusy
-                            ? `You already have a meeting at ${a.time}`
-                            : `${OTHER[side]} is busy at ${a.time}`
-                      }
-                      className="h-auto flex-col gap-0 py-1.5 tabular-nums"
-                      onClick={() => book(a.time)}
-                    >
-                      <span className={cn(!a.free && "line-through")}>{a.time}</span>
-                      {!a.free && (
-                        <span className="text-[10px] font-normal no-underline">
-                          {mineBusy ? "you're busy" : side === "company" ? "candidate busy" : "company busy"}
-                        </span>
-                      )}
-                    </Button>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-
-        {/* Step C: feedback */}
-        <section className={cn("space-y-3", !slot && "pointer-events-none opacity-50")}>
-          <StepTitle n="C" title="After the meeting: 30-second feedback" done={!!fb?.[side]}>
-            You answer on your own. It rates the meeting and the cards, never the person, and helps the
-            organiser report impact and improve the next event.
-          </StepTitle>
-          {fb?.company && fb?.talent && (
-            <p className="rounded-lg border border-evidence/30 bg-evidence-soft p-3 text-sm text-evidence">
-              {OUTCOME_LABEL[pairOutcome(fb)]}
-            </p>
-          )}
-          <div className="max-w-xl">
-            <FeedbackForm
-              key={`${current.key}:${side}`}
-              side={side}
-              who={me}
-              initial={fb?.[side]}
-              onSubmit={(f) => {
-                giveFeedback(current.key, side, f);
-                toast.success("Thanks, feedback saved", {
-                  description: "Your answers are shared with the organiser, not with the other side.",
-                });
-              }}
-            />
-          </div>
-        </section>
+          {/* Step C: feedback */}
+          <section className={cn("space-y-3", !slot && "pointer-events-none opacity-50")}>
+            <StepTitle n="C" title="After the meeting: 30-second feedback" done={!!fb?.[side]}>
+              You answer on your own. It rates the meeting and the cards, never the person, and helps improve
+              the next event.
+            </StepTitle>
+            {fb?.company && fb?.talent && (
+              <p className="rounded-lg border border-evidence/30 bg-evidence-soft p-3 text-sm text-evidence">
+                {OUTCOME_LABEL[pairOutcome(fb)]}
+              </p>
+            )}
+            <div className="max-w-xl">
+              <FeedbackForm
+                key={`${current.key}:${side}`}
+                side={side}
+                who={me}
+                initial={fb?.[side]}
+                onSubmit={(f) => {
+                  giveFeedback(current.key, side, f);
+                  toast.success("Thanks, feedback saved", {
+                    description: "Your answers are only counted in totals, never shown to the other side.",
+                  });
+                }}
+              />
+            </div>
+          </section>
+        </div>
       </div>
     </div>
   );
@@ -572,14 +593,14 @@ function FeedbackForm({
                 ))}
               </div>
               <p className="text-xs text-muted-foreground">
-                Only the organiser sees this. The other side is not told.
+                Only counted in totals. The other side is not told.
               </p>
             </div>
           </>
         )}
         <div className="grid gap-1.5">
           <Label htmlFor={`improve-${side}`}>
-            What should the organiser do differently next time? (optional)
+            What should the event do differently next time? (optional)
           </Label>
           <Textarea
             id={`improve-${side}`}

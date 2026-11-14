@@ -1,5 +1,6 @@
 /**
- * The demo has three separate views, one per role. Each role only sees its own pages;
+ * The demo has two separate views, one per role: companies and job seekers. Each side
+ * decides for itself (companies invite, candidates accept); there is no organiser role. Each role only sees its own pages;
  * the header shows the role tabs and the current role's page nav from this list.
  */
 export const ROLES = [
@@ -9,8 +10,10 @@ export const ROLES = [
     title: "Hiring companies",
     pages: [
       { href: "/company", label: "Need card" },
+      { href: "/company/candidates", label: "Candidates" },
       { href: "/meetings/company", label: "Meetings" },
-      { href: "/meetings/agenda/C-YOU", label: "My agenda" },
+      { href: "/company/agenda", label: "My agenda" },
+      { href: "/company/insights", label: "Insights" },
     ],
   },
   {
@@ -20,19 +23,7 @@ export const ROLES = [
     pages: [
       { href: "/talent", label: "Skill card" },
       { href: "/meetings/talent", label: "Meetings" },
-      { href: "/meetings/agenda/T-YOU", label: "My agenda" },
-    ],
-  },
-  {
-    id: "organiser",
-    label: "Organiser",
-    title: "City of Espoo event staff",
-    pages: [
-      { href: "/organiser/dashboard", label: "Dashboard" },
-      { href: "/organiser", label: "Matches" },
-      { href: "/meetings/organiser", label: "Event day" },
-      { href: "/meetings/agenda", label: "Agendas" },
-      { href: "/responsible", label: "Responsible AI" },
+      { href: "/talent/agenda", label: "My agenda" },
     ],
   },
 ] as const;
@@ -42,10 +33,10 @@ export type RoleId = Role["id"];
 
 const under = (pathname: string, href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
-/** The role a path belongs to. A participant's agenda belongs to that participant's side. */
+/**
+ * The role a path belongs to. /responsible belongs to no role: it's open to everyone.
+ */
 export function roleOf(pathname: string): Role | undefined {
-  const agenda = pathname.match(/^\/meetings\/agenda\/([^/]+)/);
-  if (agenda) return ROLES.find((r) => r.id === (agenda[1].startsWith("T-") ? "talent" : "company"));
   return ROLES.find((r) => r.pages.some((p) => under(pathname, p.href)));
 }
 

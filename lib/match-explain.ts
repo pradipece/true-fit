@@ -53,7 +53,7 @@ export function explainInput(role: string, m: MatchExplanation): ExplainInput {
 
 export type WhyText = { why: string; ask: string; source: "ai" | "rules" };
 
-export const EXPLAIN_SYSTEM_PROMPT = `You write a short, plain-language "why this match" note for a recruitment event organiser in Espoo, Finland. The match score has already been calculated by transparent rules from skills only. Your job is to explain that scoring output, not to judge the person.
+export const EXPLAIN_SYSTEM_PROMPT = `You write a short, plain-language "why this match" note for a hiring company at a recruitment event in Espoo, Finland. The match score has already been calculated by transparent rules from skills only. Your job is to explain that scoring output, not to judge the person.
 
 Rules:
 - "why": 2–3 sentences. Say which required skills the person has (and whether evidenced by their own answers or self-reported), which come through a related skill, and the biggest gap. Refer to skills by the names given. You may quote a few words of evidence.

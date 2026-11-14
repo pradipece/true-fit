@@ -59,7 +59,7 @@ describe("reasons and audit log", () => {
       talentId: "T-30",
       from: "none",
       to: "approved",
-      actor: "Organiser (demo)",
+      actor: "Company (demo)",
     });
     expect(a.note).toBeUndefined();
     expect(a.id).not.toBe(b.id);

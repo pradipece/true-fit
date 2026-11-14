@@ -17,7 +17,7 @@ import type { Engagement, Need, Talent } from "./types";
  * Company intake: shared between the API route (Gemini) and the browser (offline rules).
  *
  * The assistant only structures what the company says into a need card. It never sees
- * talent data, and nothing reaches the organiser until a person approves the card.
+ * talent data, and no candidate is suggested until a person approves the card.
  */
 
 /** Presets offered as one-tap choices. The fields themselves are free text. */
@@ -64,6 +64,8 @@ export type IntakeTurn = {
   asked: Topic[];
   ready: boolean;
   source: "ai" | "rules";
+  /** Set when the role changed this turn and the card was rechecked against the pool. */
+  recheck?: RoleRecheck;
 };
 
 // ── Draft helpers ────────────────────────────────────────────────────────────
@@ -146,7 +148,7 @@ const capitalise = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const SKILL_IDS = SKILLS.map((s) => s.id);
 const OCCUPATION_IDS = OCCUPATIONS.map((o) => o.id);
 
-export const INTAKE_SYSTEM_PROMPT = `You are the intake assistant for a recruitment matchmaking event run by the City of Espoo, Finland. A company representative describes a role, often vaguely ("we need a dev"). Turn that into a precise need card through a short conversation.
+export const INTAKE_SYSTEM_PROMPT = `You are TrueFit Assistant, the intake assistant for a recruitment matchmaking event run by the City of Espoo, Finland. A company representative describes a role, often vaguely ("we need a dev"). Turn that into a precise need card through a short conversation.
 
 How to run the conversation:
 - Ask one clarifying question per turn, in plain language, at most two sentences plus the question. Aim to finish in 4–6 turns.
@@ -169,8 +171,9 @@ How to fill the draft:
 - "language", "mode" and "timing.engagement" are free text. Use the standard wording when it fits (language: ${LANGUAGES.join(" / ")}; mode: ${MODES.join(" / ")}; contract: ${ENGAGEMENTS.join(" / ")}). When the user describes something else, write it in their words, short and clear: "Swedish or English", "Finnish within a year, English to start", "On-site 3 days, 2 remote", "6-month project". Never write a "native speaker" or mother-tongue requirement; use a working level instead.
 - Skills are the exception: "must" and "nice" accept only ids from the skill catalogue, because matching runs on that list. If the user names a skill that isn't in it, map it to the closest catalogue skill and mention it in the summary.
 - Leave a field as "" (or []) when it hasn't been discussed. Do not guess language, timing or way of working.
+- When the user changes the role itself (a different job, not a refinement of the same one), rebuild the card for the new role instead of patching the old one: set the new title, occupation and summary, replace must-have and nice-to-have skills that belonged to the old role (keep one only if the user says so or it clearly fits the new work), and keep language, timing and way of working only if they still apply, otherwise clear them and ask again. Say in one sentence what you changed. Then use <current_card_pool> and <pool_summary> to tell them roughly how many people at this event have the new must-haves.
 - The user may edit the card directly. The <current_need_card> in their latest message is authoritative: keep their edits unless they ask for a change in the chat.
-- Set "ready" to true only when title, at least one must-have, language, timing.start and mode are all filled. When ready, tell them to review and approve the card; nothing is sent to the organiser until they do.
+- Set "ready" to true only when title, at least one must-have, language, timing.start and mode are all filled. When ready, tell them to review and approve the card; no candidates are suggested until they do.
 
 Reply in the language the user writes in (English, Finnish or Swedish), but keep skill ids and enum values exactly as specified.
 
@@ -282,9 +285,15 @@ export const STARTERS_OUTPUT_SCHEMA = {
 } as const;
 
 /** The latest user message with the current card attached, so direct edits win. */
-export function withCurrentCard(text: string, draft: NeedDraft, pool?: ReturnType<typeof poolSummary>) {
+export function withCurrentCard(
+  text: string,
+  draft: NeedDraft,
+  pool?: ReturnType<typeof poolSummary>,
+  card?: CardPoolCheck,
+) {
   const summary = pool ? `\n\n<pool_summary>\n${JSON.stringify(pool)}\n</pool_summary>` : "";
-  return `${text}\n\n<current_need_card>\n${JSON.stringify(draft, null, 2)}\n</current_need_card>${summary}`;
+  const counts = card ? `\n\n<current_card_pool>\n${JSON.stringify(card)}\n</current_card_pool>` : "";
+  return `${text}\n\n<current_need_card>\n${JSON.stringify(draft, null, 2)}\n</current_need_card>${summary}${counts}`;
 }
 
 // ── Offline rules: a deterministic stand-in when no model is available ──────
@@ -321,7 +330,7 @@ const hasAny = (t: Talent, skills: string[]) => t.skills.some((s) => skills.incl
 /** People in the pool who list at least one of the skills. */
 export const poolCount = (skills: string[], pool: Talent[]) => pool.filter((t) => hasAny(t, skills)).length;
 
-/** Same rule as the organiser's suggestions: people at or above the overlap guide. */
+/** Same rule as the Candidates page suggestions: people at or above the overlap guide. */
 export const relevantCount = (d: NeedDraft, pool: Talent[]) =>
   d.must.length ? matchesForNeed(draftToNeed(d, ""), pool).filter((m) => m.suggested).length : 0;
 
@@ -497,6 +506,98 @@ export function poolSummary(pool: Talent[]) {
   };
 }
 
+// ── Role changes: recheck the card against the pool ─────────────────────────
+
+const titleWords = (s: string) =>
+  new Set(
+    normalize(s)
+      .split(/[^a-z0-9]+/)
+      .filter((w) => w.length > 2),
+  );
+
+/**
+ * True when the card moved to a different role, not a refinement of the same one
+ * ("Developer" → "Back-end developer" is a refinement; "Developer" → "Nurse" is a change).
+ */
+export function roleChanged(prev: NeedDraft, next: NeedDraft): boolean {
+  if (!prev.title && !prev.occupation) return false;
+  if (prev.occupation && next.occupation) return prev.occupation !== next.occupation;
+  const a = titleWords(prev.title);
+  const b = titleWords(next.title);
+  if (!a.size || !b.size) return false;
+  return ![...a].some((w) => b.has(w));
+}
+
+/** Aggregate counts for one card. Numbers only, never who those people are. */
+export type CardPoolCheck = {
+  people: number;
+  /** People at or above the overlap guide for the card's must-haves. */
+  relevant: number;
+  must: { skill: string; people: number }[];
+  /** People who can work in the card's language; null when not set. */
+  language: number | null;
+  /** People open to the card's way of working; null when not set. */
+  mode: number | null;
+};
+
+export function cardPoolCheck(d: NeedDraft, pool: Talent[]): CardPoolCheck {
+  return {
+    people: pool.length,
+    relevant: relevantCount(d, pool),
+    must: d.must.map((skill) => ({ skill, people: poolCount([skill], pool) })),
+    language: d.language ? languageCount(d.language, pool) : null,
+    mode: d.mode ? modeCount(d.mode, pool) : null,
+  };
+}
+
+export type RoleRecheck = CardPoolCheck & {
+  /** Skills from the old role that the server took off the card. */
+  removed: string[];
+};
+
+/**
+ * Safety net for role changes: skills carried over from the old card are dropped when
+ * they don't fit the new occupation, aren't related to it, aren't transversal and the
+ * user didn't name them in their latest message. Without a known occupation the card
+ * is left as the model wrote it.
+ */
+export function dropStaleSkills(prev: NeedDraft, next: NeedDraft, userText: string) {
+  const occ = next.occupation ? OCCUPATION_BY_ID[next.occupation] : undefined;
+  if (!occ) return { draft: next, removed: [] as string[] };
+  const fits = new Set(occ.skills);
+  for (const s of occ.skills) for (const r of relatedSkills(s, 0.5)) fits.add(r.skill.id);
+  const named = new Set(mentionedSkills(userText));
+  const old = new Set([...prev.must, ...prev.nice]);
+  const stale = (id: string) =>
+    old.has(id) && !fits.has(id) && !named.has(id) && SKILL_BY_ID[id]?.group !== "Transversal";
+  const removed = [...next.must, ...next.nice].filter(stale);
+  if (!removed.length) return { draft: next, removed };
+  return {
+    draft: { ...next, must: next.must.filter((s) => !stale(s)), nice: next.nice.filter((s) => !stale(s)) },
+    removed,
+  };
+}
+
+/** One plain sentence with the new counts, appended to the reply after a role change. */
+export function recheckNote(r: RoleRecheck): string {
+  const parts: string[] = [];
+  if (r.removed.length)
+    parts.push(
+      `I took ${r.removed.map(skillLabel).join(", ")} off the card, since they belonged to the earlier role.`,
+    );
+  if (r.must.length) {
+    const per = r.must.map((m) => `${skillLabel(m.skill)} ${m.people}`).join(", ");
+    parts.push(
+      `Card rechecked for the new role: ${r.relevant} of ${r.people} people at this event fit the must-haves (people per skill: ${per}).`,
+    );
+  } else {
+    parts.push(
+      `Card rechecked for the new role: ${r.people} people are registered. Add a must-have skill to see how many fit.`,
+    );
+  }
+  return parts.join(" ");
+}
+
 function parseLanguage(t: string): string {
   if (/finnish (is )?(required|needed|must)|must speak finnish|fluent finnish|suomi pakollinen/.test(t))
     return "Finnish required";
@@ -665,7 +766,7 @@ export function rulesTurn(
 
   return {
     reply:
-      "That's everything I need. Review the need card, edit anything that's off, and approve it when you're happy. Nothing goes to the organiser until you do.",
+      "That's everything I need. Review the need card, edit anything that's off, and approve it when you're happy. Suitable candidates appear once you do.",
     quickReplies: [],
     draft,
     asked: askedIn,

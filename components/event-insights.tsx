@@ -22,9 +22,9 @@ import { useDemo } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 const DECISIONS: Series[] = [
-  { key: "approved", label: "Approved", color: CHART.blue },
-  { key: "waiting", label: "Waiting for you", color: CHART.amber },
-  { key: "rejected", label: "Rejected", color: CHART.magenta },
+  { key: "approved", label: "Invited", color: CHART.blue },
+  { key: "waiting", label: "Not decided yet", color: CHART.amber },
+  { key: "rejected", label: "Not now", color: CHART.magenta },
 ];
 
 const SKILLS: Series[] = [
@@ -34,8 +34,8 @@ const SKILLS: Series[] = [
 
 const fmtRating = (v: number | null) => (v === null ? "–" : `${v.toFixed(1)} / 5`);
 
-/** Organiser dashboard: headline numbers and charts. Counts and averages only, never individuals. */
-export function OrganiserInsights() {
+/** Event insights for companies: headline numbers and charts. Counts and averages only, never individuals. */
+export function EventInsights() {
   const { needs, talent, decisions, optIns, slots, feedback } = useDemo();
   const d = useMemo(
     () => dashboardData({ needs, talent, decisions, optIns, slots, feedback }),
@@ -79,10 +79,10 @@ export function OrganiserInsights() {
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-transfer/30 bg-transfer-soft/40 px-4 py-3 text-sm">
           <span>
             <strong className="font-medium">{d.tiles.waiting.value} suggested matches</strong> are waiting for
-            your decision.
+            a company decision.
           </span>
-          <Button size="sm" nativeButton={false} render={<Link href="/organiser" />}>
-            Review matches <ArrowRightIcon data-icon="inline-end" />
+          <Button size="sm" nativeButton={false} render={<Link href="/company/candidates" />}>
+            Review candidates <ArrowRightIcon data-icon="inline-end" />
           </Button>
         </div>
       )}
@@ -113,8 +113,8 @@ export function OrganiserInsights() {
         </ChartCard>
 
         <ChartCard
-          title="Your decisions per need"
-          description="Suggested matches you approved, rejected or still have to look at."
+          title="Company decisions per need"
+          description="Suggested matches each company invited, passed on or still has to look at, across the event."
           legend={DECISIONS}
           table={{
             columns: ["Need", "Approved", "Waiting", "Rejected"],

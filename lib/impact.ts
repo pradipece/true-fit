@@ -3,7 +3,7 @@ import type { Feedback, FeedbackSide, NextStep, SideFeedback } from "./types";
 
 /**
  * Feedback loop: structured post-meeting answers from both sides, turned into impact
- * metrics for the organiser. Ratings are about the meeting and the cards, never the person.
+ * metrics for the Insights page. Ratings are about the meeting and the cards, never the person.
  */
 
 export const NEXT_STEPS: Record<FeedbackSide, { value: NextStep; label: string }[]> = {
@@ -56,7 +56,7 @@ export function pairOutcome(f: Feedback | undefined): PairOutcome {
 
 const avg = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null);
 
-/** Remove names, contacts, origin, schools and similar from free text before organisers see it. */
+/** Remove names, contacts, origin, schools and similar from free text before it appears in Insights. */
 export const anonymise = (text: string) =>
   rulesPrivacy([{ id: "x", text }])
     .reduce((t, f) => t.split(f.text).join("[removed]"), text)
@@ -64,7 +64,7 @@ export const anonymise = (text: string) =>
 
 export type Impact = ReturnType<typeof impactMetrics>;
 
-/** Impact for the organiser dashboard, from booked slots and both sides' feedback. */
+/** Impact for the Insights page, from booked slots and both sides' feedback. */
 export function impactMetrics(slots: Record<string, string>, feedback: Record<string, Feedback>) {
   const booked = Object.keys(slots);
   const answered = booked.filter((k) => feedback[k]?.company || feedback[k]?.talent);

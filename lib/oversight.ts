@@ -4,31 +4,27 @@ import { biasAudit, matchesForNeed, pairKey, poolCoverage } from "./match";
 import type { AuditEntry, Decision, Feedback, MatchExplanation, Need, SkillGroup, Talent } from "./types";
 
 /**
- * Organiser oversight: reasons, the append-only audit log and the review queue.
+ * Human oversight by the company: reasons, the append-only audit log and the review queue.
  * Matching only suggests. People below the overlap guide are listed for review too:
  * nobody is rejected, hidden or removed automatically.
  */
 
-export const ACTOR = "Organiser (demo)";
+export const ACTOR = "Company (demo)";
 
 export const REASONS = {
   approve: [
     "Must-haves shown in their answers",
     "Strong transferable skills",
     "Worth a conversation despite gaps",
-    "Company asked to meet this profile",
+    "Fits how our team works",
   ],
   reject: [
     "Key must-have not shown yet",
-    "Company asked for a different level of experience",
+    "We need a different level of experience",
     "Way of working or start date doesn't fit",
-    "Already meeting this company",
+    "Already meeting this candidate",
   ],
-  edit: [
-    "New feedback from the company",
-    "New information from the candidate",
-    "Correcting my earlier decision",
-  ],
+  edit: ["New information from the candidate", "We changed the need card", "Correcting my earlier decision"],
 } as const;
 
 export const OTHER = "Other (explain in the note)";

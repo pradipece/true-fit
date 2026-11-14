@@ -27,7 +27,7 @@ export default function CompanyPage() {
           },
           {
             title: "Approve it",
-            text: "Nothing is shared until you approve. The organiser then suggests people who fit.",
+            text: "Nothing is shared until you approve. Then the Candidates page lists the people whose skills fit, with their contact details.",
           },
         ]}
       />

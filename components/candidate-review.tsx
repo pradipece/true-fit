@@ -8,12 +8,13 @@ import {
   ChevronDownIcon,
   ClipboardListIcon,
   DownloadIcon,
-  EyeOffIcon,
   HandshakeIcon,
   LanguagesIcon,
-  LayoutDashboardIcon,
   ListChecksIcon,
+  MailIcon,
+  MapPinIcon,
   MessageSquareIcon,
+  PhoneIcon,
   PencilIcon,
   ScaleIcon,
   Undo2Icon,
@@ -35,14 +36,16 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { IdentitySwitch, useIdentity } from "@/components/identity";
 import { MatchExplanationView, ScoreMeter } from "@/components/match-explanation";
-import { OrganiserOverview } from "@/components/organiser-overview";
 import { SkillChip, SkillLegend } from "@/components/skill-chip";
 import { WhyThisMatch } from "@/components/why-this-match";
 import { pairKey, SUGGEST_THRESHOLD } from "@/lib/match";
-import { auditCsv, OTHER, overview, REASONS, reasonError, reviewList } from "@/lib/oversight";
+import { auditCsv, OTHER, REASONS, reasonError, reviewList } from "@/lib/oversight";
+import { companyOf } from "@/lib/schedule";
 import { useDemo } from "@/lib/store";
-import type { AuditEntry, Decision, MatchExplanation, Need } from "@/lib/types";
+import type { AuditEntry, Decision, MatchExplanation, Need, Talent } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type DialogType = "approve" | "reject" | "edit" | "revert";
@@ -61,6 +64,16 @@ const fmtTime = (iso: string) =>
     minute: "2-digit",
   });
 
+const displayName = (t?: Talent) => t && (t.contact?.fullName ?? t.revealName);
+
+const initials = (name: string) =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase())
+    .join("");
+
 const ACTION_STYLE: Record<AuditEntry["action"], string> = {
   approved: "border-evidence/30 bg-evidence-soft text-evidence",
   rejected: "border-border bg-secondary text-secondary-foreground",
@@ -68,8 +81,30 @@ const ACTION_STYLE: Record<AuditEntry["action"], string> = {
   reverted: "border-dashed",
 };
 
-export function OrganiserDashboard() {
-  const { needs, talent, decisions, audit, optIns, slots, feedback, decide, undoDecision } = useDemo();
+/**
+ * The company reviews the people suggested for its own needs and decides, with a reason,
+ * whom to invite. Matching only suggests; nothing is automatic and every decision is logged.
+ * Only the signed-in company's needs, decisions and audit entries are shown.
+ */
+export function CandidateReview() {
+  const {
+    needs: allNeeds,
+    talent,
+    decisions,
+    audit: allAudit,
+    optIns,
+    slots,
+    feedback,
+    decide,
+    undoDecision,
+    setOptIn,
+  } = useDemo();
+  const { id: companyId } = useIdentity("company");
+  const needs = useMemo(() => allNeeds.filter((n) => companyOf(n) === companyId), [allNeeds, companyId]);
+  const audit = useMemo(() => {
+    const own = new Set(needs.map((n) => n.id));
+    return allAudit.filter((e) => own.has(e.needId));
+  }, [allAudit, needs]);
   const [selected, setSelected] = useState<string>(needs[0]?.id ?? "");
   const [showOthers, setShowOthers] = useState(false);
   const [dialog, setDialog] = useState<DialogState | null>(null);
@@ -77,18 +112,12 @@ export function OrganiserDashboard() {
   const need = needs.find((n) => n.id === selected) ?? needs[0];
   const list = useMemo(() => (need ? reviewList(need, talent) : null), [need, talent]);
   const talentById = useMemo(() => new Map(talent.map((t) => [t.id, t])), [talent]);
-  const [tab, setTab] = useState<"overview" | "review" | "log">("overview");
-  const o = useMemo(
-    () => overview(needs, talent, decisions, optIns, slots),
-    [needs, talent, decisions, optIns, slots],
+  const [tab, setTab] = useState<"review" | "log">("review");
+  const awaitingReview = needs.reduce(
+    (sum, n) =>
+      sum + reviewList(n, talent).suggested.filter((m) => !decisions[pairKey(m.needId, m.talentId)]).length,
+    0,
   );
-
-  const openReview = (needId?: string) => {
-    if (needId) setSelected(needId);
-    setShowOthers(false);
-    setTab("review");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
 
   const pipeline = (key: string) =>
     feedback[key]?.company && feedback[key]?.talent
@@ -99,7 +128,9 @@ export function OrganiserDashboard() {
           ? `Meeting at ${slots[key]}`
           : optIns[key]?.company && optIns[key]?.talent
             ? "Both opted in"
-            : "Awaiting opt-in";
+            : optIns[key]?.company
+              ? "Invited, waiting for the candidate"
+              : "Waiting for your yes in Meetings";
 
   const confirm = (reason: string, note: string, status?: Decision["status"]) => {
     if (!dialog) return;
@@ -111,16 +142,18 @@ export function OrganiserDashboard() {
     } else {
       const next = dialog.type === "edit" ? status! : dialog.type === "approve" ? "approved" : "rejected";
       decide(key, { status: next, reason, note: n });
+      // Inviting is the company's yes; the candidate answers in their Meetings view.
+      if (next === "approved" && optIns[key]?.company === undefined) setOptIn(key, "company", true);
       toast.success(
         dialog.type === "edit"
-          ? `Decision changed to ${next}`
+          ? `Decision changed to ${next === "approved" ? "invited" : "not now"}`
           : next === "approved"
-            ? "Approved, both sides asked to opt in"
-            : "Rejected for this need, with reason logged",
+            ? "Invited to meet"
+            : "Passed for this need, with reason logged",
         {
           description:
             next === "approved"
-              ? "Identities stay hidden until both say yes."
+              ? "The candidate sees the invitation in their Meetings view and answers yes or no."
               : "The candidate can still be matched to other needs.",
         },
       );
@@ -155,40 +188,47 @@ export function OrganiserDashboard() {
 
   return (
     <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="gap-6">
+      <IdentitySwitch side="company" />
       <TabsList className="h-10">
-        <TabsTrigger value="overview" className="px-3">
-          <LayoutDashboardIcon /> Overview
-        </TabsTrigger>
         <TabsTrigger value="review" className="px-3">
-          <ListChecksIcon /> Review matches
-          {o.awaitingReview > 0 && (
-            <Badge className="ml-1 h-5 min-w-5 px-1.5 tabular-nums">{o.awaitingReview}</Badge>
+          <ListChecksIcon /> Suitable candidates
+          {awaitingReview > 0 && (
+            <Badge className="ml-1 h-5 min-w-5 px-1.5 tabular-nums">{awaitingReview}</Badge>
           )}
         </TabsTrigger>
         <TabsTrigger value="log" className="px-3">
-          <ClipboardListIcon /> Audit log
+          <ClipboardListIcon /> Your decisions log
         </TabsTrigger>
       </TabsList>
-
-      <TabsContent value="overview">
-        <OrganiserOverview onReview={openReview} />
-      </TabsContent>
 
       <TabsContent value="review" className="space-y-6">
         <p className="flex items-start gap-2 rounded-xl border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
           <ScaleIcon className="mt-0.5 size-4 shrink-0 text-primary" />
           <span>
-            <span className="font-medium text-foreground">You decide every match.</span> Nobody is rejected
+            <span className="font-medium text-foreground">You decide whom to invite.</span> Nobody is rejected
             automatically: people below the {Math.round(SUGGEST_THRESHOLD * 100)}% suggestion line are listed
-            too. There are no hidden scores: every percentage is a skill match you can open to see how it was
-            worked out.
+            too. The order comes from skills only; there are no hidden scores, and every percentage is a skill
+            match you can open. Names and contact details are fictional demo data.
           </span>
         </p>
 
-        <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
+        {needs.length === 0 && (
+          <Card>
+            <CardContent className="space-y-3 py-10 text-center">
+              <p className="text-muted-foreground">
+                No approved need card yet. Describe who you need and approve the card to see suitable
+                candidates.
+              </p>
+              <Button nativeButton={false} render={<Link href="/company" />}>
+                Write a need card <ArrowRightIcon data-icon="inline-end" />
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+        <div className={cn("grid gap-6 lg:grid-cols-[320px_1fr]", !needs.length && "hidden")}>
           {/* Need list */}
           <div className="space-y-2">
-            <p className="px-1 text-xs font-medium text-muted-foreground">Company needs</p>
+            <p className="px-1 text-xs font-medium text-muted-foreground">Your needs</p>
             {needs.map((n) => {
               const { suggested } = reviewList(n, talent);
               const open = suggested.filter((m) => !decisions[pairKey(m.needId, m.talentId)]).length;
@@ -237,8 +277,8 @@ export function OrganiserDashboard() {
               {list.suggested.length === 0 && (
                 <Card>
                   <CardContent className="py-6 text-center text-sm text-muted-foreground">
-                    No one reaches the suggestion line for this need yet. Review the people below yourself, or
-                    invite talent with these skills.
+                    No one reaches the suggestion line for this need yet. Look through the people below
+                    yourself, or move a rare must-have skill to nice-to-have on your card.
                   </CardContent>
                 </Card>
               )}
@@ -279,7 +319,7 @@ export function OrganiserDashboard() {
             const n = needs.find((x) => x.id === id);
             return n ? `${n.title} · ${n.company}` : id;
           }}
-          alias={(id) => talentById.get(id)?.alias ?? id}
+          alias={(id) => displayName(talentById.get(id)) ?? id}
           onExport={exportCsv}
         />
       </TabsContent>
@@ -345,10 +385,10 @@ function MatchCard({
     <Card className={cn(d?.status === "rejected" && "opacity-70")}>
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center gap-2 text-base">
-          <span className="grid size-8 place-items-center rounded-full bg-secondary">
-            <EyeOffIcon className="size-3.5 text-muted-foreground" />
-          </span>
-          {t.alias}
+          <Avatar>
+            <AvatarFallback>{initials(displayName(t) ?? t.alias)}</AvatarFallback>
+          </Avatar>
+          {displayName(t)}
           {t.createdByUser && <Badge>You</Badge>}
           {!m.suggested && (
             <Badge variant="outline" className="font-normal">
@@ -362,6 +402,29 @@ function MatchCard({
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
+        {t.contact && (
+          <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm" aria-label="Contact details">
+            <li className="flex items-center gap-1.5 text-muted-foreground">
+              <MapPinIcon className="size-3.5" /> {t.contact.city}
+            </li>
+            <li>
+              <a
+                href={`mailto:${t.contact.email}`}
+                className="flex items-center gap-1.5 underline-offset-4 hover:underline"
+              >
+                <MailIcon className="size-3.5 text-muted-foreground" /> {t.contact.email}
+              </a>
+            </li>
+            <li>
+              <a
+                href={`tel:${t.contact.phone.replace(/\s+/g, "")}`}
+                className="flex items-center gap-1.5 tabular-nums underline-offset-4 hover:underline"
+              >
+                <PhoneIcon className="size-3.5 text-muted-foreground" /> {t.contact.phone}
+              </a>
+            </li>
+          </ul>
+        )}
         <MatchExplanationView m={m} />
         <WhyThisMatch need={need} talent={t} />
         <details className="text-xs">
@@ -405,7 +468,7 @@ function MatchCard({
               ) : (
                 <XIcon data-icon="inline-start" />
               )}
-              {d.status === "approved" ? "Approved" : "Rejected"} · {d.reason}
+              {d.status === "approved" ? "Invited" : "Not now"} · {d.reason}
             </Badge>
             {status && <span className="text-xs text-muted-foreground">{status}</span>}
             {d.note && (
@@ -425,10 +488,10 @@ function MatchCard({
         ) : (
           <>
             <Button size="sm" onClick={() => onAction("approve")}>
-              <CheckIcon data-icon="inline-start" /> Approve
+              <CheckIcon data-icon="inline-start" /> Invite to meet
             </Button>
             <Button size="sm" variant="outline" onClick={() => onAction("reject")}>
-              <XIcon data-icon="inline-start" /> Reject
+              <XIcon data-icon="inline-start" /> Not now
             </Button>
             <span className="ml-auto text-xs text-muted-foreground">Suggestion only · you decide</span>
           </>
@@ -440,14 +503,14 @@ function MatchCard({
 
 const DIALOG_COPY: Record<DialogType, { title: string; body: string; cta: string }> = {
   approve: {
-    title: "Approve this match?",
-    body: "Both sides will be asked to opt in. Nothing is shared until they both agree.",
-    cta: "Approve & request opt-in",
+    title: "Invite this candidate to meet?",
+    body: "The candidate sees your invitation and need card in their Meetings view and answers yes or no. You book a slot once they say yes.",
+    cta: "Invite with reason",
   },
   reject: {
-    title: "Reject for this need?",
-    body: "Rejections need a reason so they can be reviewed for bias. The candidate can still be matched to other needs and is not told.",
-    cta: "Reject with reason",
+    title: "Not now for this need?",
+    body: "Passing needs a reason so decisions can be checked for bias. The candidate can still be matched to other needs and is not told.",
+    cta: "Pass with reason",
   },
   edit: {
     title: "Edit this decision",
@@ -508,7 +571,7 @@ function DecisionDialog({
                     setReason("");
                   }}
                 >
-                  {s === "approved" ? "Approved" : "Rejected"}
+                  {s === "approved" ? "Invited" : "Not now"}
                   {state?.current?.status === s && " (current)"}
                 </Button>
               ))}
@@ -589,24 +652,18 @@ function AuditLog({
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
-          <ClipboardListIcon className="size-4" /> Audit log
+          <ClipboardListIcon className="size-4" /> Your decisions log
         </CardTitle>
         <CardDescription>
-          Every approval, rejection, edit and undo, with who, when and why. Append-only: entries are never
-          changed or deleted.
+          Every invitation, pass, edit and undo for your needs, with when and why. Append-only: entries are
+          never changed or deleted.
         </CardDescription>
         <div className="col-start-2 row-span-2 row-start-1 flex flex-wrap gap-2 self-start justify-self-end">
           <Button size="sm" variant="outline" onClick={onExport} disabled={!entries.length}>
             <DownloadIcon data-icon="inline-start" /> Export CSV
           </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            nativeButton={false}
-            render={<Link href="/meetings/organiser" />}
-          >
-            <HandshakeIcon data-icon="inline-start" /> Opt-ins & slots{" "}
-            <ArrowRightIcon data-icon="inline-end" />
+          <Button size="sm" variant="outline" nativeButton={false} render={<Link href="/meetings/company" />}>
+            <HandshakeIcon data-icon="inline-start" /> Meetings <ArrowRightIcon data-icon="inline-end" />
           </Button>
         </div>
       </CardHeader>

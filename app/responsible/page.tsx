@@ -44,13 +44,13 @@ const DECISIONS = [
     step: "Which matches go ahead",
     machine: `Rules suggest pairs at ${Math.round(SUGGEST_THRESHOLD * 100)}%+ overlap; everyone else stays listed`,
     kind: "rules",
-    human: "An organiser approves or rejects each pair, always with a reason",
+    human: "The company invites or passes on each candidate, always with a reason",
   },
   {
     step: "Whether to meet",
     machine: "Nothing",
     kind: "none",
-    human: "Both sides opt in; names are revealed only then",
+    human: "Both sides opt in before a meeting is booked",
   },
   {
     step: "What happens next",
@@ -98,13 +98,13 @@ const DATA = [
   },
   {
     item: "Company need card",
-    why: "Matching and display to organisers and matched candidates",
+    why: "Matching and display to the company and matched candidates",
     sent: "—",
     retention: "Event + 12 months",
   },
   {
     item: "Skill card: skills, accepted evidence quotes, headline, languages, availability",
-    why: "Matching and display (anonymised until mutual opt-in)",
+    why: "Matching and display to the company once its need card is approved",
     sent: "—",
     retention: "Event + 90 days, or until the candidate deletes it",
   },
@@ -128,7 +128,7 @@ const DATA = [
   },
   {
     item: "Name and contact details",
-    why: "Shared only after both sides opt in",
+    why: "Shown to a company on its suitable-candidates list after it approves its need card; never scored or sent to the AI",
     sent: "—",
     retention: "Event + 90 days",
   },
@@ -145,7 +145,7 @@ const DATA = [
     retention: "Ratings aggregated; ideas anonymised; event + 12 months",
   },
   {
-    item: "Organiser decisions and audit log",
+    item: "Company decisions and audit log",
     why: "Human oversight and AI Act record-keeping",
     sent: "—",
     retention: "At least 6 months (AI Act Art. 26(6)), then reviewed",
@@ -193,9 +193,9 @@ const AI_ACT = [
     ref: "Art. 14",
     title: "Human oversight",
     today:
-      "Organisers approve every match; nobody is rejected automatically; both sides opt in; decisions can be edited or undone.",
+      "Companies decide every invitation; nobody is rejected automatically; candidates accept or decline; decisions can be edited or undone.",
     production:
-      "Trained organisers with authority to override; spot checks of rejected and non-suggested people.",
+      "Company recruiters trained on the tool; the event organiser spot-checks passed and non-suggested people in aggregate.",
   },
   {
     ref: "Art. 15",
@@ -333,7 +333,7 @@ export default async function ResponsiblePage() {
           ))}
           <p className="text-muted-foreground sm:col-span-2 lg:col-span-4">
             Overlap = credit earned ÷ credit possible. Pairs at {Math.round(SUGGEST_THRESHOLD * 100)}% or more
-            are shown as suggestions, but organisers see and can approve anyone in the pool. Rule-based, not a
+            are shown as suggestions, but companies see and can invite anyone in the pool. Rule-based, not a
             trained model, so there are no learned proxies for protected characteristics.
           </p>
           <p className="flex items-start gap-1.5 text-muted-foreground sm:col-span-2 lg:col-span-4">
@@ -421,8 +421,8 @@ export default async function ResponsiblePage() {
                   </Table>
                   {!ok && (
                     <p className="mt-2 text-xs text-transfer">
-                      Below 0.8: organisers check rejections for this group and invite more needs that fit its
-                      skills before the event.
+                      Below 0.8: the event team checks passes for this group and invite more needs that fit
+                      its skills before the event.
                     </p>
                   )}
                 </CardContent>

@@ -128,6 +128,16 @@ CREATE TABLE IF NOT EXISTS talent_audit (
   path      text NOT NULL CHECK (path IN ('Linear', 'Career changer'))
 );
 
+-- Mock personal info (synthetic), kept apart from the profile: only shown to a company
+-- after both sides opt in, never read by matching and never sent to the AI.
+CREATE TABLE IF NOT EXISTS talent_contact (
+  talent_id text PRIMARY KEY REFERENCES talent (id) ON DELETE CASCADE,
+  full_name text NOT NULL,
+  email     text NOT NULL CHECK (email LIKE '%@example.com'),
+  phone     text NOT NULL,
+  city      text NOT NULL
+);
+
 -- ── Scraped public data (data/scraped, research only) ───────────────────────
 
 CREATE TABLE IF NOT EXISTS scraped_sources (
@@ -169,5 +179,6 @@ ALTER TABLE talent_skills          ENABLE ROW LEVEL SECURITY;
 ALTER TABLE talent_evidence        ENABLE ROW LEVEL SECURITY;
 ALTER TABLE talent_languages       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE talent_audit           ENABLE ROW LEVEL SECURITY;
+ALTER TABLE talent_contact         ENABLE ROW LEVEL SECURITY;
 ALTER TABLE scraped_sources        ENABLE ROW LEVEL SECURITY;
 ALTER TABLE scraped_items          ENABLE ROW LEVEL SECURITY;

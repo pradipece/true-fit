@@ -1,12 +1,16 @@
 import { aiConfigured, generateJson, logFallback } from "@/lib/ai";
 import { getSeed } from "@/lib/seed-db";
 import {
+  cardPoolCheck,
   cleanQuickReplies,
+  dropStaleSkills,
   INTAKE_OUTPUT_SCHEMA,
   INTAKE_SYSTEM_PROMPT,
   missingFields,
   sanitizeDraft,
   poolSummary,
+  recheckNote,
+  roleChanged,
   withCurrentCard,
   type IntakeRequest,
   type IntakeTurn,
@@ -60,18 +64,31 @@ async function aiTurn(req: IntakeRequest): Promise<IntakeTurn> {
     messages: history.map((m, i) => ({
       role: m.role,
       content:
-        i === history.length - 1 ? withCurrentCard(m.content, req.draft, poolSummary(pool)) : m.content,
+        i === history.length - 1
+          ? withCurrentCard(m.content, req.draft, poolSummary(pool), cardPoolCheck(req.draft, pool))
+          : m.content,
     })),
   });
-  const draft = sanitizeDraft(out.draft);
+  let draft = sanitizeDraft(out.draft);
+  let reply = out.reply;
+  let recheck: IntakeTurn["recheck"];
+  // A new role means a new card: drop skills left from the old role and report fresh counts.
+  if (roleChanged(req.draft, draft)) {
+    const lastUser = history[history.length - 1]?.content ?? "";
+    const cleaned = dropStaleSkills(req.draft, draft, lastUser);
+    draft = cleaned.draft;
+    recheck = { ...cardPoolCheck(draft, pool), removed: cleaned.removed };
+    reply = `${reply.trim()}\n\n${recheckNote(recheck)}`;
+  }
   return {
-    reply: out.reply,
+    reply,
     quickReplies: cleanQuickReplies(out.quick_replies, history[history.length - 1]?.content),
     draft,
     asked: req.asked,
     // Trust the card, not the flag: ready means every required field is filled.
     ready: !!out.ready && missingFields(draft).length === 0,
     source: "ai",
+    recheck,
   };
 }
 
@@ -82,7 +99,7 @@ export async function POST(request: Request) {
   // The chat has no offline fallback: it needs Gemini, so it always tries (no cooldown skip).
   if (!aiConfigured())
     return Response.json(
-      { error: "The intake assistant isn't set up yet (no GEMINI_API_KEY on the server)." },
+      { error: "TrueFit Assistant isn't set up yet (no GEMINI_API_KEY on the server)." },
       { status: 503 },
     );
   try {

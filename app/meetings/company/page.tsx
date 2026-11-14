@@ -12,18 +12,18 @@ export default function CompanyMeetingsPage() {
       <PageHeader
         eyebrow="Companies · your table"
         title="Company view"
-        description="Candidates the organiser approved for your needs. You see their evidence and why they were suggested; their name stays hidden until you both say yes."
+        description="Candidates you invited. Follow who has answered, book a slot once they say yes, and give feedback after the meeting."
       />
       <PageGuide
         id="meetings-company"
         steps={[
           {
-            title: "See who was suggested",
-            text: "These candidates were approved by the organiser for your needs.",
+            title: "See who you invited",
+            text: "Invite people from the Candidates page; they show up here.",
           },
           {
             title: "Say yes or no",
-            text: "Names are shown only when you both say yes. A no is never explained to the other side.",
+            text: "Inviting counts as your yes. The candidate answers; a no is never explained.",
           },
           {
             title: "Meet and give feedback",

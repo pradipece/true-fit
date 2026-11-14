@@ -12,18 +12,18 @@ export default function TalentMeetingsPage() {
       <PageHeader
         eyebrow="Candidates · your skill card"
         title="Candidate view"
-        description="Companies suggested to you by the organiser. You see the need and why you were suggested; your name stays hidden until you both say yes."
+        description="Companies that invited you to meet. You see their need card and why your skills fit; say yes or no to each."
       />
       <PageGuide
         id="meetings-talent"
         steps={[
           {
             title: "See who wants to meet",
-            text: "These companies were suggested to you and approved by the organiser.",
+            text: "These companies looked at your skill card and invited you.",
           },
           {
             title: "Say yes or no",
-            text: "Your name stays hidden until you both say yes. A no is never explained to the company.",
+            text: "You decide. A no is never explained to the company.",
           },
           { title: "Meet and give feedback", text: "Book a 10-minute slot, then tell us how it went." },
         ]}

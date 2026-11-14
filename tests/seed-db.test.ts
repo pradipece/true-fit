@@ -45,12 +45,39 @@ describe("Supabase seed source", () => {
     expect(seed.talent).toEqual(SEED.talent);
   });
 
+  it("candidate-only SQL replaces the talent tables and reads back the same, with full names", async () => {
+    const out = join(mkdtempSync(join(tmpdir(), "truefit-sql-")), "talent.sql");
+    execFileSync("node", ["scripts/db/migrate.mjs", "--talent-only", "--sql", out], { stdio: "ignore" });
+    const sql = readFileSync(out, "utf8");
+    expect(sql).not.toMatch(/TRUNCATE (esco|companies)/);
+    await pg.exec(sql);
+    await pg.exec(sql); // safe to rerun
+    const seed = await getSeed();
+    expect(seed.source).toBe("supabase");
+    expect(seed.talent).toEqual(SEED.talent);
+    expect(seed.needs).toEqual(SEED.needs);
+    for (const t of seed.talent) expect(t.revealName).toBe(t.contact?.fullName);
+  });
+
   it("keeps protected attributes in their own table", async () => {
     const cols = await pg.query<{ column_name: string }>(
       `SELECT column_name FROM information_schema.columns WHERE table_name = 'talent'`,
     );
     const names = cols.rows.map((r) => r.column_name);
     for (const f of ["origin", "education", "path"]) expect(names).not.toContain(f);
+  });
+
+  it("keeps mock contact details in their own table, one row per candidate", async () => {
+    const cols = await pg.query<{ column_name: string }>(
+      `SELECT column_name FROM information_schema.columns WHERE table_name = 'talent'`,
+    );
+    const names = cols.rows.map((r) => r.column_name);
+    for (const f of ["full_name", "email", "phone", "city"]) expect(names).not.toContain(f);
+    const rows = await pg.query<{ talent_id: string; email: string }>(
+      `SELECT talent_id, email FROM talent_contact`,
+    );
+    expect(rows.rows).toHaveLength(SEED.talent.length);
+    for (const r of rows.rows) expect(r.email).toMatch(/@example\.com$/);
   });
 
   it("locks every table behind row-level security with no policies", async () => {

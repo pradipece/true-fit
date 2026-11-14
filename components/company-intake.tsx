@@ -8,6 +8,7 @@ import {
   CheckIcon,
   CircleDashedIcon,
   InfoIcon,
+  MessageCircleIcon,
   LandmarkIcon,
   Loader2Icon,
   PencilIcon,
@@ -51,13 +52,20 @@ import {
 import { matchesForNeed, poolCoverage } from "@/lib/match";
 import { asksNativeSpeaker, languageRule, modeKind, onlyFinnish, openToMode } from "@/lib/need-terms";
 import { useDemo } from "@/lib/store";
+import type { MatchExplanation, Talent } from "@/lib/types";
 import { cn, isSubmitEnter } from "@/lib/utils";
 
-type Msg = ChatMessage & { added?: string[]; quickReplies?: string[]; source?: IntakeTurn["source"] };
+type Msg = ChatMessage & {
+  added?: string[];
+  removed?: string[];
+  rechecked?: boolean;
+  quickReplies?: string[];
+  source?: IntakeTurn["source"];
+};
 
 const GREETING: Msg = {
   role: "assistant",
-  content: `Hi! The event is ${EVENT.weeksAway} weeks away. Who would you like to meet there? Describe it in your own words. “We need a dev” is a perfectly good start.`,
+  content: `Hi, I'm TrueFit Assistant! The event is ${EVENT.weeksAway} weeks away. Who would you like to meet there? Describe it in your own words. “We need a dev” is a perfectly good start.`,
   quickReplies: DEFAULT_STARTERS,
 };
 
@@ -85,14 +93,39 @@ export function CompanyIntake() {
   const [company, setCompany] = useState("Your company (demo)");
   const [reviewed, setReviewed] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  // The chat lives in a popup opened from the round button in the bottom-right corner.
+  const [chatOpen, setChatOpen] = useState(false);
+  const [unread, setUnread] = useState(false);
   const threadRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const chatOpenRef = useRef(chatOpen);
+  useEffect(() => {
+    chatOpenRef.current = chatOpen;
+  }, [chatOpen]);
+  const openChat = () => {
+    setChatOpen(true);
+    setUnread(false);
+    requestAnimationFrame(() => {
+      inputRef.current?.focus();
+      const el = threadRef.current;
+      if (el) el.scrollTop = el.scrollHeight;
+    });
+  };
+  useEffect(() => {
+    if (!chatOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setChatOpen(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [chatOpen]);
 
   const missing = missingFields(draft);
   const need = useMemo(() => draftToNeed(draft, company), [draft, company]);
-  const relevant = useMemo(
-    () => (need.must.length ? matchesForNeed(need, talent).filter((m) => m.suggested).length : 0),
+  // Live: who fits the card right now. Ranked by skills only (lib/match.ts).
+  const suitable = useMemo(
+    () => (need.must.length ? matchesForNeed(need, talent).filter((m) => m.suggested) : []),
     [need, talent],
   );
+  const relevant = suitable.length;
   const evidenced = useMemo(() => poolCoverage(draft.must, talent), [draft.must, talent]);
   const speakers = draft.language ? languageCount(draft.language, talent) : 0;
   const knownLanguage = !!languageRule(draft.language);
@@ -161,14 +194,25 @@ export function CompanyIntake() {
 
     const before = new Set([...draft.must, ...draft.nice]);
     const added = [...turn.draft.must, ...turn.draft.nice].filter((s) => !before.has(s));
+    const after = new Set([...turn.draft.must, ...turn.draft.nice]);
+    const removed = [...before].filter((s) => !after.has(s));
     setDraft(turn.draft);
     setAsked(turn.asked);
     setReviewed(false);
     setSubmitted(false);
     setMessages((m) => [
       ...m,
-      { role: "assistant", content: turn.reply, added, quickReplies: turn.quickReplies, source: turn.source },
+      {
+        role: "assistant",
+        content: turn.reply,
+        added,
+        removed,
+        rechecked: !!turn.recheck,
+        quickReplies: turn.quickReplies,
+        source: turn.source,
+      },
     ]);
+    if (!chatOpenRef.current) setUnread(true);
     setPending(false);
     scrollDown();
   };
@@ -176,8 +220,8 @@ export function CompanyIntake() {
   const approve = () => {
     addNeed({ ...need, submittedWeeksBefore: EVENT.weeksAway });
     setSubmitted(true);
-    toast.success("Need card approved and sent to the organiser", {
-      description: "It now appears in the organiser dashboard.",
+    toast.success("Need card approved", {
+      description: "Your suitable candidates are ready on the Candidates page.",
     });
   };
 
@@ -194,12 +238,21 @@ export function CompanyIntake() {
   const replies = messages.length === 1 ? starters : (lastMsg.quickReplies ?? []);
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_440px]">
-      {/* Chat */}
-      <Card className="flex h-[640px] flex-col">
+    <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+      {/* Chat popup, opened from the button in the bottom-right corner */}
+      <Card
+        role="dialog"
+        aria-label="TrueFit Assistant"
+        aria-hidden={!chatOpen}
+        className={cn(
+          "fixed right-4 bottom-22 z-50 flex h-[min(620px,calc(100dvh-8rem))] w-[calc(100vw-2rem)] flex-col shadow-2xl sm:w-[420px]",
+          "origin-bottom-right transition-[opacity,scale] duration-200",
+          chatOpen ? "scale-100 opacity-100" : "pointer-events-none invisible scale-95 opacity-0",
+        )}
+      >
         <CardHeader className="border-b">
           <CardTitle className="flex items-center gap-2 text-base">
-            <BotIcon className="size-4 text-primary" /> Intake assistant
+            <BotIcon className="size-4 text-primary" /> TrueFit Assistant
             <Badge variant="outline" className={cn("font-normal", !online && "text-destructive")}>
               <span
                 className={cn("size-1.5 rounded-full", online ? "bg-evidence" : "bg-destructive")}
@@ -209,20 +262,19 @@ export function CompanyIntake() {
             </Badge>
           </CardTitle>
           <CardDescription>
-            Answer a few questions in your own words and the assistant turns them into a list of skills. It
-            needs an internet connection. It only sees what you type and how many people are registered, never
-            any candidate, and it never picks candidates.
+            Turns your answers into the need card. It only sees what you type and how many people are
+            registered, never any candidate.
           </CardDescription>
-          {messages.length > 1 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={restart}
-              className="col-start-2 row-span-2 row-start-1 self-start justify-self-end"
-            >
-              <RotateCcwIcon data-icon="inline-start" /> Start over
+          <div className="col-start-2 row-span-2 row-start-1 flex items-center gap-1 self-start justify-self-end">
+            {messages.length > 1 && (
+              <Button variant="ghost" size="sm" onClick={restart}>
+                <RotateCcwIcon data-icon="inline-start" /> Start over
+              </Button>
+            )}
+            <Button variant="ghost" size="icon-sm" aria-label="Close chat" onClick={() => setChatOpen(false)}>
+              <XIcon />
             </Button>
-          )}
+          </div>
         </CardHeader>
         <CardContent
           ref={threadRef}
@@ -239,11 +291,24 @@ export function CompanyIntake() {
                     : "rounded-bl-md bg-muted",
                 )}
               >
+                {m.rechecked && (
+                  <p className="flex items-center gap-1 text-xs font-medium text-primary">
+                    <RotateCcwIcon className="size-3" /> New role: card and people count rechecked
+                  </p>
+                )}
                 <p className="whitespace-pre-line">{m.content}</p>
                 {m.added && m.added.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
+                  <div className="flex flex-wrap gap-1" aria-label="Skills added">
                     {m.added.map((s) => (
                       <SkillChip key={s} id={s} />
+                    ))}
+                  </div>
+                )}
+                {m.removed && m.removed.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-1" aria-label="Skills removed">
+                    <span className="text-xs text-muted-foreground">Removed:</span>
+                    {m.removed.map((s) => (
+                      <SkillChip key={s} id={s} className="line-through opacity-60" />
                     ))}
                   </div>
                 )}
@@ -319,6 +384,7 @@ export function CompanyIntake() {
             }}
           >
             <Textarea
+              ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
@@ -345,15 +411,49 @@ export function CompanyIntake() {
         </CardFooter>
       </Card>
 
-      {/* Editable need card */}
-      <div className="space-y-4 lg:sticky lg:top-20 lg:self-start">
+      <Button
+        size="icon-lg"
+        onClick={() => (chatOpen ? setChatOpen(false) : openChat())}
+        aria-label={chatOpen ? "Close TrueFit Assistant" : "Open TrueFit Assistant"}
+        aria-expanded={chatOpen}
+        className="fixed right-4 bottom-4 z-50 size-14 rounded-full shadow-lg [&_svg:not([class*='size-'])]:size-6"
+      >
+        {chatOpen ? <XIcon /> : <MessageCircleIcon />}
+        {!chatOpen && (unread || messages.length === 1) && (
+          <span className="absolute top-0.5 right-0.5 flex size-3.5" aria-hidden>
+            <span className="absolute inline-flex size-full animate-ping rounded-full bg-evidence opacity-75" />
+            <span className="relative inline-flex size-3.5 rounded-full border-2 border-background bg-evidence" />
+          </span>
+        )}
+      </Button>
+
+      {/* Side column: live pool count and a way into the chat */}
+      <div className="space-y-4 lg:sticky lg:top-20 lg:col-start-2 lg:row-start-1 lg:self-start">
         <PoolCount
           relevant={relevant}
           evidenced={evidenced}
           total={talent.length}
           hasMust={!!draft.must.length}
         />
+        <Card size="sm">
+          <CardContent className="space-y-2">
+            <p className="flex items-center gap-1.5 text-sm font-medium">
+              <BotIcon className="size-4 text-primary" /> Not sure what to write?
+            </p>
+            <p className="text-xs leading-snug text-muted-foreground">
+              Tell TrueFit Assistant in your own words and it fills in the card for you. “We need a dev” is a
+              fine start.
+            </p>
+            <Button size="sm" variant="outline" onClick={openChat} className="w-full">
+              <MessageCircleIcon data-icon="inline-start" />
+              {messages.length > 1 ? "Continue the chat" : "Chat with TrueFit Assistant"}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
 
+      {/* Editable need card */}
+      <div className="space-y-4 lg:col-start-1 lg:row-start-1">
         <Card>
           <CardHeader>
             <CardDescription className="flex items-center gap-2">
@@ -472,17 +572,19 @@ export function CompanyIntake() {
               onChange={(engagement) => edit({ timing: { ...draft.timing, engagement } })}
               placeholder="Or write your own, e.g. 6-month project"
             />
+
+            <Separator />
+            <SuitableCandidates matches={suitable} talent={talent} approved={submitted} />
           </CardContent>
 
           <CardFooter className="flex-col items-stretch gap-3">
             {submitted ? (
               <>
                 <p className="flex items-center gap-1.5 text-sm text-evidence">
-                  <ShieldCheckIcon className="size-4" /> You approved this card. The organiser decides which
-                  suggested matches to approve.
+                  <ShieldCheckIcon className="size-4" /> You approved this card. Now decide whom to invite.
                 </p>
-                <Button variant="outline" nativeButton={false} render={<Link href="/meetings/company" />}>
-                  Go to your meetings <ArrowRightIcon data-icon="inline-end" />
+                <Button nativeButton={false} render={<Link href="/company/candidates" />}>
+                  See {relevant} suitable candidates <ArrowRightIcon data-icon="inline-end" />
                 </Button>
               </>
             ) : (
@@ -504,7 +606,7 @@ export function CompanyIntake() {
                   </label>
                 )}
                 <Button onClick={approve} disabled={missing.length > 0 || !reviewed}>
-                  <CheckIcon data-icon="inline-start" /> Approve and send to organiser
+                  <CheckIcon data-icon="inline-start" /> Approve need card
                 </Button>
               </>
             )}
@@ -512,6 +614,125 @@ export function CompanyIntake() {
         </Card>
       </div>
     </div>
+  );
+}
+
+const PREVIEW = 5;
+
+/** Live list of the people whose skills fit the card. Updates on every edit or chat turn. */
+function SuitableCandidates({
+  matches,
+  talent,
+  approved,
+}: {
+  matches: MatchExplanation[];
+  talent: Talent[];
+  approved: boolean;
+}) {
+  const byId = useMemo(() => new Map(talent.map((t) => [t.id, t])), [talent]);
+  const [all, setAll] = useState(false);
+  const shown = all ? matches : matches.slice(0, PREVIEW);
+  return (
+    <section className="space-y-2" aria-labelledby="need-card-candidates">
+      <div className="flex items-baseline justify-between gap-2">
+        <h3 id="need-card-candidates" className="flex items-center gap-1.5 text-sm font-medium">
+          <UsersIcon className="size-4 text-primary" /> Suitable candidates
+        </h3>
+        {matches.length > 0 && (
+          <span className="text-xs text-muted-foreground tabular-nums">{matches.length} people</span>
+        )}
+      </div>
+      {matches.length === 0 ? (
+        <p className="text-xs text-muted-foreground">
+          Add must-have skills and the people whose skills fit appear here as you go.
+        </p>
+      ) : (
+        <>
+          <ul className="divide-y rounded-lg border">
+            {shown.map((m) => {
+              const t = byId.get(m.talentId);
+              if (!t) return null;
+              const name = t.contact?.fullName ?? t.revealName;
+              return (
+                <li key={t.id}>
+                  <details className="group">
+                    <summary className="flex cursor-pointer list-none items-center gap-2.5 px-3 py-2 hover:bg-muted/40 [&::-webkit-details-marker]:hidden">
+                      <span className="grid size-7 shrink-0 place-items-center rounded-full bg-secondary text-[11px] font-medium">
+                        {name
+                          .split(/\s+/)
+                          .slice(0, 2)
+                          .map((w) => w[0])
+                          .join("")}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-medium">{name}</span>
+                        <span className="block truncate text-xs text-muted-foreground">
+                          {t.contact?.city ? `${t.contact.city} · ` : ""}
+                          {t.headline}
+                        </span>
+                      </span>
+                      <span className="shrink-0 text-xs font-medium tabular-nums">
+                        {Math.round(m.score * 100)}%
+                      </span>
+                    </summary>
+                    <div className="space-y-2 px-3 pb-3 pl-12.5 text-xs">
+                      <div className="flex flex-wrap gap-1">
+                        {m.shared.map((x) => (
+                          <SkillChip key={x.skill} id={x.skill} kind={x.level} must={x.must} />
+                        ))}
+                        {m.transferable.map((x) => (
+                          <SkillChip key={x.to} id={x.to} from={x.from} kind="transfer" must={x.must} />
+                        ))}
+                      </div>
+                      {t.contact && (
+                        <p className="flex flex-wrap gap-x-3 gap-y-1 text-muted-foreground">
+                          <a
+                            href={`mailto:${t.contact.email}`}
+                            className="hover:text-foreground hover:underline"
+                          >
+                            {t.contact.email}
+                          </a>
+                          <a
+                            href={`tel:${t.contact.phone.replace(/\s+/g, "")}`}
+                            className="tabular-nums hover:text-foreground hover:underline"
+                          >
+                            {t.contact.phone}
+                          </a>
+                        </p>
+                      )}
+                    </div>
+                  </details>
+                </li>
+              );
+            })}
+          </ul>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            {matches.length > PREVIEW ? (
+              <Button size="xs" variant="ghost" onClick={() => setAll((v) => !v)}>
+                {all ? "Show fewer" : `Show all ${matches.length}`}
+              </Button>
+            ) : (
+              <span />
+            )}
+            {approved ? (
+              <Button
+                size="xs"
+                variant="outline"
+                nativeButton={false}
+                render={<Link href="/company/candidates" />}
+              >
+                Invite on the Candidates page <ArrowRightIcon data-icon="inline-end" />
+              </Button>
+            ) : (
+              <span className="text-xs text-muted-foreground">Preview · approve the card to invite them</span>
+            )}
+          </div>
+          <p className="text-[11px] leading-snug text-muted-foreground">
+            Ranked by skills only. Names and contact details are fictional demo data.
+          </p>
+        </>
+      )}
+    </section>
   );
 }
 
@@ -619,8 +840,8 @@ function PoolCount({
               </p>
               <p className="text-xs leading-snug text-muted-foreground">
                 {evidenced} of them have shown your must-have skills in their own answers or work samples, not
-                just listed them on a CV. Free to join doesn&apos;t mean low quality. You only see people
-                after the organiser approves a match and both sides opt in.
+                just listed them on a CV. Free to join doesn&apos;t mean low quality. Approve your card to see
+                who they are, with their contact details, below.
               </p>
             </>
           ) : (
