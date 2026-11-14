@@ -17,6 +17,7 @@ import {
   ShieldCheckIcon,
   SparklesIcon,
   Undo2Icon,
+  UserRoundIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -29,9 +30,11 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { SkillChip, SkillLegend } from "@/components/skill-chip";
+import { CvImport, type CvApply } from "@/components/cv-import";
 import { EscoMatch } from "@/components/esco-match";
 import { VoiceNote } from "@/components/voice-note";
 import { sampleToText, WorkSample, type Sample } from "@/components/work-sample";
+import { cleanContact, contactProblem, EMPTY_CONTACT } from "@/lib/contact";
 import { SCENARIO_PROMPTS, VOICE_PROMPT } from "@/lib/data";
 import { SKILLS, skillLabel } from "@/lib/esco";
 import { useDemo } from "@/lib/store";
@@ -48,7 +51,7 @@ import {
   type StartersRequest,
   type Translation,
 } from "@/lib/talent-ai";
-import type { Evidence, SkillGroup, Talent } from "@/lib/types";
+import type { Evidence, SkillGroup, Talent, TalentContact } from "@/lib/types";
 import { cn, isSubmitEnter } from "@/lib/utils";
 
 const GROUPS: SkillGroup[] = ["Digital", "Green transition", "Healthcare", "Business", "Transversal"];
@@ -150,6 +153,11 @@ export function TalentProfile() {
   const [languages, setLanguages] = useState<string[]>(["English"]);
   const [mode, setMode] = useState<Talent["mode"]>("Any");
   const [availability, setAvailability] = useState("");
+  // Personal details: kept off the anonymised card, never scored and never sent to the AI.
+  const [contact, setContact] = useState<TalentContact>(EMPTY_CONTACT);
+  const setField = (k: keyof TalentContact) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setContact((c) => ({ ...c, [k]: e.target.value }));
+  const contactError = contactProblem(contact);
   const [reviewed, setReviewed] = useState(false);
   const [joined, setJoined] = useState(false);
 
@@ -175,16 +183,29 @@ export function TalentProfile() {
 
   // ── Actions ────────────────────────────────────────────────────────────────
 
-  const translate = async () => {
-    if (!title.trim() && !path.trim()) return;
+  const translate = async (body = { title, path }) => {
+    if (!body.title.trim() && !body.path.trim()) return;
     setTranslating(true);
-    const body = { title, path };
     try {
       setTranslation(await postJson<Translation>("/api/talent/translate", body));
     } catch {
       setTranslation({ ...rulesTranslate(body), source: "rules" });
     }
     setTranslating(false);
+  };
+
+  /** Carry over what the person kept from their CV scan, then translate it like typed input. */
+  const applyCv = (cv: CvApply) => {
+    const next = { title: cv.title || title, path: cv.path || path };
+    setTitle(next.title);
+    setPath(next.path);
+    if (cv.skills.length) addSkills(cv.skills);
+    if (cv.languages.length) setLanguages(cv.languages);
+    toast.success("Added from your CV", {
+      description:
+        "Check your background below. Skills from a CV count as stated until an answer shows them.",
+    });
+    translate(next);
   };
 
   const addSkills = (ids: string[], limit = MAX_PICK) => {
@@ -292,7 +313,8 @@ export function TalentProfile() {
     addTalent({
       id: "T-YOU",
       alias: "Candidate T-YOU",
-      revealName: "You (demo)",
+      revealName: cleanContact(contact).fullName || "You (demo)",
+      contact: cleanContact(contact),
       headline: headline.trim() || "New at this event",
       previousField: translation?.localTitle || title.trim() || "—",
       skills: skills.map((id) => ({ id, level: evidenced.has(id) ? "evidenced" : "claimed" })),
@@ -310,7 +332,8 @@ export function TalentProfile() {
     });
   };
 
-  const canJoin = skills.length > 0 && !!result && !stale && openFlags.length === 0 && reviewed;
+  const canJoin =
+    skills.length > 0 && !!result && !stale && openFlags.length === 0 && !contactError && reviewed;
   const joinHint = !skills.length
     ? "Pick at least one skill."
     : !result
@@ -319,9 +342,11 @@ export function TalentProfile() {
         ? "Your answers changed. Map them again."
         : openFlags.length
           ? "Resolve the privacy check first."
-          : !reviewed
-            ? "Tick the review box."
-            : "";
+          : contactError
+            ? contactError
+            : !reviewed
+              ? "Tick the review box."
+              : "";
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
@@ -356,6 +381,7 @@ export function TalentProfile() {
         <CardContent className="space-y-6 py-2">
           {step === 0 && (
             <section className="space-y-4">
+              <CvImport onApply={applyCv} />
               <div className="flex items-center gap-2">
                 <LanguagesIcon className="size-4 text-primary" />
                 <h3 className="font-medium">Skills translator</h3>
@@ -404,7 +430,7 @@ export function TalentProfile() {
                   <SparklesIcon className="size-3" /> Example: an unusual path
                 </button>
               </div>
-              <Button onClick={translate} disabled={translating || (!title.trim() && !path.trim())}>
+              <Button onClick={() => translate()} disabled={translating || (!title.trim() && !path.trim())}>
                 {translating ? (
                   <Loader2Icon data-icon="inline-start" className="animate-spin" />
                 ) : (
@@ -836,10 +862,80 @@ export function TalentProfile() {
                     />
                   </div>
                 </div>
+                <fieldset className="space-y-3 rounded-xl border p-4">
+                  <legend className="flex items-center gap-1.5 px-1 text-sm font-medium">
+                    <UserRoundIcon className="size-4 text-muted-foreground" /> Your personal information
+                  </legend>
+                  <p className="text-xs text-muted-foreground">
+                    So companies can reach you. It stays off your skill card, is never part of the skill match
+                    and is never sent to the AI. This is a demo: use made-up details.
+                  </p>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="grid gap-1.5">
+                      <Label htmlFor="fullName">
+                        Full name <span className="text-destructive">*</span>
+                      </Label>
+                      <Input
+                        id="fullName"
+                        autoComplete="name"
+                        required
+                        maxLength={80}
+                        value={contact.fullName}
+                        onChange={setField("fullName")}
+                        placeholder="e.g. Alex Virtanen"
+                      />
+                    </div>
+                    <div className="grid gap-1.5">
+                      <Label htmlFor="email">
+                        Email <span className="text-destructive">*</span>
+                      </Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        autoComplete="email"
+                        required
+                        maxLength={120}
+                        value={contact.email}
+                        onChange={setField("email")}
+                        placeholder="alex@example.com"
+                        aria-invalid={!!contact.email && contactError === "Add a valid email address."}
+                      />
+                    </div>
+                    <div className="grid gap-1.5">
+                      <Label htmlFor="phone">Phone</Label>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        autoComplete="tel"
+                        maxLength={20}
+                        value={contact.phone}
+                        onChange={setField("phone")}
+                        placeholder="+358 40 123 4567"
+                        aria-invalid={contactError === "Check your phone number."}
+                      />
+                    </div>
+                    <div className="grid gap-1.5">
+                      <Label htmlFor="city">City</Label>
+                      <Input
+                        id="city"
+                        autoComplete="address-level2"
+                        maxLength={60}
+                        value={contact.city}
+                        onChange={setField("city")}
+                        placeholder="e.g. Espoo"
+                      />
+                    </div>
+                  </div>
+                  {contactError && (contact.fullName || contact.email || contact.phone) && (
+                    <p className="text-xs text-destructive" role="alert">
+                      {contactError}
+                    </p>
+                  )}
+                </fieldset>
                 <div className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
-                  <p className="mb-1 font-medium text-foreground">Never on your card</p>
-                  Name, photo, date of birth, nationality, school names or a CV. Your name and contact details
-                  are shared only with companies you both agree to meet.
+                  <p className="mb-1 font-medium text-foreground">Never on your skill card</p>
+                  Photo, date of birth, nationality, school names or a CV. Your name and contact details are
+                  kept separate and shown only to companies reviewing candidates for their roles.
                 </div>
                 <label className="flex items-start gap-2 text-sm leading-snug">
                   <Checkbox
@@ -950,6 +1046,21 @@ export function TalentProfile() {
           <CardFooter>
             <SkillLegend className="flex-col items-start" />
           </CardFooter>
+        </Card>
+        <Card size="sm" className="border-dashed">
+          <CardHeader>
+            <CardDescription className="flex items-center gap-1.5">
+              <UserRoundIcon className="size-3.5" /> Private: kept apart from your card
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <dl className="space-y-1.5 text-sm">
+              <Row label="Name" value={contact.fullName.trim() || "—"} />
+              <Row label="Email" value={contact.email.trim() || "—"} />
+              <Row label="Phone" value={contact.phone.trim() || "—"} />
+              <Row label="City" value={contact.city.trim() || "—"} />
+            </dl>
+          </CardContent>
         </Card>
       </div>
     </div>

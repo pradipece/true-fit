@@ -73,6 +73,7 @@ const KIND = {
 const DOES = [
   "Asks a company clarifying questions and drafts a need card they edit and approve",
   "Translates job titles and unusual career paths into ESCO skills and Finnish job-ad words, with the official ESCO occupation alongside",
+  "Scans an uploaded CV (PDF or Word, any standard layout) or LinkedIn PDF for a job title, a career summary without names or places, and stated skills with verbatim quotes",
   "Suggests which answer supports which skill, quoting the candidate's own words verbatim (invented quotes are dropped)",
   "Flags names, schools, ages and other identifying details so the candidate can remove them",
   "Offers writing ideas and sentence starters, never full answers",
@@ -113,6 +114,12 @@ const DATA = [
     why: "Suggest which answer supports which skill",
     sent: "Gemini",
     retention: "Not stored; only quotes the candidate accepts are kept",
+  },
+  {
+    item: "Uploaded CV (PDF or Word) or LinkedIn profile PDF",
+    why: "Prefill the background and suggest stated skills, which the candidate reviews",
+    sent: "Gemini (text only, contact details removed first)",
+    retention: "Not stored; read once in memory, only the fields the candidate keeps are used",
   },
   {
     item: "Voice note audio",

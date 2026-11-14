@@ -24,7 +24,7 @@ const OCCUPATION_IDS = OCCUPATIONS.map((o) => o.id);
 const str = (description: string) => ({ type: "string", description });
 
 /** Where a keyword hint for a skill appears in free text. */
-function skillHits(text: string) {
+export function skillHits(text: string) {
   const t = ` ${text.toLowerCase()} `;
   const hits: { skill: string; keyword: string; index: number }[] = [];
   for (const s of SKILLS) {
@@ -47,7 +47,7 @@ function sentenceAt(text: string, index: number) {
   return text.slice(start + 1, end).trim();
 }
 
-const contains = (haystack: string, needle: string) =>
+export const contains = (haystack: string, needle: string) =>
   !!needle.trim() && normalize(haystack).includes(normalize(needle));
 
 // ── Skills translator ────────────────────────────────────────────────────────
