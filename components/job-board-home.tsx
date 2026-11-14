@@ -152,7 +152,7 @@ export function JobBoardHome() {
           </div>
           {!session && (
             <p className="text-sm text-muted-foreground">
-              Searching and applying needs a free (demo) job seeker account:{" "}
+              Searching and applying needs a free job seeker account:{" "}
               <Link
                 href="/login?role=talent"
                 className="font-medium text-primary underline-offset-4 hover:underline"
@@ -321,7 +321,6 @@ export function JobBoardHome() {
             <Link href="/responsible" className="underline underline-offset-4 hover:text-foreground">
               Responsible AI
             </Link>
-            <span>All people and companies are made up.</span>
           </p>
         </div>
       </section>

@@ -68,11 +68,11 @@ export function SiteHeader() {
           <Button
             variant="ghost"
             size="icon"
-            aria-label="Reset demo data"
-            title="Reset demo data (Espoo only)"
+            aria-label="Reset data"
+            title="Reset data (Espoo only)"
             onClick={() => {
               reset();
-              toast("Demo data reset to the synthetic seed.", {
+              toast("Data reset.", {
                 description: "The shared database copy is reset too.",
               });
             }}

@@ -80,8 +80,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
                 <SiteHeader />
                 <main className="flex-1">{children}</main>
                 <footer className="border-t py-6 text-center text-xs text-muted-foreground">
-                  Prototype for the City of Espoo “Rethinking Recruitment” challenge · all data is synthetic ·
-                  the AI suggests, people decide ·{" "}
+                  Prototype for the City of Espoo “Rethinking Recruitment” challenge · the AI suggests, people
+                  decide ·{" "}
                   <Link href="/responsible" className="underline underline-offset-4 hover:text-foreground">
                     Responsible AI
                   </Link>

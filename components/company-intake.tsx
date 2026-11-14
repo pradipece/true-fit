@@ -70,12 +70,50 @@ const GREETING: Msg = {
   quickReplies: DEFAULT_STARTERS,
 };
 
-export function CompanyIntake() {
+/** A saved role as a chat draft, so the assistant can refine it. */
+export function needToDraft(n: Need): NeedDraft {
+  return {
+    title: n.title,
+    occupation: n.occupation ?? "",
+    summary: n.summary,
+    must: [...n.must],
+    nice: [...n.nice],
+    language: n.language,
+    mode: n.mode,
+    timing: { start: n.timing?.start ?? "", engagement: n.timing?.engagement ?? "" },
+  };
+}
+
+const roleGreeting = (n: Need): Msg => ({
+  role: "assistant",
+  content: `Hi, I'm TrueFit Assistant! I've loaded your ${n.title} role. Tell me what to change, such as skills to add, drop or make optional, and the suitable candidates update as we go.`,
+  quickReplies: [
+    "Which must-have skill is hardest to find?",
+    "Make one must-have a nice-to-have",
+    "Add a nice-to-have skill",
+  ],
+});
+
+type IntakeProps = {
+  /** A demo (seed) company: its information is view-only, so the draft is never saved. */
+  preview?: boolean;
+  /** Start from this saved role instead of an empty card. */
+  base?: Need;
+  /** Called with the chat's current draft whenever it changes. */
+  onDraft?: (d: NeedDraft) => void;
+  /** Only the chat popup and its button; the parent shows the candidates. */
+  chatOnly?: boolean;
+};
+
+export function CompanyIntake({ preview = false, base, onDraft, chatOnly = false }: IntakeProps = {}) {
   const { talent, needs, addNeed, decisions, optIns, slots, screening, offers, setOptIn } = useDemo();
-  const [messages, setMessages] = useState<Msg[]>([GREETING]);
+  const greeting = useMemo(() => (base ? roleGreeting(base) : GREETING), [base]);
+  const baseDraft = useMemo(() => (base ? needToDraft(base) : EMPTY_DRAFT), [base]);
+  const [messages, setMessages] = useState<Msg[]>(() => [greeting]);
   // Opening suggestions tailored by Gemini to who is registered; fixed ones until they arrive.
   const [starters, setStarters] = useState<string[]>(DEFAULT_STARTERS);
   useEffect(() => {
+    if (base) return;
     const ctrl = new AbortController();
     fetch("/api/intake/starters", { signal: ctrl.signal })
       .then((r) => (r.ok ? r.json() : null))
@@ -84,13 +122,20 @@ export function CompanyIntake() {
       })
       .catch(() => {});
     return () => ctrl.abort();
-  }, []);
+  }, [base]);
   const [input, setInput] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [voiceError, setVoiceError] = useState<string | null>(null);
   const online = useOnline();
-  const [draft, setDraft] = useState<NeedDraft>(EMPTY_DRAFT);
+  const [draft, setDraft] = useState<NeedDraft>(baseDraft);
+  const onDraftRef = useRef(onDraft);
+  useEffect(() => {
+    onDraftRef.current = onDraft;
+  }, [onDraft]);
+  useEffect(() => {
+    onDraftRef.current?.(draft);
+  }, [draft]);
   const [asked, setAsked] = useState<Topic[]>([]);
   const draftRef = useRef(draft);
   useEffect(() => {
@@ -183,9 +228,10 @@ export function CompanyIntake() {
   // No separate need card to approve: once the chat has a role and must-have skills, the
   // need is saved so the organiser can introduce these people (and the company can ask it to).
   useEffect(() => {
+    if (preview) return;
     if (need.title !== "New role" && need.must.length)
       addNeed({ ...need, submittedWeeksBefore: EVENT.weeksAway });
-  }, [need, addNeed]);
+  }, [need, addNeed, preview]);
 
   // Scroll only the message list. scrollIntoView() would also scroll the page itself,
   // making the whole layout jump each time a reply arrives.
@@ -266,8 +312,8 @@ export function CompanyIntake() {
   const restart = () => {
     if (isLive) live.stop();
     setError(null);
-    setMessages([GREETING]);
-    setDraft(EMPTY_DRAFT);
+    setMessages([greeting]);
+    setDraft(baseDraft);
     setAsked([]);
   };
 
@@ -277,7 +323,7 @@ export function CompanyIntake() {
   };
 
   const lastMsg = messages[messages.length - 1];
-  const replies = messages.length === 1 ? starters : (lastMsg.quickReplies ?? []);
+  const replies = messages.length === 1 && !base ? starters : (lastMsg.quickReplies ?? []);
 
   return (
     <div className="space-y-6">
@@ -575,112 +621,129 @@ export function CompanyIntake() {
         )}
       </Button>
 
-      {/* What the assistant understood, in one line, and a way into the chat */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card px-4 py-3">
-        {draft.must.length ? (
-          <div className="min-w-0 space-y-1.5">
-            <p className="text-sm">
-              <span className="font-medium">{draft.title || "New role"}</span>
-              <span className="text-muted-foreground tabular-nums">
-                {" "}
-                · {suitable.length} of {talent.length} people at this event fit
-              </span>
-            </p>
-            <div className="flex flex-wrap gap-1">
-              {draft.must.map((s) => (
-                <SkillChip key={s} id={s} must />
-              ))}
-              {draft.nice.map((s) => (
-                <SkillChip key={s} id={s} />
-              ))}
-            </div>
-          </div>
-        ) : (
-          <p className="flex items-center gap-2 text-sm">
-            <BotIcon className="size-4 shrink-0 text-primary" />
-            Tell TrueFit Assistant who you need. “We need a dev” is a fine start.
-          </p>
-        )}
-        <div className="flex flex-wrap gap-2">
-          <Button size="sm" variant="outline" onClick={startLive} disabled={!online || isLive}>
-            <AudioLinesIcon data-icon="inline-start" /> {isLive ? "Live now" : "Talk live"}
-          </Button>
-          <Button size="sm" onClick={openChat}>
-            <MessageCircleIcon data-icon="inline-start" />
-            {messages.length > 1 ? "Change in the chat" : "Chat with TrueFit Assistant"}
-          </Button>
-        </div>
-      </div>
-
-      {/* Suitable candidates, live */}
-      {suitable.length > 0 ? (
-        <section className="space-y-4" aria-labelledby="suitable-candidates">
-          <div className="flex flex-wrap items-end justify-between gap-2">
-            <div>
-              <h2 id="suitable-candidates" className="flex items-center gap-2 text-lg font-semibold">
-                <UsersIcon className="size-5 text-primary" /> Suitable candidates
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                Best skill match first. The event organiser makes the introductions: ask it to introduce
-                anyone you&apos;d like to meet. Names and contact details are fictional demo data; name, city
-                and languages never change the skill match.
+      {!chatOnly && (
+        <>
+          {/* What the assistant understood, in one line, and a way into the chat */}
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card px-4 py-3">
+            {draft.must.length ? (
+              <div className="min-w-0 space-y-1.5">
+                <p className="text-sm">
+                  <span className="font-medium">{draft.title || "New role"}</span>
+                  <span className="text-muted-foreground tabular-nums">
+                    {" "}
+                    · {suitable.length} of {talent.length} people at this event fit
+                  </span>
+                </p>
+                <div className="flex flex-wrap gap-1">
+                  {draft.must.map((s) => (
+                    <SkillChip key={s} id={s} must />
+                  ))}
+                  {draft.nice.map((s) => (
+                    <SkillChip key={s} id={s} />
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <p className="flex items-center gap-2 text-sm">
+                <BotIcon className="size-4 shrink-0 text-primary" />
+                Tell TrueFit Assistant who you need. “We need a dev” is a fine start.
               </p>
+            )}
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" variant="outline" onClick={startLive} disabled={!online || isLive}>
+                <AudioLinesIcon data-icon="inline-start" /> {isLive ? "Live now" : "Talk live"}
+              </Button>
+              <Button size="sm" onClick={openChat}>
+                <MessageCircleIcon data-icon="inline-start" />
+                {messages.length > 1 ? "Change in the chat" : "Chat with TrueFit Assistant"}
+              </Button>
             </div>
-            <Button
-              size="sm"
-              variant="outline"
-              nativeButton={false}
-              render={<Link href="/meetings/company" />}
-            >
-              Your introductions <ArrowRightIcon data-icon="inline-end" />
-            </Button>
           </div>
-          <RankToggle ranking={ranking} />
-          <SkillLegend />
-          <div className="grid gap-4 lg:grid-cols-2">
-            {ranking.ordered.map((m) => {
-              const t = byId.get(m.talentId);
-              if (!t) return null;
-              const key = pairKey(need.id, t.id);
-              return (
-                <CandidateProfile
-                  key={t.id}
-                  t={t}
-                  m={m}
-                  role={need.title}
-                  company={companyFit(eventNeeds, t, companyOf(need))}
-                  otherRoles={otherNeeds.map((n) => {
-                    const o = explainMatch(n, t);
-                    return { id: n.id, title: n.title, score: o.score, suggested: o.suggested };
-                  })}
-                  note={<AiFitBadge fit={ranking.fitOf(t.id)} />}
-                  footer={
-                    <IntroRequest
-                      pair={key}
-                      stage={stageOf(key, { decisions, optIns, slots, screening, offers })}
-                      asked={optIns[key]?.company === true}
-                      onAsk={(v) => setOptIn(key, "company", v)}
+
+          {/* Suitable candidates, live */}
+          {suitable.length > 0 ? (
+            <section className="space-y-4" aria-labelledby="suitable-candidates">
+              <div className="flex flex-wrap items-end justify-between gap-2">
+                <div>
+                  <h2 id="suitable-candidates" className="flex items-center gap-2 text-lg font-semibold">
+                    <UsersIcon className="size-5 text-primary" /> Suitable candidates
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    {preview
+                      ? "Best skill match first. This role is a preview and isn't saved: create your own company account to save it and ask Espoo for introductions."
+                      : "Best skill match first. The event organiser makes the introductions: ask it to introduce anyone you'd like to meet."}{" "}
+                    Name, city and languages never change the skill match.
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  nativeButton={false}
+                  render={<Link href="/meetings/company" />}
+                >
+                  Your introductions <ArrowRightIcon data-icon="inline-end" />
+                </Button>
+              </div>
+              <RankToggle ranking={ranking} />
+              <SkillLegend />
+              <div className="flex flex-col gap-4">
+                {ranking.ordered.map((m) => {
+                  const t = byId.get(m.talentId);
+                  if (!t) return null;
+                  const key = pairKey(need.id, t.id);
+                  return (
+                    <CandidateProfile
+                      key={t.id}
+                      t={t}
+                      m={m}
+                      role={need.title}
+                      company={companyFit(eventNeeds, t, companyOf(need))}
+                      otherRoles={otherNeeds.map((n) => {
+                        const o = explainMatch(n, t);
+                        return { id: n.id, title: n.title, score: o.score, suggested: o.suggested };
+                      })}
+                      note={<AiFitBadge fit={ranking.fitOf(t.id)} />}
+                      footer={
+                        preview ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="ml-auto"
+                            nativeButton={false}
+                            render={<Link href="/login?role=company" />}
+                          >
+                            Create an account to ask for introductions
+                          </Button>
+                        ) : (
+                          <IntroRequest
+                            pair={key}
+                            stage={stageOf(key, { decisions, optIns, slots, screening, offers })}
+                            asked={optIns[key]?.company === true}
+                            onAsk={(v) => setOptIn(key, "company", v)}
+                          />
+                        )
+                      }
                     />
-                  }
-                />
-              );
-            })}
-          </div>
-        </section>
-      ) : (
-        <Card>
-          <CardContent className="space-y-3 py-12 text-center">
-            <UsersIcon className="mx-auto size-8 text-muted-foreground" />
-            <p className="text-muted-foreground">
-              {draft.must.length
-                ? "Nobody fits these must-have skills yet. Ask the assistant to move a rare skill to nice-to-have."
-                : "Suitable candidates appear here, with their contact details, as soon as the assistant knows which skills you need."}
-            </p>
-            <Button variant="outline" onClick={openChat}>
-              <MessageCircleIcon data-icon="inline-start" /> Chat with TrueFit Assistant
-            </Button>
-          </CardContent>
-        </Card>
+                  );
+                })}
+              </div>
+            </section>
+          ) : (
+            <Card>
+              <CardContent className="space-y-3 py-12 text-center">
+                <UsersIcon className="mx-auto size-8 text-muted-foreground" />
+                <p className="text-muted-foreground">
+                  {draft.must.length
+                    ? "Nobody fits these must-have skills yet. Ask the assistant to move a rare skill to nice-to-have."
+                    : "Suitable candidates appear here, with their contact details, as soon as the assistant knows which skills you need."}
+                </p>
+                <Button variant="outline" onClick={openChat}>
+                  <MessageCircleIcon data-icon="inline-start" /> Chat with TrueFit Assistant
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </>
       )}
     </div>
   );

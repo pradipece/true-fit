@@ -76,8 +76,8 @@ export function LoginForm({
         </p>
         <h1 className="text-3xl font-semibold tracking-tight text-balance">Sign in to True Fit</h1>
         <p className="text-pretty text-muted-foreground">
-          Choose who you are. Every account is made up, so there is no password. Each role only sees its own
-          pages and can only change its own answers; the server checks every change.
+          Choose who you are. Each role only sees its own pages and can only change its own answers; the
+          server checks every change.
         </p>
         {deniedRole && (
           <p className="flex gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm">
@@ -165,14 +165,14 @@ export function LoginForm({
                 {role === "organiser"
                   ? "Espoo team account"
                   : role === "company"
-                    ? "Or try a demo company"
-                    : "Or try a demo candidate"}
+                    ? "Or pick a company"
+                    : "Or pick a candidate"}
               </CardTitle>
               <CardDescription>
                 {role === "talent"
-                  ? "Made-up people already registered. Their profiles are view-only, so everyone sees them unchanged; you can still try applying and the interview steps."
+                  ? "People already registered. Their profiles are view-only, so everyone sees them unchanged; you can still try applying and the interview steps."
                   : role === "company"
-                    ? "Made-up companies already hiring. Their information and roles are view-only; you can still review candidates, ask Espoo for introductions and interview."
+                    ? "Companies already hiring. Their information and roles are view-only; you can still review candidates, ask Espoo for introductions and interview."
                     : "One shared account for the City of Espoo team. It reviews and introduces; it can't change any company's or candidate's information."}
               </CardDescription>
             </CardHeader>
@@ -295,10 +295,6 @@ function SignUpCard({ role, next }: { role: "talent" | "company"; next?: string 
             </p>
           )}
           <SubmitButton label="Continue" />
-          <p className="text-xs text-muted-foreground">
-            Demo sign-in: no password, and all data is synthetic. Please don&apos;t enter real personal
-            details.
-          </p>
         </form>
       </CardContent>
     </Card>

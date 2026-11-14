@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowRightIcon, EyeIcon, UsersIcon } from "lucide-react";
+import { ArrowRightIcon, EyeIcon, SparklesIcon, Undo2Icon, UsersIcon } from "lucide-react";
 import { AiFitBadge, RankToggle, useAiRanking } from "@/components/ai-rank";
 import { CandidateProfile } from "@/components/candidate-profile";
-import { CompanyIntake, companyFit, IntroRequest } from "@/components/company-intake";
+import { CompanyIntake, companyFit, IntroRequest, needToDraft } from "@/components/company-intake";
 import { JobMeta } from "@/components/job-listing";
 import { useSession } from "@/components/session";
 import { SkillChip, SkillLegend } from "@/components/skill-chip";
@@ -17,12 +17,16 @@ import { stageOf } from "@/lib/pipeline";
 import { companyOf } from "@/lib/schedule";
 import { SEED_NEEDS } from "@/lib/seed";
 import { useDemo } from "@/lib/store";
+import type { NeedDraft } from "@/lib/intake";
+import type { Need } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 /**
  * Find candidates: a company with its own account describes roles in the intake chat; a
  * demo company (synthetic seed) sees its roles view-only, so people trying the demo never
- * change the information everyone else sees. The server enforces the same rule.
+ * change the information everyone else sees. The server enforces the same rule. Both get the
+ * TrueFit Assistant chat; for a demo company it refines the selected role (never saved) and
+ * the suitable candidates follow the chat's version of it.
  */
 export function MyCompany() {
   const { session } = useSession();
@@ -35,30 +39,28 @@ function DemoCompanyView({ companyId }: { companyId: string }) {
   const { needs, talent, decisions, optIns, slots, screening, offers, setOptIn } = useDemo();
   const roles = useMemo(() => needs.filter((n) => companyOf(n) === companyId), [needs, companyId]);
   const [selected, setSelected] = useState(roles[0]?.id ?? "");
-  const need = roles.find((n) => n.id === selected) ?? roles[0];
+  const saved = roles.find((n) => n.id === selected) ?? roles[0];
+  // The chat's version of the selected role. Same id, so introductions stay on the real role.
+  const [chat, setChat] = useState<{ id: string; draft: NeedDraft } | null>(null);
+  const [resets, setResets] = useState(0);
+  const savedId = saved?.id;
+  const onDraft = useCallback((draft: NeedDraft) => savedId && setChat({ id: savedId, draft }), [savedId]);
+  const need = useMemo(
+    () => (saved ? withDraft(saved, chat?.id === saved.id ? chat.draft : undefined) : undefined),
+    [saved, chat],
+  );
+  const refined = !!saved && !!need && need !== saved;
   const suitable = useMemo(
     () => (need ? matchesForNeed(need, talent).filter((m) => m.suggested) : []),
     [need, talent],
   );
   const byId = useMemo(() => new Map(talent.map((t) => [t.id, t])), [talent]);
   const ranking = useAiRanking(need, suitable, byId);
-  if (!need) return null;
+  if (!need) return <CompanyIntake preview />;
   const others = roles.filter((n) => n.id !== need.id);
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start gap-3 rounded-xl border border-primary/30 bg-accent px-4 py-3 text-sm text-accent-foreground">
-        <EyeIcon className="mt-0.5 size-4 shrink-0" />
-        <p className="min-w-0 flex-1">
-          <span className="font-medium">{need.company} is a demo company.</span> Its information and roles are
-          view-only, so everyone trying the demo sees them unchanged. You can still review candidates, ask
-          Espoo for introductions and interview them.
-        </p>
-        <Button size="sm" variant="outline" nativeButton={false} render={<Link href="/login?role=company" />}>
-          Create my own company account
-        </Button>
-      </div>
-
       {/* The company's roles */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {roles.map((n) => (
@@ -80,9 +82,29 @@ function DemoCompanyView({ companyId }: { companyId: string }) {
 
       <Card>
         <CardHeader>
-          <Badge variant="outline" className="w-fit">
-            <EyeIcon data-icon="inline-start" /> View-only role
-          </Badge>
+          <div className="flex flex-wrap items-center gap-2">
+            {refined ? (
+              <>
+                <Badge variant="outline" className="border-primary/30 bg-accent text-accent-foreground">
+                  <SparklesIcon data-icon="inline-start" /> Changed in the chat · not saved
+                </Badge>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    setChat(null);
+                    setResets((r) => r + 1);
+                  }}
+                >
+                  <Undo2Icon data-icon="inline-start" /> Back to the saved role
+                </Button>
+              </>
+            ) : (
+              <Badge variant="outline" className="w-fit">
+                <EyeIcon data-icon="inline-start" /> View-only role · refine it in the chat (bottom-right)
+              </Badge>
+            )}
+          </div>
           <CardTitle>{need.title}</CardTitle>
           <CardDescription>{need.summary}</CardDescription>
         </CardHeader>
@@ -119,7 +141,7 @@ function DemoCompanyView({ companyId }: { companyId: string }) {
           <>
             <RankToggle ranking={ranking} />
             <SkillLegend />
-            <div className="grid gap-4 lg:grid-cols-2">
+            <div className="flex flex-col gap-4">
               {ranking.ordered.map((m) => {
                 const t = byId.get(m.talentId);
                 if (!t) return null;
@@ -157,6 +179,27 @@ function DemoCompanyView({ companyId }: { companyId: string }) {
           </Card>
         )}
       </section>
+
+      {/* TrueFit Assistant refines the selected role; the list above follows it. Never saved. */}
+      <CompanyIntake key={`${need.id}:${resets}`} preview chatOnly base={saved} onDraft={onDraft} />
     </div>
   );
+}
+
+/** The saved role with the chat's changes applied, or the saved role itself if nothing changed. */
+function withDraft(saved: Need, d: NeedDraft | undefined): Need {
+  if (!d || JSON.stringify(d) === JSON.stringify(needToDraft(saved))) return saved;
+  return {
+    ...saved,
+    title: d.title || saved.title,
+    occupation: d.occupation || saved.occupation,
+    summary: d.summary || saved.summary,
+    must: d.must,
+    nice: d.nice,
+    language: d.language || saved.language,
+    mode: d.mode || saved.mode,
+    timing: d.timing.start
+      ? { start: d.timing.start, engagement: d.timing.engagement || saved.timing?.engagement || "Permanent" }
+      : saved.timing,
+  };
 }

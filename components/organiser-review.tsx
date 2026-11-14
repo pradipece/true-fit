@@ -287,8 +287,7 @@ export function OrganiserReview() {
             Only candidates who pass it are sent to the company, which then decides on its own interview and a
             job offer. Nobody is rejected automatically: people below the{" "}
             {Math.round(SUGGEST_THRESHOLD * 100)}% suggestion line are listed too. The order comes from skills
-            only; there are no hidden scores, and every percentage is a skill match you can open. Names and
-            contact details are fictional demo data.
+            only; there are no hidden scores, and every percentage is a skill match you can open.
           </span>
         </p>
 

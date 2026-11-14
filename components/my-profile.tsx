@@ -1,12 +1,9 @@
 "use client";
 
-import Link from "next/link";
-import { ArrowRightIcon, EyeIcon, QuoteIcon } from "lucide-react";
+import { QuoteIcon } from "lucide-react";
 import { useSession } from "@/components/session";
 import { SkillChip, SkillLegend } from "@/components/skill-chip";
 import { TalentProfile } from "@/components/talent-profile";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SEED_TALENT } from "@/lib/seed";
 import { useDemo } from "@/lib/store";
@@ -28,7 +25,7 @@ export function MyProfile() {
 
 function DemoProfileView({ t }: { t: Talent }) {
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
+    <div className="mx-auto max-w-4xl">
       <Card>
         <CardHeader>
           <CardDescription>{t.previousField}</CardDescription>
@@ -68,32 +65,6 @@ function DemoProfileView({ t }: { t: Talent }) {
             <span>Way of working: {t.mode}</span>
             <span>Available: {t.availability}</span>
           </p>
-        </CardContent>
-      </Card>
-
-      <Card className="h-fit border-primary/30 lg:sticky lg:top-28">
-        <CardHeader>
-          <Badge variant="outline" className="w-fit">
-            <EyeIcon data-icon="inline-start" /> View-only
-          </Badge>
-          <CardTitle className="text-base">This is a demo candidate</CardTitle>
-          <CardDescription>
-            Made-up people keep the same profile for everyone trying the demo, so it can&apos;t be edited. You
-            can still apply to jobs and go through the Espoo and company interviews as this person.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <Button className="w-full" nativeButton={false} render={<Link href="/login?role=talent" />}>
-            Create my own profile <ArrowRightIcon data-icon="inline-end" />
-          </Button>
-          <Button
-            variant="outline"
-            className="w-full"
-            nativeButton={false}
-            render={<Link href="/talent/explore" />}
-          >
-            Find jobs as this person
-          </Button>
         </CardContent>
       </Card>
     </div>

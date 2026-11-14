@@ -995,7 +995,7 @@ export function TalentProfile() {
                   </legend>
                   <p className="text-xs text-muted-foreground">
                     So companies can reach you. It stays off your skill card, is never part of the skill match
-                    and is never sent to the AI. This is a demo: use made-up details.
+                    and is never sent to the AI.
                   </p>
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div className="grid gap-1.5">
