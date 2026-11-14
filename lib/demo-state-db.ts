@@ -56,11 +56,14 @@ export async function readVersion() {
   return Number(rows[0]?.version ?? 0);
 }
 
-/** Has anything ever been saved? An empty database gets the demo's starting state first. */
+/**
+ * Has the pipeline started? An empty one gets the demo's starting state first. Job seekers'
+ * cards don't count: they survive a reset, and the seed pipeline still has to be written.
+ */
 export async function isEmpty() {
   const { rows } = await db().query(
     `SELECT (SELECT count(*) FROM pipeline_pairs) + (SELECT count(*) FROM pipeline_audit)
-          + (SELECT count(*) FROM demo_cards) AS n`,
+          + (SELECT count(*) FROM demo_cards WHERE kind = 'need') AS n`,
   );
   return Number(rows[0].n) === 0;
 }
@@ -120,12 +123,17 @@ export async function writePatch(p: Patch): Promise<number> {
   }
 }
 
-/** Demo reset: empty the demo tables (seed tables are untouched). Returns the new version. */
+/**
+ * Demo reset: back to the seed pipeline. Decisions, interviews, offers, the log and need
+ * cards made in the demo go; job seekers' accounts, cards and saved profiles stay, so a
+ * reset never deletes what people uploaded. Returns the new version.
+ */
 export async function clearState(): Promise<number> {
   const client = await db().connect();
   try {
     await client.query("BEGIN");
-    await client.query("TRUNCATE pipeline_pairs, pipeline_audit, demo_cards, candidate_profiles");
+    await client.query("TRUNCATE pipeline_pairs, pipeline_audit");
+    await client.query("DELETE FROM demo_cards WHERE kind = 'need'");
     const { rows } = await client.query(
       `UPDATE demo_state_meta SET version = version + 1 WHERE id = 1 RETURNING version`,
     );

@@ -12,7 +12,9 @@ import type { Need } from "../types";
  *   clearing a value            → the organiser, or either side on its own pair (a decline,
  *                                 a withdrawal or an undo clears the later steps)
  *   audit entries               → organiser only
- *   cards                       → a company only its own need cards, a candidate only its own card
+ *   cards                       → a company only its own need cards with its own name, a
+ *                                 candidate only its own card; demo (seed) candidates and
+ *                                 companies are view-only, and Espoo edits no one's information
  */
 
 type Field = { name: string; read: (r: PairRow | undefined) => unknown; writers: RoleId[] };
@@ -56,13 +58,36 @@ const empty = (v: unknown) =>
   v === null ||
   (typeof v === "object" && Object.values(v as object).every((x) => x === undefined));
 
-export type Who = { role: RoleId; id: string };
+/** The signed-in account. `name` (the session's) pins the company name on its role cards. */
+export type Who = { role: RoleId; id: string; name?: string };
 
 /** The company id a need belongs to (seed or demo card). */
 const companyOfNeed = (needs: Pick<Need, "id" | "companyId">[], needId: string) => {
   const n = needs.find((x) => x.id === needId);
   return n ? (n.companyId ?? "C-YOU") : undefined;
 };
+
+/**
+ * Why `who` may not save this role card, or null. Only a company, only its own cards, with
+ * its own name on them; the demo companies and their roles (seed) are view-only, and the
+ * Espoo team never edits a company's information.
+ */
+export function needCardProblem(
+  n: Pick<Need, "id" | "companyId" | "company">,
+  who: Who,
+  saved: Pick<Need, "id" | "companyId">[],
+  seedNeeds: Pick<Need, "id" | "companyId">[],
+): string | null {
+  if (who.role !== "company") return "Only a company can save a need card";
+  const seedCompanies = new Set(seedNeeds.map((x) => x.companyId ?? "C-YOU"));
+  if (seedCompanies.has(who.id) || seedNeeds.some((x) => x.id === n.id))
+    return "Demo companies' information is view-only";
+  if ((n.companyId ?? "C-YOU") !== who.id) return "A company can only save its own need cards";
+  const before = companyOfNeed(saved, n.id);
+  if (before && before !== who.id) return "That need card belongs to another company";
+  if (who.name && n.company !== who.name) return "A role card must carry your own company name";
+  return null;
+}
 
 /** Is `who` one of the two sides of this pair? The organiser is a party to every pair. */
 export function isParty(who: Who, key: string, needs: Pick<Need, "id" | "companyId">[]) {
@@ -77,19 +102,19 @@ export function authorizePatch(
   current: Snapshot,
   who: Who,
   seedNeeds: Pick<Need, "id" | "companyId">[],
+  seedTalentIds: string[] = [],
 ): string | null {
   // Needs a pair key can refer to: seed, saved demo cards, and cards in this same patch
   // (checked below, so a company can't claim someone else's need through it).
   const needs = [...patch.needs, ...current.needs, ...seedNeeds];
 
   for (const n of patch.needs) {
-    if (who.role !== "company") return "Only a company can save a need card";
-    if ((n.companyId ?? "C-YOU") !== who.id) return "A company can only save its own need cards";
-    const before = companyOfNeed([...current.needs, ...seedNeeds], n.id);
-    if (before && before !== who.id) return "That need card belongs to another company";
+    const problem = needCardProblem(n, who, current.needs, seedNeeds);
+    if (problem) return problem;
   }
   for (const t of patch.talent) {
     if (who.role !== "talent" || t.id !== who.id) return "A job seeker can only save their own card";
+    if (seedTalentIds.includes(t.id)) return "Demo candidates' profiles are view-only";
   }
   if (patch.audit.length && who.role !== "organiser") return "Only the organiser writes the decision log";
 
@@ -109,4 +134,24 @@ export function authorizePatch(
     }
   }
   return null;
+}
+
+/**
+ * Writing the starting state into an empty pipeline: any signed-in browser may write the
+ * seed pairs and log, but cards are still only its own. Other people's cards (e.g. a stale
+ * local copy) are dropped instead of refused, so the seed write still goes through.
+ */
+export function bootstrapPatch(
+  patch: Patch,
+  who: Who,
+  seedNeeds: Pick<Need, "id" | "companyId">[],
+  seedTalentIds: string[] = [],
+): Patch {
+  return {
+    ...patch,
+    needs: patch.needs.filter((n) => !needCardProblem(n, who, [], seedNeeds)),
+    talent: patch.talent.filter(
+      (t) => who.role === "talent" && t.id === who.id && !seedTalentIds.includes(t.id),
+    ),
+  };
 }

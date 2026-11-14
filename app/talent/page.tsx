@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { PageGuide } from "@/components/page-guide";
 import { PageHeader } from "@/components/page-header";
-import { TalentProfile } from "@/components/talent-profile";
+import { MyProfile } from "@/components/my-profile";
 
 export const metadata: Metadata = { title: "My profile · Job seeker" };
 
@@ -30,7 +30,7 @@ export default function TalentPage() {
           },
         ]}
       />
-      <TalentProfile />
+      <MyProfile />
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { requireAccess } from "@/lib/auth/server";
-import { authorizePatch } from "@/lib/auth/patch-rbac";
+import { authorizePatch, bootstrapPatch } from "@/lib/auth/patch-rbac";
 import { dbConfigured } from "@/lib/db";
 import { cleanPatch } from "@/lib/demo-state";
 import { clearState, isEmpty, readState, readVersion, writePatch } from "@/lib/demo-state-db";
@@ -11,12 +11,14 @@ import { getSeed } from "@/lib/seed-db";
  *
  *   GET            → { version, empty, snapshot }   (?since=<version> → { version, unchanged: true })
  *   PATCH <Patch>  → { version }                    per-pair upserts, validated server-side
- *   DELETE         → { version }                    demo reset: empty the demo tables
+ *   DELETE         → { version }                    demo reset: back to the seed pipeline
+ *                                                    (job seekers' profiles are kept)
  *
  * Behind the mock sign-in (lib/auth): reads need any role; each PATCH is checked field by
  * field against the database (lib/auth/patch-rbac.ts), so a company writes only its own
  * answers, a candidate only theirs, and only the organiser decides, logs and resets. The one
- * exception is an empty database, which any signed-in browser fills with the demo seed.
+ * exception is an empty pipeline, which any signed-in browser fills with the demo seed (cards
+ * are still only its own). Demo candidates' profiles are view-only for everyone.
  */
 
 const MAX_BODY = 1_000_000;
@@ -57,12 +59,16 @@ export async function PATCH(request: Request) {
   const patch = cleanPatch(body);
   if (!patch) return Response.json({ error: "Invalid patch" }, { status: 400 });
   try {
-    if (!(await isEmpty())) {
-      const [{ snapshot }, { needs }] = await Promise.all([readState(), getSeed()]);
-      const denied = authorizePatch(patch, snapshot, guard.session, needs);
+    const { needs, talent } = await getSeed();
+    const seedTalentIds = talent.map((t) => t.id);
+    let toWrite = patch;
+    if (await isEmpty()) toWrite = bootstrapPatch(patch, guard.session, needs, seedTalentIds);
+    else {
+      const { snapshot } = await readState();
+      const denied = authorizePatch(patch, snapshot, guard.session, needs, seedTalentIds);
       if (denied) return Response.json({ error: denied }, { status: 403 });
     }
-    return Response.json({ version: await writePatch(patch) });
+    return Response.json({ version: await writePatch(toWrite) });
   } catch (err) {
     return fail(err);
   }

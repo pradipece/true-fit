@@ -1,5 +1,6 @@
 import { requireAccess } from "@/lib/auth/server";
 import { cleanDraft, MAX_DRAFT } from "@/lib/candidate-profile";
+import { isSeedTalent } from "@/lib/auth/job-seekers";
 import { db, dbConfigured } from "@/lib/db";
 
 /**
@@ -24,6 +25,7 @@ export async function GET() {
   if (guard.error) return guard.error;
   if (!dbConfigured()) return Response.json({ error: "No database is configured" }, { status: 503 });
   try {
+    if (await isSeedTalent(guard.session.id)) return Response.json({ draft: null, readOnly: true });
     const { rows } = await db().query(
       `SELECT draft, joined, updated_at FROM candidate_profiles WHERE talent_id = $1`,
       [guard.session.id],
@@ -54,6 +56,8 @@ export async function PUT(request: Request) {
   const draft = cleanDraft(body.draft);
   if (!draft) return Response.json({ error: "Invalid profile" }, { status: 400 });
   try {
+    if (await isSeedTalent(guard.session.id))
+      return Response.json({ error: "Demo candidates' profiles are view-only" }, { status: 403 });
     const { rows } = await db().query(
       `INSERT INTO candidate_profiles (talent_id, draft, joined, updated_at)
        VALUES ($1, $2::jsonb, $3, now())

@@ -242,6 +242,9 @@ export function TalentProfile() {
             setMode(card.mode);
             setAvailability(card.availability);
             if (card.contact) setContact(card.contact);
+          } else if (session?.name) {
+            // A new account: start with the name they signed up with.
+            setContact((c) => ({ ...c, fullName: c.fullName || session.name }));
           }
         }
         setProfileLoaded(true);

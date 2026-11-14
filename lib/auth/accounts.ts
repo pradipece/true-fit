@@ -23,9 +23,10 @@ export function accounts(): Account[] {
     name: p.name,
     sub: p.sub,
   }));
-  // New accounts first: they're the main demo path.
-  const fresh = people.filter((a) => a.id.endsWith("-YOU"));
-  return [ORGANISER_ACCOUNT, ...fresh, ...people.filter((a) => !a.id.endsWith("-YOU"))];
+  // No shared "new" accounts (T-YOU, C-YOU): job seekers and companies sign up with their
+  // own account (lib/auth/job-seekers.ts), so nobody overwrites anyone else's information.
+  // Everyone listed here is a view-only demo account (plus the Espoo team).
+  return [ORGANISER_ACCOUNT, ...people.filter((a) => !a.id.endsWith("-YOU"))];
 }
 
 export const findAccount = (role: RoleId, id: string) =>

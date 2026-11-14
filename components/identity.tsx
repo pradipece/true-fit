@@ -40,7 +40,10 @@ export function useIdentity(side: FeedbackSide) {
   // participants() reads the seed registry, which DemoProvider fills before this renders.
   const options = useMemo(() => participants().filter((p) => p.kind === side), [side]);
   const id = session?.role === side ? session.id : OWN_ID[side];
-  const me = options.find((p) => p.id === id) ?? options[0];
+  // Job seekers who signed up themselves aren't in the seed list: describe them from the session.
+  const me =
+    options.find((p) => p.id === id) ??
+    (session?.role === side ? { kind: side, id, name: session.name, sub: "" } : options[0]);
   return { id, me, options, counts };
 }
 

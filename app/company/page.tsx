@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CompanyIntake } from "@/components/company-intake";
+import { MyCompany } from "@/components/my-company";
 import { IntakeTimeline } from "@/components/intake-timeline";
 import { PageGuide } from "@/components/page-guide";
 import { PageHeader } from "@/components/page-header";
@@ -31,7 +31,7 @@ export default function CompanyPage() {
           },
         ]}
       />
-      <CompanyIntake />
+      <MyCompany />
       <IntakeTimeline />
     </div>
   );

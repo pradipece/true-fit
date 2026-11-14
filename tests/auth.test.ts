@@ -122,14 +122,16 @@ describe("who may write which part of a pair", () => {
   });
 
   it("lets each account save only its own card", () => {
-    const own: Need = { ...need, id: `N-${company}-NEW`, createdByUser: true };
-    expect(authorizePatch(patch({ needs: [own] }), EMPTY_SNAPSHOT, owner, SEED_NEEDS)).toBeNull();
-    expect(authorizePatch(patch({ needs: [own] }), EMPTY_SNAPSHOT, rival, SEED_NEEDS)).toMatch(/own need/);
-    // Can't take over another company's need by relabelling it.
-    const hijack: Need = { ...need, companyId: otherCompany, createdByUser: true };
-    expect(authorizePatch(patch({ needs: [hijack] }), EMPTY_SNAPSHOT, rival, SEED_NEEDS)).toMatch(
-      /another company/,
-    );
+    // Companies that signed up (demo companies are view-only, tested below).
+    const a = { role: "company" as const, id: "C-aaaaaaaaaa" };
+    const b = { role: "company" as const, id: "C-bbbbbbbbbb" };
+    const own: Need = { ...need, id: "N-C-aaaaaaaaaa-NEW", companyId: a.id, createdByUser: true };
+    expect(authorizePatch(patch({ needs: [own] }), EMPTY_SNAPSHOT, a, SEED_NEEDS)).toBeNull();
+    expect(authorizePatch(patch({ needs: [own] }), EMPTY_SNAPSHOT, b, SEED_NEEDS)).toMatch(/own need/);
+    // Can't take over another company's saved card by relabelling it.
+    const saved = snap({ needs: [own] });
+    const hijack: Need = { ...own, companyId: b.id };
+    expect(authorizePatch(patch({ needs: [hijack] }), saved, b, SEED_NEEDS)).toMatch(/another company/);
     const card = { id: "T-30", createdByUser: true } as never;
     expect(authorizePatch(patch({ talent: [card] }), EMPTY_SNAPSHOT, talent, SEED_NEEDS)).toBeNull();
     expect(authorizePatch(patch({ talent: [card] }), EMPTY_SNAPSHOT, stranger, SEED_NEEDS)).toMatch(
@@ -174,5 +176,97 @@ describe("no database keys in the UI", async () => {
   });
   it("account names don't show ids", () => {
     for (const p of participants()) expect(p.name).not.toContain(p.id);
+  });
+});
+
+describe("crowds can't overwrite profiles", async () => {
+  const { bootstrapPatch } = await import("@/lib/auth/patch-rbac");
+  const { accounts } = await import("@/lib/auth/accounts");
+  const { SEED_TALENT } = await import("@/lib/seed");
+  const seedIds = SEED_TALENT.map((t) => t.id);
+  const seed = { role: "talent" as const, id: seedIds[0] };
+  const newcomer = { role: "talent" as const, id: "T-abcdefghjk" };
+
+  it("keeps demo candidates' profiles view-only, even for themselves", () => {
+    const own = { id: seed.id, createdByUser: true } as never;
+    expect(authorizePatch(patch({ talent: [own] }), EMPTY_SNAPSHOT, seed, SEED_NEEDS, seedIds)).toMatch(
+      /view-only/,
+    );
+    const mine = { id: newcomer.id, createdByUser: true } as never;
+    expect(
+      authorizePatch(patch({ talent: [mine] }), EMPTY_SNAPSHOT, newcomer, SEED_NEEDS, seedIds),
+    ).toBeNull();
+  });
+
+  it("lets a demo candidate still apply", () => {
+    const p = patch({ pairs: { [`N-01::${seed.id}`]: { optIn: { talent: true } } } });
+    expect(authorizePatch(p, EMPTY_SNAPSHOT, seed, SEED_NEEDS, seedIds)).toBeNull();
+  });
+
+  it("drops other people's cards when writing the starting state", () => {
+    const mine = { id: newcomer.id, createdByUser: true } as never;
+    const theirs = { id: "T-zzzzzzzzzz", createdByUser: true } as never;
+    const out = bootstrapPatch(patch({ talent: [mine, theirs] }), newcomer, SEED_NEEDS, seedIds);
+    expect(out.talent.map((t) => t.id)).toEqual([newcomer.id]);
+  });
+
+  it("no longer offers a shared 'new job seeker' account", () => {
+    expect(accounts().some((a) => a.id === "T-YOU")).toBe(false);
+  });
+});
+
+describe("Espoo and companies can't edit protected information", async () => {
+  const { bootstrapPatch } = await import("@/lib/auth/patch-rbac");
+  const seedCompany = { role: "company" as const, id: company, name: need.company };
+  const newco = { role: "company" as const, id: "C-abcdefghjk", name: "Nuuksio Software Oy" };
+  const espoo = { role: "organiser" as const, id: "ESPOO", name: "Espoo Esbo event team" };
+  const card = (over: Partial<Need>): Need => ({
+    ...need,
+    id: "N-C-abcdefghjk-NEW",
+    companyId: newco.id,
+    company: newco.name,
+    createdByUser: true,
+    ...over,
+  });
+
+  it("keeps demo companies and their roles view-only", () => {
+    const own = card({ id: `N-${company}-NEW`, companyId: company, company: need.company });
+    expect(authorizePatch(patch({ needs: [own] }), EMPTY_SNAPSHOT, seedCompany, SEED_NEEDS)).toMatch(
+      /view-only/,
+    );
+    // Not even a new company can take over a demo role's id.
+    expect(
+      authorizePatch(patch({ needs: [card({ id: "N-01" })] }), EMPTY_SNAPSHOT, newco, SEED_NEEDS),
+    ).toMatch(/view-only/);
+  });
+
+  it("lets a company that signed up post roles under its own name only", () => {
+    expect(authorizePatch(patch({ needs: [card({})] }), EMPTY_SNAPSHOT, newco, SEED_NEEDS)).toBeNull();
+    expect(
+      authorizePatch(
+        patch({ needs: [card({ company: "Kivi Energy Systems" })] }),
+        EMPTY_SNAPSHOT,
+        newco,
+        SEED_NEEDS,
+      ),
+    ).toMatch(/own company name/);
+  });
+
+  it("never lets the Espoo team edit a company's or a candidate's information", () => {
+    expect(authorizePatch(patch({ needs: [card({})] }), EMPTY_SNAPSHOT, espoo, SEED_NEEDS)).toMatch(
+      /Only a company/,
+    );
+    const profile = { id: "T-30", createdByUser: true } as never;
+    expect(authorizePatch(patch({ talent: [profile] }), EMPTY_SNAPSHOT, espoo, SEED_NEEDS)).toMatch(
+      /own card/,
+    );
+    const out = bootstrapPatch(patch({ needs: [card({})], talent: [profile] }), espoo, SEED_NEEDS);
+    expect(out.needs).toEqual([]);
+    expect(out.talent).toEqual([]);
+  });
+
+  it("still lets a demo company ask for introductions", () => {
+    const p = patch({ pairs: { "N-01::T-12": { optIn: { company: true } } } });
+    expect(authorizePatch(p, EMPTY_SNAPSHOT, seedCompany, SEED_NEEDS)).toBeNull();
   });
 });

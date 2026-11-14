@@ -216,6 +216,25 @@ CREATE TABLE IF NOT EXISTS demo_cards (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
+-- Job seekers who signed up in the app (mock sign-in: name + email, no password). Each
+-- gets their own id, so many people can build profiles at once without touching anyone
+-- else's. A demo reset keeps these accounts and their profiles.
+CREATE TABLE IF NOT EXISTS job_seeker_accounts (
+  id         text PRIMARY KEY,
+  name       text NOT NULL,
+  email      text NOT NULL UNIQUE,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- Companies that signed up in the app (same mock sign-in). Each posts its own roles; the
+-- demo companies in the seed are view-only.
+CREATE TABLE IF NOT EXISTS company_accounts (
+  id         text PRIMARY KEY,
+  name       text NOT NULL,
+  email      text NOT NULL UNIQUE,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
 -- Each job seeker's own profile as they build it (background, answers, CV import,
 -- contact details), autosaved per signed-in account by app/api/talent/profile so it is
 -- there when they come back. The finished card is published to demo_cards when they join.
@@ -255,4 +274,6 @@ ALTER TABLE pipeline_pairs         ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pipeline_audit         ENABLE ROW LEVEL SECURITY;
 ALTER TABLE demo_cards             ENABLE ROW LEVEL SECURITY;
 ALTER TABLE candidate_profiles     ENABLE ROW LEVEL SECURITY;
+ALTER TABLE job_seeker_accounts    ENABLE ROW LEVEL SECURITY;
+ALTER TABLE company_accounts       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE demo_state_meta        ENABLE ROW LEVEL SECURITY;

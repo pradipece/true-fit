@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useActionState, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
 import {
   CheckIcon,
@@ -9,13 +9,15 @@ import {
   SearchIcon,
   ShieldAlertIcon,
   ShieldCheckIcon,
+  UserRoundPlusIcon,
 } from "lucide-react";
 import { ROLE_ICON } from "@/components/role-icons";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import type { Account } from "@/lib/auth/accounts";
-import { signIn, signOut } from "@/lib/auth/actions";
+import { signIn, signOut, signUpCompany, signUpJobSeeker } from "@/lib/auth/actions";
 import { ROLE_PERMISSIONS } from "@/lib/auth/rbac";
 import type { Session } from "@/lib/auth/session";
 import { ROLES, type RoleId } from "@/lib/roles";
@@ -23,16 +25,20 @@ import { cn } from "@/lib/utils";
 
 const ROLE_COPY: Record<RoleId, { blurb: string; can: string[] }> = {
   talent: {
-    blurb: "Browse jobs, build your skill profile and apply.",
+    blurb: "Create your account, build your profile and apply.",
     can: ["Browse and apply to jobs", "Build your own skill profile", "Answer invitations and offers"],
   },
   company: {
-    blurb: "Post a role, find candidates and interview them.",
+    blurb: "Create your account, post a role and interview.",
     can: ["Post and edit your own roles", "Ask Espoo for introductions", "Interview and make offers"],
   },
   organiser: {
     blurb: "City of Espoo event team: review and introduce.",
-    can: ["See every role and candidate", "Introduce and run Espoo interviews", "Event insights and reset"],
+    can: [
+      "See every role and candidate",
+      "Introduce and run Espoo interviews",
+      "Insights and reset; can't edit anyone's information",
+    ],
   },
 };
 
@@ -119,11 +125,7 @@ export function LoginForm({
         </Card>
       </div>
 
-      <form action={signIn} className="space-y-4">
-        <input type="hidden" name="role" value={role} />
-        <input type="hidden" name="account" value={picked[role]} />
-        {next && <input type="hidden" name="next" value={next} />}
-
+      <div className="space-y-4">
         <div role="radiogroup" aria-label="Role" className="grid grid-cols-3 gap-2">
           {ROLES.map((r) => {
             const Icon = ROLE_ICON[r.id];
@@ -151,86 +153,162 @@ export function LoginForm({
           })}
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">
-              {role === "organiser"
-                ? "Event team account"
-                : role === "company"
-                  ? "Company account"
-                  : "Job seeker account"}
-            </CardTitle>
-            <CardDescription>
-              {role === "talent"
-                ? "Start as a new job seeker, or sign in as one of the people already registered."
-                : role === "company"
-                  ? "Start as a new company, or sign in as one already hiring at the event."
-                  : "One shared account for the City of Espoo event team."}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {list.length > 6 && (
-              <div className="relative">
-                <SearchIcon className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  value={q}
-                  onChange={(e) => setQ(e.target.value)}
-                  placeholder="Search by name"
-                  className="pl-8"
-                  aria-label="Search accounts"
-                />
-              </div>
-            )}
-            <ul className="max-h-80 space-y-1.5 overflow-y-auto pr-1" role="radiogroup" aria-label="Account">
-              {shown.map((a) => {
-                const active = picked[role] === a.id;
-                return (
-                  <li key={a.id}>
-                    <button
-                      type="button"
-                      role="radio"
-                      aria-checked={active}
-                      onClick={() => setPicked((p) => ({ ...p, [role]: a.id }))}
-                      className={cn(
-                        "flex w-full items-center gap-3 rounded-lg border px-3 py-2 text-left text-sm transition-colors hover:bg-muted/60",
-                        active && "border-primary bg-accent/60",
-                      )}
-                    >
-                      <span
+        {role !== "organiser" && <SignUpCard key={role} role={role} next={next} />}
+
+        <form action={signIn}>
+          <input type="hidden" name="role" value={role} />
+          <input type="hidden" name="account" value={picked[role]} />
+          {next && <input type="hidden" name="next" value={next} />}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">
+                {role === "organiser"
+                  ? "Espoo team account"
+                  : role === "company"
+                    ? "Or try a demo company"
+                    : "Or try a demo candidate"}
+              </CardTitle>
+              <CardDescription>
+                {role === "talent"
+                  ? "Made-up people already registered. Their profiles are view-only, so everyone sees them unchanged; you can still try applying and the interview steps."
+                  : role === "company"
+                    ? "Made-up companies already hiring. Their information and roles are view-only; you can still review candidates, ask Espoo for introductions and interview."
+                    : "One shared account for the City of Espoo team. It reviews and introduces; it can't change any company's or candidate's information."}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {list.length > 6 && (
+                <div className="relative">
+                  <SearchIcon className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    value={q}
+                    onChange={(e) => setQ(e.target.value)}
+                    placeholder="Search by name"
+                    className="pl-8"
+                    aria-label="Search accounts"
+                  />
+                </div>
+              )}
+              <ul
+                className="max-h-80 space-y-1.5 overflow-y-auto pr-1"
+                role="radiogroup"
+                aria-label="Account"
+              >
+                {shown.map((a) => {
+                  const active = picked[role] === a.id;
+                  return (
+                    <li key={a.id}>
+                      <button
+                        type="button"
+                        role="radio"
+                        aria-checked={active}
+                        onClick={() => setPicked((p) => ({ ...p, [role]: a.id }))}
                         className={cn(
-                          "grid size-8 shrink-0 place-items-center rounded-full bg-secondary text-xs font-semibold",
-                          active && "bg-primary text-primary-foreground",
+                          "flex w-full items-center gap-3 rounded-lg border px-3 py-2 text-left text-sm transition-colors hover:bg-muted/60",
+                          active && "border-primary bg-accent/60",
                         )}
                       >
-                        {initials(a.name)}
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate font-medium">{a.name}</span>
-                        <span className="block truncate text-xs text-muted-foreground">{a.sub}</span>
-                      </span>
-                      {a.id.endsWith("-YOU") && (
-                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
-                          New
+                        <span
+                          className={cn(
+                            "grid size-8 shrink-0 place-items-center rounded-full bg-secondary text-xs font-semibold",
+                            active && "bg-primary text-primary-foreground",
+                          )}
+                        >
+                          {initials(a.name)}
                         </span>
-                      )}
-                    </button>
-                  </li>
-                );
-              })}
-              {!shown.length && <li className="py-6 text-center text-sm text-muted-foreground">No match.</li>}
-            </ul>
-            <SubmitButton label={`Sign in as ${list.find((a) => a.id === picked[role])?.name ?? "…"}`} />
-          </CardContent>
-        </Card>
-      </form>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate font-medium">{a.name}</span>
+                          <span className="block truncate text-xs text-muted-foreground">{a.sub}</span>
+                        </span>
+                        {a.id.endsWith("-YOU") && (
+                          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+                            New
+                          </span>
+                        )}
+                      </button>
+                    </li>
+                  );
+                })}
+                {!shown.length && (
+                  <li className="py-6 text-center text-sm text-muted-foreground">No match.</li>
+                )}
+              </ul>
+              <SubmitButton
+                variant={role === "talent" ? "outline" : "default"}
+                label={`Sign in as ${list.find((a) => a.id === picked[role])?.name ?? "…"}`}
+              />
+            </CardContent>
+          </Card>
+        </form>
+      </div>
     </div>
   );
 }
 
-function SubmitButton({ label }: { label: string }) {
+/** A new job seeker creates their own account; the same email signs back in. */
+/** A new job seeker or company creates its own account; the same email signs back in. */
+function SignUpCard({ role, next }: { role: "talent" | "company"; next?: string }) {
+  const [state, action] = useActionState(role === "company" ? signUpCompany : signUpJobSeeker, {});
+  const company = role === "company";
+  return (
+    <Card className="ring-2 ring-primary/40">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <UserRoundPlusIcon className="size-4 text-primary" />
+          {company ? "Create your company account" : "Create your job seeker account"}
+        </CardTitle>
+        <CardDescription>
+          {company
+            ? "Your own company account: post your roles and only you can change them. Coming back? Enter the same email."
+            : "Your own account and profile: nobody else can see or change your drafts. Coming back? Enter the same email to continue where you left off."}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form action={action} className="space-y-3">
+          {next && <input type="hidden" name="next" value={next} />}
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-1.5">
+              <Label htmlFor="su-name">{company ? "Company name" : "Full name"}</Label>
+              <Input
+                id="su-name"
+                name="name"
+                autoComplete={company ? "organization" : "name"}
+                placeholder={company ? "e.g. Nuuksio Software Oy" : "e.g. Aino Virtanen"}
+                maxLength={80}
+              />
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="su-email">Email</Label>
+              <Input
+                id="su-email"
+                name="email"
+                type="email"
+                required
+                autoComplete="email"
+                placeholder="you@example.com"
+              />
+            </div>
+          </div>
+          {state.error && (
+            <p role="alert" className="text-sm text-destructive">
+              {state.error}
+            </p>
+          )}
+          <SubmitButton label="Continue" />
+          <p className="text-xs text-muted-foreground">
+            Demo sign-in: no password, and all data is synthetic. Please don&apos;t enter real personal
+            details.
+          </p>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
+
+function SubmitButton({ label, variant = "default" }: { label: string; variant?: "default" | "outline" }) {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" className="w-full" size="lg" disabled={pending}>
+    <Button type="submit" variant={variant} className="w-full" size="lg" disabled={pending}>
       {pending ? "Signing in…" : label}
     </Button>
   );

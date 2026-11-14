@@ -711,7 +711,7 @@ const closeBubble = (m: Msg): Msg => ({ ...m, live: false, content: m.content.tr
  * The company can't invite directly: it asks the organiser (the event's broker) for an
  * introduction, which counts as the company's yes. The organiser still decides, with a reason.
  */
-function IntroRequest({
+export function IntroRequest({
   pair,
   stage: p,
   asked,
@@ -781,7 +781,7 @@ function IntroRequest({
 }
 
 /** This company's match for one person (its best role) and its rank among all companies. */
-function companyFit(needs: Need[], t: Talent, companyId: string) {
+export function companyFit(needs: Need[], t: Talent, companyId: string) {
   const ranked = companiesFor(needs, t);
   const i = ranked.findIndex((c) => c.companyId === companyId);
   if (i < 0) return undefined;
