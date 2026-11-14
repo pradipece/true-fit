@@ -1,5 +1,5 @@
 import { aiConfigured, generateJson, logFallback } from "@/lib/ai";
-import { SEED_TALENT } from "@/lib/data";
+import { getSeed } from "@/lib/seed-db";
 import {
   INTAKE_OUTPUT_SCHEMA,
   INTAKE_SYSTEM_PROMPT,
@@ -46,6 +46,8 @@ function parseBody(body: unknown): IntakeRequest | null {
 async function aiTurn(req: IntakeRequest): Promise<IntakeTurn> {
   // Start the model's history at the first user turn; the greeting is scripted.
   const history = req.messages.slice(req.messages.findIndex((m) => m.role === "user"));
+  // Aggregate counts only; the individual profiles never reach the model.
+  const pool = (await getSeed()).talent;
   const out = await generateJson<{
     reply: string;
     quick_replies: string[];
@@ -57,9 +59,7 @@ async function aiTurn(req: IntakeRequest): Promise<IntakeTurn> {
     messages: history.map((m, i) => ({
       role: m.role,
       content:
-        i === history.length - 1
-          ? withCurrentCard(m.content, req.draft, poolSummary(SEED_TALENT))
-          : m.content,
+        i === history.length - 1 ? withCurrentCard(m.content, req.draft, poolSummary(pool)) : m.content,
     })),
   });
   const draft = sanitizeDraft(out.draft);

@@ -301,6 +301,11 @@
   resolved "https://registry.yarnpkg.com/@dotenvx/primitives/-/primitives-0.8.0.tgz#25f3af8f876717deb00b21c64df8a7ba05d16b2c"
   integrity sha512-VYJy0uhFm9zTJ1TxBaW/pA8bjbOM/OttaNMwZ1RHG4JKyRG7DhSdiqD1ipQoAyoD22olUtxbP78W9xY3Wd11bg==
 
+"@electric-sql/pglite@0.3.14":
+  version "0.3.14"
+  resolved "https://registry.yarnpkg.com/@electric-sql/pglite/-/pglite-0.3.14.tgz#ea464c0bc52435ceba710d3ebd33917e91d893cf"
+  integrity sha512-3DB258dhqdsArOI1fIt7cb9RpUOgcDg5hXWVgVHAeqVQ/qxtFy605QKs4gx6mFq3jWsSPqDN8TgSEsqC3OfV9Q==
+
 "@emnapi/core@2.0.0-beta.2":
   version "2.0.0-beta.2"
   resolved "https://registry.yarnpkg.com/@emnapi/core/-/core-2.0.0-beta.2.tgz#ff0e7979b1c52afc59df7ebc792adc821f8f74d7"

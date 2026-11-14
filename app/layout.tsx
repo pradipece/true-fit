@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { VersionUpdate } from "@/components/version-update";
+import { getSeed } from "@/lib/seed-db";
 import { DemoProvider } from "@/lib/store";
 import { APP_COMMIT, APP_VERSION } from "@/lib/version";
 import "./globals.css";
@@ -29,7 +30,9 @@ export const metadata: Metadata = {
     "More signal, less noise: companies describe real needs, talent shows real evidence, and organisers approve explainable matches before, during and after the event.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  // Supabase when configured and reachable, else the JSON seeds (cached, see lib/seed-db.ts).
+  const { needs, talent } = await getSeed();
   return (
     <html
       lang="en"
@@ -39,7 +42,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="flex min-h-full flex-col">
         <ThemeProvider>
           <TooltipProvider>
-            <DemoProvider>
+            <DemoProvider seed={{ needs, talent }}>
               <SiteHeader />
               <main className="flex-1">{children}</main>
               <StepNav />

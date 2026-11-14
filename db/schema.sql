@@ -1,6 +1,10 @@
--- true-fit schema for Tiger Data (Postgres). Loaded by `yarn db:migrate`.
+-- true-fit schema for Supabase (Postgres). Loaded by `yarn db:migrate` / `yarn db:sql`.
 -- The JSON files in data/ stay the source of truth: the migration replaces table
 -- contents from them on every run. All people and companies are synthetic.
+--
+-- Row-level security is on for every table with no policies, so the publishable
+-- (anon) key gets nothing through Supabase's REST/GraphQL APIs. Only the server reads
+-- the data, over a direct Postgres connection (lib/db.ts).
 
 -- ── ESCO subset (data/esco) ─────────────────────────────────────────────────
 
@@ -48,13 +52,15 @@ CREATE TABLE IF NOT EXISTS esco_occupation_skills (
 );
 
 -- ── Synthetic seeds (data/seed) ─────────────────────────────────────────────
+-- `position` keeps the seed files' order, so reads match the JSON exactly.
 
 CREATE TABLE IF NOT EXISTS companies (
   id       text PRIMARY KEY,
   name     text NOT NULL,
   blurb    text,
   sector   text,
-  location text
+  location text,
+  position int
 );
 
 CREATE TABLE IF NOT EXISTS needs (
@@ -65,7 +71,8 @@ CREATE TABLE IF NOT EXISTS needs (
   summary                text,
   language               text NOT NULL CHECK (language IN ('English OK', 'Finnish required', 'Finnish or English')),
   mode                   text NOT NULL CHECK (mode IN ('On-site', 'Hybrid', 'Remote')),
-  submitted_weeks_before int
+  submitted_weeks_before int,
+  position               int
 );
 
 CREATE TABLE IF NOT EXISTS need_skills (
@@ -82,7 +89,8 @@ CREATE TABLE IF NOT EXISTS talent (
   headline       text,
   previous_field text,
   availability   text,
-  mode           text NOT NULL CHECK (mode IN ('On-site', 'Hybrid', 'Remote', 'Any'))
+  mode           text NOT NULL CHECK (mode IN ('On-site', 'Hybrid', 'Remote', 'Any')),
+  position       int
 );
 
 CREATE TABLE IF NOT EXISTS talent_skills (
@@ -107,6 +115,7 @@ CREATE TABLE IF NOT EXISTS talent_languages (
   talent_id text NOT NULL REFERENCES talent (id) ON DELETE CASCADE,
   lang      text NOT NULL,
   level     text NOT NULL CHECK (level IN ('Native', 'Fluent', 'Working', 'Learning')),
+  position  int,
   PRIMARY KEY (talent_id, lang)
 );
 
@@ -144,3 +153,21 @@ CREATE TABLE IF NOT EXISTS scraped_items (
 );
 
 CREATE INDEX IF NOT EXISTS scraped_items_data_gin ON scraped_items USING gin (data jsonb_path_ops);
+
+-- ── Lock the tables away from the public API ────────────────────────────────
+
+ALTER TABLE esco_meta              ENABLE ROW LEVEL SECURITY;
+ALTER TABLE esco_skills            ENABLE ROW LEVEL SECURITY;
+ALTER TABLE esco_skill_relations   ENABLE ROW LEVEL SECURITY;
+ALTER TABLE esco_occupations       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE esco_occupation_skills ENABLE ROW LEVEL SECURITY;
+ALTER TABLE companies              ENABLE ROW LEVEL SECURITY;
+ALTER TABLE needs                  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE need_skills            ENABLE ROW LEVEL SECURITY;
+ALTER TABLE talent                 ENABLE ROW LEVEL SECURITY;
+ALTER TABLE talent_skills          ENABLE ROW LEVEL SECURITY;
+ALTER TABLE talent_evidence        ENABLE ROW LEVEL SECURITY;
+ALTER TABLE talent_languages       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE talent_audit           ENABLE ROW LEVEL SECURITY;
+ALTER TABLE scraped_sources        ENABLE ROW LEVEL SECURITY;
+ALTER TABLE scraped_items          ENABLE ROW LEVEL SECURITY;

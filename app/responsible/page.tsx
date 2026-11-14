@@ -13,8 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PageHeader } from "@/components/page-header";
-import { SEED_NEEDS, SEED_TALENT } from "@/lib/data";
 import { biasAudit, SCORING, SUGGEST_THRESHOLD } from "@/lib/match";
+import { getSeed } from "@/lib/seed-db";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Responsible AI" };
@@ -218,7 +218,8 @@ const AI_ACT = [
   },
 ];
 
-export default function ResponsiblePage() {
+export default async function ResponsiblePage() {
+  const { needs: SEED_NEEDS, talent: SEED_TALENT, source } = await getSeed();
   const audit = biasAudit(SEED_NEEDS, SEED_TALENT);
 
   return (
@@ -432,7 +433,9 @@ export default function ResponsiblePage() {
         </div>
         <p className="text-xs text-muted-foreground">
           Group data is optional, self-declared and used only in aggregate. Synthetic pool of{" "}
-          {SEED_TALENT.length} people; with real data the same check runs before every event.
+          {SEED_TALENT.length} people, loaded from{" "}
+          {source === "supabase" ? "the Supabase database" : "the bundled seed files"}; with real data the
+          same check runs before every event.
         </p>
       </section>
 

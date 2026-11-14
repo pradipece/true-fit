@@ -1,6 +1,6 @@
 import { cacheLife } from "next/cache";
-import { SEED_NEEDS } from "@/lib/data";
 import { preGeneratedSchedule } from "@/lib/schedule";
+import { getSeed } from "@/lib/seed-db";
 
 /**
  * The pre-generated event schedule (slots and rooms) as JSON. Deterministic, so it is
@@ -14,5 +14,6 @@ export async function GET() {
 async function schedule() {
   "use cache";
   cacheLife("days");
-  return { ...preGeneratedSchedule(SEED_NEEDS), generatedFor: "build" };
+  const { needs } = await getSeed();
+  return { ...preGeneratedSchedule(needs), generatedFor: "build" };
 }

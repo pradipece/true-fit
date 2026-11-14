@@ -33,9 +33,12 @@ const SEED_DECISIONS: Record<string, Decision> = {
   },
 };
 
-const SEED_STATE: DemoState = {
-  needs: SEED_NEEDS,
-  talent: SEED_TALENT,
+/** Seed rows the server loaded (Supabase, or the JSON seeds as fallback). */
+export type DemoSeed = { needs: Need[]; talent: Talent[] };
+
+const seedState = ({ needs, talent }: DemoSeed = { needs: SEED_NEEDS, talent: SEED_TALENT }): DemoState => ({
+  needs,
+  talent,
   decisions: SEED_DECISIONS,
   audit: Object.entries(SEED_DECISIONS).map(([key, d]) =>
     auditEntry(key, "approved", "none", "approved", d.reason, d.note, d.at),
@@ -66,7 +69,7 @@ const SEED_STATE: DemoState = {
       },
     },
   },
-};
+});
 
 // Bump when seeds change so stale persisted state does not hide new personas.
 const STORAGE_KEY = "truefit-demo-v4";
@@ -89,20 +92,21 @@ type Ctx = DemoState & {
 
 const DemoContext = createContext<Ctx | null>(null);
 
-export function DemoProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<DemoState>(SEED_STATE);
+export function DemoProvider({ children, seed }: { children: React.ReactNode; seed?: DemoSeed }) {
+  const initial = useMemo(() => seedState(seed), [seed]);
+  const [state, setState] = useState<DemoState>(initial);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
       // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate persisted demo state after mount
-      if (raw) setState({ ...SEED_STATE, ...JSON.parse(raw) });
+      if (raw) setState({ ...initial, ...JSON.parse(raw) });
     } catch {
       /* storage unavailable: run from seed */
     }
     setLoaded(true);
-  }, []);
+  }, [initial]);
 
   useEffect(() => {
     if (!loaded) return;
@@ -177,7 +181,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
       setState((s) => ({ ...s, feedback: { ...s.feedback, [key]: { ...s.feedback[key], [side]: f } } })),
     [],
   );
-  const reset = useCallback(() => setState(SEED_STATE), []);
+  const reset = useCallback(() => setState(initial), [initial]);
 
   const value = useMemo(
     () => ({
