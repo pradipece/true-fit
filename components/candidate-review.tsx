@@ -8,6 +8,7 @@ import {
   ChevronDownIcon,
   ClipboardListIcon,
   DownloadIcon,
+  HandIcon,
   HandshakeIcon,
   LanguagesIcon,
   ListChecksIcon,
@@ -153,7 +154,9 @@ export function CandidateReview() {
         {
           description:
             next === "approved"
-              ? "The candidate sees the invitation in their Meetings view and answers yes or no."
+              ? optIns[key]?.talent
+                ? "They already asked to meet you, so you both said yes. Pick a time in Meetings."
+                : "The candidate sees the invitation in their Meetings view and answers yes or no."
               : "The candidate can still be matched to other needs.",
         },
       );
@@ -181,6 +184,7 @@ export function CandidateReview() {
         t={t}
         decision={d}
         status={d?.status === "approved" ? pipeline(key) : undefined}
+        asked={!d && optIns[key]?.talent === true}
         onAction={(type) => setDialog({ type, m, current: d })}
       />
     );
@@ -231,6 +235,10 @@ export function CandidateReview() {
             {needs.map((n) => {
               const { suggested } = reviewList(n, talent);
               const open = suggested.filter((m) => !decisions[pairKey(m.needId, m.talentId)]).length;
+              const asks = talent.filter((t) => {
+                const k = pairKey(n.id, t.id);
+                return optIns[k]?.talent === true && !decisions[k];
+              }).length;
               return (
                 <button
                   key={n.id}
@@ -256,6 +264,11 @@ export function CandidateReview() {
                     {suggested.length} suggested · {open ? `${open} to review` : "all reviewed"} · sent{" "}
                     {n.submittedWeeksBefore} wk before
                   </p>
+                  {asks > 0 && (
+                    <p className="mt-1 flex items-center gap-1 text-xs font-medium text-primary tabular-nums">
+                      <HandIcon className="size-3.5" /> {asks} asked to meet you
+                    </p>
+                  )}
                 </button>
               );
             })}
@@ -371,6 +384,7 @@ function MatchCard({
   t,
   decision: d,
   status,
+  asked,
   onAction,
 }: {
   need: Need;
@@ -378,6 +392,8 @@ function MatchCard({
   t: ReturnType<typeof useDemo>["talent"][number];
   decision?: Decision;
   status?: string;
+  /** The candidate asked to meet for this need (from Explore roles). Not part of the score. */
+  asked?: boolean;
   onAction: (type: DialogType) => void;
 }) {
   return (
@@ -389,6 +405,14 @@ function MatchCard({
           </Avatar>
           {displayName(t)}
           {t.createdByUser && <Badge>You</Badge>}
+          {asked && (
+            <Badge
+              className="bg-primary text-primary-foreground"
+              title="They asked to meet you about this role. It doesn't change the skill match."
+            >
+              <HandIcon data-icon="inline-start" /> Asked to meet you
+            </Badge>
+          )}
           {!m.suggested && (
             <Badge variant="outline" className="font-normal">
               below the line, not rejected

@@ -10,6 +10,7 @@ export const ROLES = [
     title: "People looking for work",
     pages: [
       { href: "/talent", label: "Skill card" },
+      { href: "/talent/explore", label: "Explore roles" },
       { href: "/meetings/talent", label: "Meetings" },
       { href: "/talent/agenda", label: "My agenda" },
     ],
