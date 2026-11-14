@@ -14,6 +14,7 @@ import {
   ShieldCheckIcon,
   SparklesIcon,
   UserRoundPlusIcon,
+  UserSearchIcon,
 } from "lucide-react";
 import { CompanyLogo, JobMeta, postedLabel } from "@/components/job-listing";
 import { useSession } from "@/components/session";
@@ -256,11 +257,11 @@ export function JobBoardHome() {
           </Card>
           <Card className="bg-primary text-primary-foreground ring-0">
             <CardContent className="space-y-3">
-              <Building2Icon className="size-6" />
-              <h2 className="font-semibold">Hiring in Espoo?</h2>
+              <UserSearchIcon className="size-6" />
+              <h2 className="font-semibold">Looking for candidates?</h2>
               <p className="text-sm opacity-90">
-                Describe the role in a short chat. Espoo introduces candidates whose skills fit, already
-                interviewed.
+                Describe the role in a short chat and see people whose skills fit. Espoo interviews them
+                before introducing them to you.
               </p>
               <Button
                 variant="secondary"
@@ -268,7 +269,7 @@ export function JobBoardHome() {
                 nativeButton={false}
                 render={<Link href={session?.role === "company" ? "/company" : "/login?role=company"} />}
               >
-                Post a job <ArrowRightIcon data-icon="inline-end" />
+                Find candidates <ArrowRightIcon data-icon="inline-end" />
               </Button>
             </CardContent>
           </Card>
