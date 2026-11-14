@@ -775,7 +775,7 @@ export function IntroRequest({
         });
       }}
     >
-      <HandIcon data-icon="inline-start" /> Ask the organiser to introduce
+      <HandIcon data-icon="inline-start" /> Ask Espoo Esbo to introduce
     </Button>
   );
 }
