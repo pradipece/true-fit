@@ -5,18 +5,6 @@
  */
 export const ROLES = [
   {
-    id: "company",
-    label: "Company",
-    title: "Hiring companies",
-    pages: [
-      { href: "/company", label: "Need card" },
-      { href: "/company/candidates", label: "Candidates" },
-      { href: "/meetings/company", label: "Meetings" },
-      { href: "/company/agenda", label: "My agenda" },
-      { href: "/company/insights", label: "Insights" },
-    ],
-  },
-  {
     id: "talent",
     label: "Job seeker",
     title: "People looking for work",
@@ -24,6 +12,18 @@ export const ROLES = [
       { href: "/talent", label: "Skill card" },
       { href: "/meetings/talent", label: "Meetings" },
       { href: "/talent/agenda", label: "My agenda" },
+    ],
+  },
+  {
+    id: "company",
+    label: "Company",
+    title: "Hiring companies",
+    pages: [
+      { href: "/company", label: "Find candidates" },
+      { href: "/company/candidates", label: "Candidates" },
+      { href: "/meetings/company", label: "Meetings" },
+      { href: "/company/agenda", label: "My agenda" },
+      { href: "/company/insights", label: "Insights" },
     ],
   },
 ] as const;

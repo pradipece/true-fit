@@ -5,54 +5,33 @@ import Link from "next/link";
 import {
   ArrowRightIcon,
   BotIcon,
-  CheckIcon,
-  CircleDashedIcon,
-  InfoIcon,
   MessageCircleIcon,
-  LandmarkIcon,
-  Loader2Icon,
-  PencilIcon,
-  PlusIcon,
   RotateCcwIcon,
   SendHorizonalIcon,
-  ShieldCheckIcon,
   SparklesIcon,
   UsersIcon,
   WifiOffIcon,
   XIcon,
 } from "lucide-react";
-import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-import { SkillChip } from "@/components/skill-chip";
+import { CandidateProfile } from "@/components/candidate-profile";
+import { SkillChip, SkillLegend } from "@/components/skill-chip";
 import { EVENT } from "@/lib/data";
-import { getSkill, searchSkills, skillLabel } from "@/lib/esco";
 import {
   DEFAULT_STARTERS,
   draftToNeed,
   EMPTY_DRAFT,
-  ENGAGEMENTS,
-  FREE_TEXT_MAX,
-  languageCount,
-  LANGUAGES,
-  missingFields,
-  MODES,
   quickReplyHint,
   type ChatMessage,
   type IntakeTurn,
   type NeedDraft,
   type Topic,
 } from "@/lib/intake";
-import { matchesForNeed, poolCoverage } from "@/lib/match";
-import { asksNativeSpeaker, languageRule, modeKind, onlyFinnish, openToMode } from "@/lib/need-terms";
+import { matchesForNeed } from "@/lib/match";
 import { useDemo } from "@/lib/store";
-import type { MatchExplanation, Talent } from "@/lib/types";
 import { cn, isSubmitEnter } from "@/lib/utils";
 
 type Msg = ChatMessage & {
@@ -62,6 +41,8 @@ type Msg = ChatMessage & {
   quickReplies?: string[];
   source?: IntakeTurn["source"];
 };
+
+const COMPANY = "Your company (demo)";
 
 const GREETING: Msg = {
   role: "assistant",
@@ -90,9 +71,6 @@ export function CompanyIntake() {
   const online = useOnline();
   const [draft, setDraft] = useState<NeedDraft>(EMPTY_DRAFT);
   const [asked, setAsked] = useState<Topic[]>([]);
-  const [company, setCompany] = useState("Your company (demo)");
-  const [reviewed, setReviewed] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
   // The chat lives in a popup opened from the round button in the bottom-right corner.
   const [chatOpen, setChatOpen] = useState(false);
   const [unread, setUnread] = useState(false);
@@ -118,19 +96,20 @@ export function CompanyIntake() {
     return () => window.removeEventListener("keydown", onKey);
   }, [chatOpen]);
 
-  const missing = missingFields(draft);
-  const need = useMemo(() => draftToNeed(draft, company), [draft, company]);
+  const need = useMemo(() => draftToNeed(draft, COMPANY), [draft]);
   // Live: who fits the card right now. Ranked by skills only (lib/match.ts).
   const suitable = useMemo(
     () => (need.must.length ? matchesForNeed(need, talent).filter((m) => m.suggested) : []),
     [need, talent],
   );
-  const relevant = suitable.length;
-  const evidenced = useMemo(() => poolCoverage(draft.must, talent), [draft.must, talent]);
-  const speakers = draft.language ? languageCount(draft.language, talent) : 0;
-  const knownLanguage = !!languageRule(draft.language);
-  const kind = modeKind(draft.mode);
-  const openToThisMode = talent.filter((t) => openToMode(draft.mode, t)).length;
+  const byId = useMemo(() => new Map(talent.map((t) => [t.id, t])), [talent]);
+
+  // No separate need card to approve: once the chat has a role and must-have skills, the
+  // need is saved so the Candidates and Meetings pages can invite these people.
+  useEffect(() => {
+    if (need.title !== "New role" && need.must.length)
+      addNeed({ ...need, submittedWeeksBefore: EVENT.weeksAway });
+  }, [need, addNeed]);
 
   // Scroll only the message list. scrollIntoView() would also scroll the page itself,
   // making the whole layout jump each time a reply arrives.
@@ -139,13 +118,6 @@ export function CompanyIntake() {
       const el = threadRef.current;
       el?.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
     });
-
-  // Any edit after approval re-opens the card for review.
-  const edit = (patch: Partial<NeedDraft>) => {
-    setDraft((d) => ({ ...d, ...patch }));
-    setReviewed(false);
-    setSubmitted(false);
-  };
 
   const send = async (text: string, retry = false) => {
     const t = text.trim();
@@ -198,8 +170,6 @@ export function CompanyIntake() {
     const removed = [...before].filter((s) => !after.has(s));
     setDraft(turn.draft);
     setAsked(turn.asked);
-    setReviewed(false);
-    setSubmitted(false);
     setMessages((m) => [
       ...m,
       {
@@ -217,28 +187,18 @@ export function CompanyIntake() {
     scrollDown();
   };
 
-  const approve = () => {
-    addNeed({ ...need, submittedWeeksBefore: EVENT.weeksAway });
-    setSubmitted(true);
-    toast.success("Need card approved", {
-      description: "Your suitable candidates are ready on the Candidates page.",
-    });
-  };
-
   const restart = () => {
     setError(null);
     setMessages([GREETING]);
     setDraft(EMPTY_DRAFT);
     setAsked([]);
-    setReviewed(false);
-    setSubmitted(false);
   };
 
   const lastMsg = messages[messages.length - 1];
   const replies = messages.length === 1 ? starters : (lastMsg.quickReplies ?? []);
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+    <div className="space-y-6">
       {/* Chat popup, opened from the button in the bottom-right corner */}
       <Card
         role="dialog"
@@ -427,591 +387,83 @@ export function CompanyIntake() {
         )}
       </Button>
 
-      {/* Side column: live pool count and a way into the chat */}
-      <div className="space-y-4 lg:sticky lg:top-20 lg:col-start-2 lg:row-start-1 lg:self-start">
-        <PoolCount
-          relevant={relevant}
-          evidenced={evidenced}
-          total={talent.length}
-          hasMust={!!draft.must.length}
-        />
-        <Card size="sm">
-          <CardContent className="space-y-2">
-            <p className="flex items-center gap-1.5 text-sm font-medium">
-              <BotIcon className="size-4 text-primary" /> Not sure what to write?
+      {/* What the assistant understood, in one line, and a way into the chat */}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card px-4 py-3">
+        {draft.must.length ? (
+          <div className="min-w-0 space-y-1.5">
+            <p className="text-sm">
+              <span className="font-medium">{draft.title || "New role"}</span>
+              <span className="text-muted-foreground tabular-nums">
+                {" "}
+                · {suitable.length} of {talent.length} people at this event fit
+              </span>
             </p>
-            <p className="text-xs leading-snug text-muted-foreground">
-              Tell TrueFit Assistant in your own words and it fills in the card for you. “We need a dev” is a
-              fine start.
+            <div className="flex flex-wrap gap-1">
+              {draft.must.map((s) => (
+                <SkillChip key={s} id={s} must />
+              ))}
+              {draft.nice.map((s) => (
+                <SkillChip key={s} id={s} />
+              ))}
+            </div>
+          </div>
+        ) : (
+          <p className="flex items-center gap-2 text-sm">
+            <BotIcon className="size-4 shrink-0 text-primary" />
+            Tell TrueFit Assistant who you need. “We need a dev” is a fine start.
+          </p>
+        )}
+        <Button size="sm" onClick={openChat}>
+          <MessageCircleIcon data-icon="inline-start" />
+          {messages.length > 1 ? "Change in the chat" : "Chat with TrueFit Assistant"}
+        </Button>
+      </div>
+
+      {/* Suitable candidates, live */}
+      {suitable.length > 0 ? (
+        <section className="space-y-4" aria-labelledby="suitable-candidates">
+          <div className="flex flex-wrap items-end justify-between gap-2">
+            <div>
+              <h2 id="suitable-candidates" className="flex items-center gap-2 text-lg font-semibold">
+                <UsersIcon className="size-5 text-primary" /> Suitable candidates
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Best skill match first. Names and contact details are fictional demo data; name, city and
+                languages never change the skill match.
+              </p>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              nativeButton={false}
+              render={<Link href="/company/candidates" />}
+            >
+              Invite on the Candidates page <ArrowRightIcon data-icon="inline-end" />
+            </Button>
+          </div>
+          <SkillLegend />
+          <div className="grid gap-4 lg:grid-cols-2">
+            {suitable.map((m) => {
+              const t = byId.get(m.talentId);
+              return t ? <CandidateProfile key={t.id} t={t} m={m} /> : null;
+            })}
+          </div>
+        </section>
+      ) : (
+        <Card>
+          <CardContent className="space-y-3 py-12 text-center">
+            <UsersIcon className="mx-auto size-8 text-muted-foreground" />
+            <p className="text-muted-foreground">
+              {draft.must.length
+                ? "Nobody fits these must-have skills yet. Ask the assistant to move a rare skill to nice-to-have."
+                : "Suitable candidates appear here, with their contact details, as soon as the assistant knows which skills you need."}
             </p>
-            <Button size="sm" variant="outline" onClick={openChat} className="w-full">
-              <MessageCircleIcon data-icon="inline-start" />
-              {messages.length > 1 ? "Continue the chat" : "Chat with TrueFit Assistant"}
+            <Button variant="outline" onClick={openChat}>
+              <MessageCircleIcon data-icon="inline-start" /> Chat with TrueFit Assistant
             </Button>
           </CardContent>
         </Card>
-      </div>
-
-      {/* Editable need card */}
-      <div className="space-y-4 lg:col-start-1 lg:row-start-1">
-        <Card>
-          <CardHeader>
-            <CardDescription className="flex items-center gap-2">
-              Need card
-              {submitted ? (
-                <Badge className="bg-evidence text-white">Approved</Badge>
-              ) : (
-                <Badge variant="outline" className="font-normal">
-                  <PencilIcon data-icon="inline-start" /> draft, editable
-                </Badge>
-              )}
-            </CardDescription>
-            <div className="grid gap-3 pt-1">
-              <Field id="title" label="Role">
-                <Input
-                  id="title"
-                  value={draft.title}
-                  onChange={(e) => edit({ title: e.target.value })}
-                  placeholder="Filled in from the chat"
-                />
-              </Field>
-              <Field id="company" label="Company">
-                <Input
-                  id="company"
-                  value={company}
-                  onChange={(e) => {
-                    setCompany(e.target.value);
-                    setReviewed(false);
-                    setSubmitted(false);
-                  }}
-                />
-              </Field>
-              <Field id="summary" label="What they'll do">
-                <Textarea
-                  id="summary"
-                  value={draft.summary}
-                  onChange={(e) => edit({ summary: e.target.value })}
-                  placeholder="Filled in from the chat"
-                  rows={2}
-                  className="min-h-14 resize-none"
-                />
-              </Field>
-            </div>
-          </CardHeader>
-
-          <CardContent className="space-y-4">
-            <SkillEditor draft={draft} onChange={edit} />
-
-            <Separator />
-
-            <ChoiceOrText
-              id="language"
-              label="Working language"
-              options={LANGUAGES}
-              value={draft.language}
-              onChange={(language) => edit({ language })}
-              placeholder="Or write your own, e.g. Swedish or English"
-            />
-            {draft.language && (
-              <div className="-mt-2 space-y-1">
-                {asksNativeSpeaker(draft.language) ? (
-                  <FieldNote tone="warn">
-                    “Native speaker” screens people out by where they grew up, not by what they can do. Ask
-                    for a working level instead, e.g. “Fluent Finnish”.
-                  </FieldNote>
-                ) : onlyFinnish(draft.language) ? (
-                  <FieldNote tone="warn">
-                    Only {speakers} of {talent.length} people at this event can work in this language. If the
-                    job can be learned in English first, “Finnish or English” keeps more people in.
-                  </FieldNote>
-                ) : knownLanguage ? (
-                  <FieldNote>
-                    {speakers} of {talent.length} people at this event can work in this language.
-                  </FieldNote>
-                ) : (
-                  <FieldNote>No language named, so nobody is left out because of language.</FieldNote>
-                )}
-              </div>
-            )}
-            <ChoiceOrText
-              id="mode"
-              label="Way of working"
-              options={MODES}
-              value={draft.mode}
-              onChange={(mode) => edit({ mode })}
-              placeholder="Or write your own, e.g. On-site 3 days a week"
-            />
-            {draft.mode && (
-              <div className="-mt-2">
-                <FieldNote>
-                  {kind
-                    ? `${openToThisMode} of ${talent.length} people are open to ${kind.toLowerCase()} work.`
-                    : "Couldn't tell if this is on-site, hybrid or remote, so nobody is left out because of it."}
-                </FieldNote>
-              </div>
-            )}
-            <div className="space-y-1.5">
-              <Label htmlFor="start" className="text-xs text-muted-foreground">
-                Timing
-              </Label>
-              <div className="flex flex-wrap gap-1.5">
-                <Input
-                  id="start"
-                  value={draft.timing.start}
-                  onChange={(e) => edit({ timing: { ...draft.timing, start: e.target.value } })}
-                  placeholder="Start, e.g. February 2027"
-                  className="h-8 w-full sm:w-60"
-                />
-              </div>
-            </div>
-            <ChoiceOrText
-              id="engagement"
-              label="Contract"
-              options={ENGAGEMENTS}
-              value={draft.timing.engagement}
-              onChange={(engagement) => edit({ timing: { ...draft.timing, engagement } })}
-              placeholder="Or write your own, e.g. 6-month project"
-            />
-
-            <Separator />
-            <SuitableCandidates matches={suitable} talent={talent} approved={submitted} />
-          </CardContent>
-
-          <CardFooter className="flex-col items-stretch gap-3">
-            {submitted ? (
-              <>
-                <p className="flex items-center gap-1.5 text-sm text-evidence">
-                  <ShieldCheckIcon className="size-4" /> You approved this card. Now decide whom to invite.
-                </p>
-                <Button nativeButton={false} render={<Link href="/company/candidates" />}>
-                  See {relevant} suitable candidates <ArrowRightIcon data-icon="inline-end" />
-                </Button>
-              </>
-            ) : (
-              <>
-                {missing.length > 0 ? (
-                  <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
-                    <CircleDashedIcon className="mt-0.5 size-3.5 shrink-0" />
-                    Still open: {missing.join(", ")}. Answer in the chat or fill it in here.
-                  </p>
-                ) : (
-                  <label className="flex items-start gap-2 text-xs leading-snug">
-                    <Checkbox
-                      checked={reviewed}
-                      onCheckedChange={(c) => setReviewed(c === true)}
-                      className="mt-0.5"
-                    />
-                    I&apos;ve reviewed this card. It describes the work and the skills it needs, not a
-                    preferred kind of person.
-                  </label>
-                )}
-                <Button onClick={approve} disabled={missing.length > 0 || !reviewed}>
-                  <CheckIcon data-icon="inline-start" /> Approve need card
-                </Button>
-              </>
-            )}
-          </CardFooter>
-        </Card>
-      </div>
-    </div>
-  );
-}
-
-const PREVIEW = 5;
-
-/** Live list of the people whose skills fit the card. Updates on every edit or chat turn. */
-function SuitableCandidates({
-  matches,
-  talent,
-  approved,
-}: {
-  matches: MatchExplanation[];
-  talent: Talent[];
-  approved: boolean;
-}) {
-  const byId = useMemo(() => new Map(talent.map((t) => [t.id, t])), [talent]);
-  const [all, setAll] = useState(false);
-  const shown = all ? matches : matches.slice(0, PREVIEW);
-  return (
-    <section className="space-y-2" aria-labelledby="need-card-candidates">
-      <div className="flex items-baseline justify-between gap-2">
-        <h3 id="need-card-candidates" className="flex items-center gap-1.5 text-sm font-medium">
-          <UsersIcon className="size-4 text-primary" /> Suitable candidates
-        </h3>
-        {matches.length > 0 && (
-          <span className="text-xs text-muted-foreground tabular-nums">{matches.length} people</span>
-        )}
-      </div>
-      {matches.length === 0 ? (
-        <p className="text-xs text-muted-foreground">
-          Add must-have skills and the people whose skills fit appear here as you go.
-        </p>
-      ) : (
-        <>
-          <ul className="divide-y rounded-lg border">
-            {shown.map((m) => {
-              const t = byId.get(m.talentId);
-              if (!t) return null;
-              const name = t.contact?.fullName ?? t.revealName;
-              return (
-                <li key={t.id}>
-                  <details className="group">
-                    <summary className="flex cursor-pointer list-none items-center gap-2.5 px-3 py-2 hover:bg-muted/40 [&::-webkit-details-marker]:hidden">
-                      <span className="grid size-7 shrink-0 place-items-center rounded-full bg-secondary text-[11px] font-medium">
-                        {name
-                          .split(/\s+/)
-                          .slice(0, 2)
-                          .map((w) => w[0])
-                          .join("")}
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-medium">{name}</span>
-                        <span className="block truncate text-xs text-muted-foreground">
-                          {t.contact?.city ? `${t.contact.city} · ` : ""}
-                          {t.headline}
-                        </span>
-                      </span>
-                      <span className="shrink-0 text-xs font-medium tabular-nums">
-                        {Math.round(m.score * 100)}%
-                      </span>
-                    </summary>
-                    <div className="space-y-2 px-3 pb-3 pl-12.5 text-xs">
-                      <div className="flex flex-wrap gap-1">
-                        {m.shared.map((x) => (
-                          <SkillChip key={x.skill} id={x.skill} kind={x.level} must={x.must} />
-                        ))}
-                        {m.transferable.map((x) => (
-                          <SkillChip key={x.to} id={x.to} from={x.from} kind="transfer" must={x.must} />
-                        ))}
-                      </div>
-                      {t.contact && (
-                        <p className="flex flex-wrap gap-x-3 gap-y-1 text-muted-foreground">
-                          <a
-                            href={`mailto:${t.contact.email}`}
-                            className="hover:text-foreground hover:underline"
-                          >
-                            {t.contact.email}
-                          </a>
-                          <a
-                            href={`tel:${t.contact.phone.replace(/\s+/g, "")}`}
-                            className="tabular-nums hover:text-foreground hover:underline"
-                          >
-                            {t.contact.phone}
-                          </a>
-                        </p>
-                      )}
-                    </div>
-                  </details>
-                </li>
-              );
-            })}
-          </ul>
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            {matches.length > PREVIEW ? (
-              <Button size="xs" variant="ghost" onClick={() => setAll((v) => !v)}>
-                {all ? "Show fewer" : `Show all ${matches.length}`}
-              </Button>
-            ) : (
-              <span />
-            )}
-            {approved ? (
-              <Button
-                size="xs"
-                variant="outline"
-                nativeButton={false}
-                render={<Link href="/company/candidates" />}
-              >
-                Invite on the Candidates page <ArrowRightIcon data-icon="inline-end" />
-              </Button>
-            ) : (
-              <span className="text-xs text-muted-foreground">Preview · approve the card to invite them</span>
-            )}
-          </div>
-          <p className="text-[11px] leading-snug text-muted-foreground">
-            Ranked by skills only. Names and contact details are fictional demo data.
-          </p>
-        </>
       )}
-    </section>
-  );
-}
-
-function Field({ id, label, children }: { id: string; label: string; children: React.ReactNode }) {
-  return (
-    <div className="grid gap-1">
-      <Label htmlFor={id} className="text-xs text-muted-foreground">
-        {label}
-      </Label>
-      {children}
-    </div>
-  );
-}
-
-/** Preset buttons plus a free-text box: pick a common answer or write your own. */
-function ChoiceOrText({
-  id,
-  label,
-  options,
-  value,
-  onChange,
-  placeholder,
-}: {
-  id: string;
-  label: string;
-  options: readonly string[];
-  value: string;
-  onChange: (v: string) => void;
-  placeholder: string;
-}) {
-  const custom = options.includes(value) ? "" : value;
-  return (
-    <div className="space-y-1.5" role="group" aria-labelledby={`${id}-label`}>
-      <p id={`${id}-label`} className="text-xs text-muted-foreground">
-        {label}
-      </p>
-      <div className="flex flex-wrap gap-1.5">
-        {options.map((o) => (
-          <Button
-            key={o}
-            size="sm"
-            variant={value === o ? "default" : "outline"}
-            aria-pressed={value === o}
-            onClick={() => onChange(value === o ? "" : o)}
-          >
-            {o}
-          </Button>
-        ))}
-      </div>
-      <Input
-        id={id}
-        value={custom}
-        onChange={(e) => onChange(e.target.value)}
-        maxLength={FREE_TEXT_MAX}
-        placeholder={placeholder}
-        aria-label={`${label}, in your own words`}
-        className={cn("h-8 text-xs", custom && "border-primary/50")}
-      />
-    </div>
-  );
-}
-
-function FieldNote({ tone, children }: { tone?: "warn"; children: React.ReactNode }) {
-  return (
-    <p
-      className={cn(
-        "flex items-start gap-1.5 text-xs",
-        tone === "warn" ? "text-transfer" : "text-muted-foreground",
-      )}
-    >
-      <InfoIcon className="mt-0.5 size-3.5 shrink-0" />
-      <span>{children}</span>
-    </p>
-  );
-}
-
-function PoolCount({
-  relevant,
-  evidenced,
-  total,
-  hasMust,
-}: {
-  relevant: number;
-  evidenced: number;
-  total: number;
-  hasMust: boolean;
-}) {
-  return (
-    <Card size="sm" className="border-primary/20 bg-accent/40">
-      <CardContent className="flex items-start gap-3">
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
-          <UsersIcon className="size-4" />
-        </span>
-        <div className="min-w-0 space-y-1">
-          {hasMust ? (
-            <>
-              <p className="text-sm font-medium">
-                <span
-                  key={relevant}
-                  className="inline-block animate-in text-2xl tabular-nums zoom-in-90 fade-in"
-                >
-                  {relevant}
-                </span>{" "}
-                people at this event already fit
-              </p>
-              <p className="text-xs leading-snug text-muted-foreground">
-                {evidenced} of them have shown your must-have skills in their own answers or work samples, not
-                just listed them on a CV. Free to join doesn&apos;t mean low quality. Approve your card to see
-                who they are, with their contact details, below.
-              </p>
-            </>
-          ) : (
-            <>
-              <p className="text-sm font-medium">{total} people are registered for this event</p>
-              <p className="text-xs text-muted-foreground">
-                Once your card has must-have skills, you&apos;ll see how many are a relevant fit.
-              </p>
-            </>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function SkillEditor({ draft, onChange }: { draft: NeedDraft; onChange: (p: Partial<NeedDraft>) => void }) {
-  const [query, setQuery] = useState("");
-  const all = [...draft.must, ...draft.nice];
-  const hits = query
-    ? searchSkills(query, { limit: 5, keywords: true }).filter((h) => !all.includes(h.item.id))
-    : [];
-  const esco = useEscoSkillSearch(query);
-
-  const setMust = (id: string, must: boolean) =>
-    onChange({
-      must: must ? [...draft.must, id] : draft.must.filter((s) => s !== id),
-      nice: must ? draft.nice.filter((s) => s !== id) : [...draft.nice, id],
-    });
-  const remove = (id: string) =>
-    onChange({ must: draft.must.filter((s) => s !== id), nice: draft.nice.filter((s) => s !== id) });
-  const add = (id: string) => {
-    onChange({ nice: [...draft.nice, id] });
-    setQuery("");
-  };
-
-  const chip = (id: string, must: boolean) => {
-    const skill = getSkill(id);
-    return (
-      <span
-        key={id}
-        className={cn(
-          "flex h-7 items-center rounded-full border text-xs transition-colors",
-          must ? "border-primary bg-primary text-primary-foreground" : "bg-card",
-        )}
-      >
-        <button
-          type="button"
-          onClick={() => setMust(id, !must)}
-          title={`${must ? "Make nice-to-have" : "Make must-have"} · EU skill name: ${skill?.escoLabel ?? id}`}
-          className={cn("flex h-full items-center gap-1 rounded-l-full pl-2.5", !must && "hover:bg-muted")}
-        >
-          {must && <CheckIcon className="size-3" />}
-          {skillLabel(id)}
-        </button>
-        <button
-          type="button"
-          onClick={() => remove(id)}
-          aria-label={`Remove ${skillLabel(id)}`}
-          className="flex h-full items-center rounded-r-full pr-2 pl-1 opacity-60 hover:opacity-100"
-        >
-          <XIcon className="size-3" />
-        </button>
-      </span>
-    );
-  };
-
-  return (
-    <div className="space-y-3">
-      <div className="space-y-1.5">
-        <p className="flex items-baseline justify-between text-xs text-muted-foreground">
-          <span>Must-have skills</span>
-          {draft.must.length > 3 && <span className="text-transfer">More than 3 rules out many people</span>}
-        </p>
-        {draft.must.length ? (
-          <div className="flex flex-wrap gap-1.5">{draft.must.map((s) => chip(s, true))}</div>
-        ) : (
-          <p className="rounded-lg border border-dashed p-3 text-center text-xs text-muted-foreground">
-            Skills appear here as you chat. Tap one to toggle must-have.
-          </p>
-        )}
-      </div>
-      <div className="space-y-1.5">
-        <p className="text-xs text-muted-foreground">Nice-to-have</p>
-        {draft.nice.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">{draft.nice.map((s) => chip(s, false))}</div>
-        )}
-        <div className="relative">
-          <PlusIcon className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (isSubmitEnter(e) && hits[0]) {
-                e.preventDefault();
-                add(hits[0].item.id);
-              }
-            }}
-            placeholder="Add a skill (English, suomi, svenska)"
-            aria-label="Add a skill"
-            className="h-8 pl-8 text-xs"
-          />
-          {query.trim().length >= 2 && (hits.length > 0 || esco.state !== "idle") && (
-            <div className="absolute inset-x-0 top-full z-10 mt-1 max-h-72 overflow-y-auto rounded-lg border bg-popover text-xs shadow-md">
-              {hits.length > 0 && (
-                <ul>
-                  {hits.map((h) => (
-                    <li key={h.item.id}>
-                      <button
-                        type="button"
-                        onClick={() => add(h.item.id)}
-                        className="flex w-full items-baseline justify-between gap-2 px-3 py-1.5 text-left hover:bg-muted"
-                      >
-                        <span>{h.item.label}</span>
-                        <span className="truncate text-muted-foreground">{h.item.escoLabel}</span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              <p className="flex items-center gap-1.5 border-t bg-muted/40 px-3 py-1 text-[11px] text-muted-foreground">
-                <LandmarkIcon className="size-3" /> More from the EU skills list
-                {esco.state === "loading" && <Loader2Icon className="size-3 animate-spin" />}
-              </p>
-              {esco.state === "error" && (
-                <p className="px-3 py-1.5 text-muted-foreground">
-                  The EU skills list can&apos;t be reached right now.
-                </p>
-              )}
-              {esco.state === "done" && esco.hits.length === 0 && (
-                <p className="px-3 py-1.5 text-muted-foreground">No matching skills in the EU list.</p>
-              )}
-              {esco.state === "done" && (
-                <ul>
-                  {esco.hits.map((h) => {
-                    const id = h.subset?.id;
-                    const have = !!id && all.includes(id);
-                    return (
-                      <li key={h.uri}>
-                        <button
-                          type="button"
-                          disabled={!id || have}
-                          onClick={() => id && add(id)}
-                          title={
-                            !id
-                              ? "Not in this event's skill set yet, so it can't be matched"
-                              : h.subset?.via === "keyword"
-                                ? `Close match: adds “${skillLabel(id)}”`
-                                : undefined
-                          }
-                          className="flex w-full items-baseline justify-between gap-2 px-3 py-1.5 text-left hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                          <span className="first-letter:uppercase">{h.title}</span>
-                          <span className="shrink-0 text-muted-foreground">
-                            {!id
-                              ? "not in this event's skill set yet"
-                              : have
-                                ? "on the card"
-                                : `→ ${skillLabel(id)}`}
-                          </span>
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
     </div>
   );
 }
@@ -1032,36 +484,4 @@ function useOnline() {
     () => navigator.onLine,
     () => true,
   );
-}
-
-type EscoSkillHit = { uri: string; title: string; subset?: { id: string; via: "uri" | "keyword" } };
-type EscoSearch = { state: "idle" | "loading" | "done" | "error"; hits: EscoSkillHit[] };
-
-/** Live ESCO skill search, debounced, for skills beyond the cached list. */
-function useEscoSkillSearch(query: string): EscoSearch {
-  const [result, setResult] = useState<EscoSearch & { q: string }>({ q: "", state: "idle", hits: [] });
-  const q = query.trim();
-  useEffect(() => {
-    if (q.length < 3) return;
-    const ctrl = new AbortController();
-    const timer = setTimeout(async () => {
-      setResult({ q, state: "loading", hits: [] });
-      try {
-        const res = await fetch(`/api/esco/search?type=skill&q=${encodeURIComponent(q)}`, {
-          signal: ctrl.signal,
-        });
-        const data = (await res.json()) as { hits?: EscoSkillHit[] };
-        if (!res.ok || !data.hits) throw new Error();
-        setResult({ q, state: "done", hits: data.hits });
-      } catch {
-        if (!ctrl.signal.aborted) setResult({ q, state: "error", hits: [] });
-      }
-    }, 350);
-    return () => {
-      clearTimeout(timer);
-      ctrl.abort();
-    };
-  }, [q]);
-  // Results for an older query, or a query too short to search, count as idle.
-  return q.length >= 3 && result.q === q ? result : { state: q.length >= 3 ? "loading" : "idle", hits: [] };
 }

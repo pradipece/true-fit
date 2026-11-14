@@ -28,7 +28,7 @@ const STEPS = [
     week: -3,
     icon: MessageSquareIcon,
     title: "Intake chat",
-    body: "Need card approved by you",
+    body: "You describe who you need to TrueFit Assistant",
   },
   {
     week: -2,

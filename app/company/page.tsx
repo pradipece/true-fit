@@ -11,23 +11,23 @@ export default function CompanyPage() {
     <div className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6">
       <PageHeader
         eyebrow="Companies · weeks before the event"
-        title="From “we need a dev” to a concrete need card"
-        description="A short guided chat asks the clarifying questions, turns your answers into a list of skills and warns you about requirements that rule people out for no good reason. You edit and approve the card before anything is sent."
+        title="Find suitable candidates"
+        description="Tell TrueFit Assistant who you need in your own words. It works out the skills, and the people at this event whose skills fit appear here with their profile and contact details."
       />
       <PageGuide
         id="company"
         steps={[
           {
             title: "Describe who you need",
-            text: "Tell the assistant in your own words. “We need a developer” is a fine start.",
+            text: "Open the chat in the bottom-right corner. “We need a developer” is a fine start.",
           },
           {
-            title: "Check the card",
-            text: "The need card on the right fills in as you chat. Change anything. Keep must-haves to three or fewer.",
+            title: "See who fits",
+            text: "Suitable candidates appear as you chat, best skill match first, with their contact details.",
           },
           {
-            title: "Approve it",
-            text: "Nothing is shared until you approve. Then the Candidates page lists the people whose skills fit, with their contact details.",
+            title: "Invite them",
+            text: "Invite people on the Candidates page, with a reason. They answer yes or no in their Meetings view.",
           },
         ]}
       />

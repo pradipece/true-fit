@@ -216,11 +216,10 @@ export function CandidateReview() {
           <Card>
             <CardContent className="space-y-3 py-10 text-center">
               <p className="text-muted-foreground">
-                No approved need card yet. Describe who you need and approve the card to see suitable
-                candidates.
+                Nothing to show yet. Tell TrueFit Assistant who you need to see suitable candidates.
               </p>
               <Button nativeButton={false} render={<Link href="/company" />}>
-                Write a need card <ArrowRightIcon data-icon="inline-end" />
+                Find candidates <ArrowRightIcon data-icon="inline-end" />
               </Button>
             </CardContent>
           </Card>
@@ -504,7 +503,7 @@ function MatchCard({
 const DIALOG_COPY: Record<DialogType, { title: string; body: string; cta: string }> = {
   approve: {
     title: "Invite this candidate to meet?",
-    body: "The candidate sees your invitation and need card in their Meetings view and answers yes or no. You book a slot once they say yes.",
+    body: "The candidate sees your invitation and the role in their Meetings view and answers yes or no. You book a slot once they say yes.",
     cta: "Invite with reason",
   },
   reject: {

@@ -11,14 +11,14 @@ export default function CompanyCandidatesPage() {
       <PageHeader
         eyebrow="Companies · before the event"
         title="Suitable candidates"
-        description="People at this event whose skills fit your approved need cards, best skill match first, with their own answers as proof and their contact details. You decide whom to invite; every decision is logged with a reason."
+        description="People at this event whose skills fit what you told TrueFit Assistant, best skill match first, with their own answers as proof and their contact details. You decide whom to invite; every decision is logged with a reason."
       />
       <PageGuide
         id="company-candidates"
         steps={[
           {
             title: "Pick a need",
-            text: "Each approved need card lists the people whose skills fit it.",
+            text: "Each role you described lists the people whose skills fit it.",
           },
           {
             title: "Look at the proof",
