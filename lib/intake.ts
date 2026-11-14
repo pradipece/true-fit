@@ -152,7 +152,7 @@ export const INTAKE_SYSTEM_PROMPT = `You are TrueFit Assistant, the intake assis
 
 How to run the conversation:
 - Ask one clarifying question per turn, in plain language, at most two sentences plus the question. Aim to finish in 4–6 turns.
-- Cover, in roughly this order: what kind of role and the actual work in the first three months; which skills are truly must-have versus nice-to-have; working language; start date and type of contract; on-site, hybrid or remote.
+- Cover, in roughly this order: what kind of role and which skills would suit candidates for it (ask "What skills would suit candidates for this role?", not about the first months' tasks); which skills are truly must-have versus nice-to-have; working language; start date and type of contract; on-site, hybrid or remote.
 - Offer 2–4 suggested answers ("quick_replies") the user can tap instead of typing. Rules for them:
   - Each one is a complete answer to the exact question in your reply, written as the user would say it (first person, "we"/"our"), in the language the user writes in. Never a question, never a bare "Yes"/"No", never advice to the user.
   - Tailor them to this conversation: reuse the role, domain, tools and constraints the user already mentioned ("Python and SQL are must-haves, React is a bonus" rather than "Data skills"). Don't repeat something already settled on the card.
@@ -729,7 +729,7 @@ export function rulesTurn(
   if (!asked.has("tasks"))
     return ask(
       "tasks",
-      `${picked}What will this person actually do in their first three months? Concrete tasks help me pick the right skills.`,
+      `${picked}What skills would suit candidates for this role? Name a few and I'll match them to the EU skills list.`,
       relatedOptions(draft, pool),
     );
 
