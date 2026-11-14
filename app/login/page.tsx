@@ -16,6 +16,9 @@ async function Login({ searchParams }: { searchParams: SearchParams }) {
   const role = one(sp.role);
   return (
     <LoginForm
+      // Re-mount per role, so a header tab (/login?role=…) opens that role's section even
+      // when the login page is already showing.
+      key={`${role ?? ""}:${one(sp.denied) ?? ""}`}
       accounts={accounts()}
       session={session}
       initialRole={isRole(role) ? role : undefined}
