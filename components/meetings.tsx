@@ -974,7 +974,9 @@ function FeedbackForm({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-1.5">
-          <p className="text-sm">Did the interview take place?</p>
+          <p className="text-sm">
+            Did the interview take place? <span className="text-destructive">*</span>
+          </p>
           <div className="flex gap-1.5">
             <Button size="sm" variant={held === true ? "default" : "outline"} onClick={() => setHeld(true)}>
               Yes
@@ -987,15 +989,21 @@ function FeedbackForm({
         {held && (
           <>
             <div className="space-y-1.5">
-              <p className="text-sm">{q.usefulness}</p>
+              <p className="text-sm">
+                {q.usefulness} <span className="text-destructive">*</span>
+              </p>
               <Stars value={usefulness} onChange={setUsefulness} label={q.usefulness} />
             </div>
             <div className="space-y-1.5">
-              <p className="text-sm">{q.accuracy}</p>
+              <p className="text-sm">
+                {q.accuracy} <span className="text-destructive">*</span>
+              </p>
               <Stars value={accuracy} onChange={setAccuracy} label={q.accuracy} />
             </div>
             <div className="space-y-1.5">
-              <p className="text-sm">What happens next?</p>
+              <p className="text-sm">
+                What happens next? <span className="text-destructive">*</span>
+              </p>
               <div className="flex flex-wrap gap-1.5">
                 {NEXT_STEPS[side].map((s) => (
                   <Button

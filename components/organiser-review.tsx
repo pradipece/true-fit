@@ -857,7 +857,10 @@ function DecisionDialog({
         )}
 
         <fieldset className="grid gap-1.5">
-          <legend className="mb-1.5 text-sm font-medium">Reason (required, logged)</legend>
+          <legend className="mb-1.5 text-sm font-medium">
+            Reason <span className="text-destructive">*</span>{" "}
+            <span className="font-normal text-muted-foreground">(logged)</span>
+          </legend>
           {[...options, OTHER].map((r) => (
             <label
               key={r}
@@ -881,7 +884,14 @@ function DecisionDialog({
         <div className="grid gap-1.5">
           <Label htmlFor="note">
             Note {type === "approve" ? "for the company, shared if they pass" : "(internal)"}
-            {reason === OTHER ? " (required)" : " (optional)"}
+            {reason === OTHER ? (
+              <>
+                {" "}
+                <span className="text-destructive">*</span>
+              </>
+            ) : (
+              " (optional)"
+            )}
           </Label>
           <Textarea
             id="note"
@@ -1228,7 +1238,10 @@ function ResultDialog({
           ))}
         </div>
         <fieldset className="grid gap-1.5">
-          <legend className="mb-1.5 text-sm font-medium">Reason (required, logged)</legend>
+          <legend className="mb-1.5 text-sm font-medium">
+            Reason <span className="text-destructive">*</span>{" "}
+            <span className="font-normal text-muted-foreground">(logged)</span>
+          </legend>
           {[...options, OTHER].map((r) => (
             <label
               key={r}
@@ -1251,7 +1264,14 @@ function ResultDialog({
         <div className="grid gap-1.5">
           <Label htmlFor="result-note">
             Note {result === "passed" ? "for the company" : "(shown to the candidate)"}
-            {reason === OTHER ? " (required)" : " (optional)"}
+            {reason === OTHER ? (
+              <>
+                {" "}
+                <span className="text-destructive">*</span>
+              </>
+            ) : (
+              " (optional)"
+            )}
           </Label>
           <Textarea id="result-note" value={note} onChange={(e) => setNote(e.target.value)} />
         </div>
@@ -1435,15 +1455,6 @@ function ByCandidate({
           </CardContent>
         </Card>
 
-        <IntroduceTo
-          key={t.id}
-          name={displayName(t) ?? t.alias}
-          companies={current.companies}
-          decisions={decisions}
-          talentId={t.id}
-          onIntroduce={(m) => onAction("approve", m)}
-        />
-
         <div className="space-y-1">
           <h2 className="text-sm font-medium">Companies ranked for this candidate</h2>
           <p className="text-xs text-muted-foreground">
@@ -1508,94 +1519,5 @@ function ByCandidate({
         />
       </div>
     </div>
-  );
-}
-
-/**
- * Pick any company, and which of its roles, to introduce this person to. Companies are
- * listed in skill-match order with their percentage; roles already decided can't be picked
- * again here (edit or undo them in the list below). Opens the same reason dialog.
- */
-function IntroduceTo({
-  name,
-  talentId,
-  companies,
-  decisions,
-  onIntroduce,
-}: {
-  name: string;
-  talentId: string;
-  companies: ReturnType<typeof companiesFor<Need>>;
-  decisions: Record<string, Decision>;
-  onIntroduce: (m: MatchExplanation) => void;
-}) {
-  const open = companies.flatMap((c) => c.roles).filter((r) => !decisions[pairKey(r.need.id, talentId)]);
-  const [needId, setNeedId] = useState(open[0]?.need.id ?? "");
-  const picked = open.find((r) => r.need.id === needId) ?? open[0];
-  const decided = (id: string) => decisions[pairKey(id, talentId)];
-
-  return (
-    <Card className="border-primary/30">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
-          <HandshakeIcon className="size-4 text-primary" /> Invite {name} to an Espoo interview for any
-          company
-        </CardTitle>
-        <CardDescription>
-          Choose any company and role, best skill match first. The company and {name} then each say yes or no.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {open.length ? (
-          <div className="flex flex-wrap items-center gap-2">
-            <Label htmlFor={`introduce-${talentId}`} className="sr-only">
-              Company and role
-            </Label>
-            <select
-              id={`introduce-${talentId}`}
-              value={picked?.need.id ?? ""}
-              onChange={(e) => setNeedId(e.target.value)}
-              className="h-9 min-w-0 flex-1 rounded-md border bg-background px-2 text-sm"
-            >
-              {companies.map((c, i) => (
-                <optgroup
-                  key={c.companyId}
-                  label={`${i + 1}. ${c.best.need.company} · ${Math.round(c.best.m.score * 100)}% company match`}
-                >
-                  {c.roles.map(({ need, m }) => {
-                    const d = decided(need.id);
-                    return (
-                      <option key={need.id} value={need.id} disabled={!!d}>
-                        {need.title} · {Math.round(m.score * 100)}%
-                        {d
-                          ? d.status === "approved"
-                            ? " · invited"
-                            : " · not now"
-                          : m.suggested
-                            ? ""
-                            : " · below the line"}
-                      </option>
-                    );
-                  })}
-                </optgroup>
-              ))}
-            </select>
-            <Button onClick={() => picked && onIntroduce(picked.m)} disabled={!picked}>
-              <CheckIcon data-icon="inline-start" /> Invite
-            </Button>
-          </div>
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            Every role at this event already has a decision for {name}. Edit or undo one below.
-          </p>
-        )}
-        {picked && (
-          <p className="mt-2 text-xs text-muted-foreground">
-            {picked.need.company} · {picked.need.title}: {Math.round(picked.m.score * 100)}% skill match
-            {picked.m.suggested ? "" : ", below the suggestion line (not rejected, your call)"}.
-          </p>
-        )}
-      </CardContent>
-    </Card>
   );
 }

@@ -10,7 +10,6 @@ import {
   FileTextIcon,
   LanguagesIcon,
   Loader2Icon,
-  MicIcon,
   PlusIcon,
   QuoteIcon,
   RefreshCwIcon,
@@ -34,8 +33,7 @@ import { SkillChip, SkillLegend } from "@/components/skill-chip";
 import { CompaniesForYou } from "@/components/companies-for-you";
 import { CvImport, type CvApply } from "@/components/cv-import";
 import { EscoMatch } from "@/components/esco-match";
-import { VoiceNote } from "@/components/voice-note";
-import { sampleToText, WorkSample, type Sample } from "@/components/work-sample";
+import { sampleToText, type Sample } from "@/components/work-sample";
 import { cleanContact, contactProblem, EMPTY_CONTACT } from "@/lib/contact";
 import { SCENARIO_PROMPTS, VOICE_PROMPT } from "@/lib/data";
 import { SKILLS, skillLabel } from "@/lib/esco";
@@ -552,7 +550,10 @@ export function TalentProfile() {
           {step === 1 && (
             <section className="space-y-4">
               <div className="flex items-baseline justify-between">
-                <h3 className="font-medium">Pick up to {MAX_PICK} skills you&apos;d like to show</h3>
+                <h3 className="font-medium">
+                  Pick up to {MAX_PICK} skills you&apos;d like to show{" "}
+                  <span className="text-destructive">*</span>
+                </h3>
                 <span className="text-xs text-muted-foreground tabular-nums">
                   {skills.length}/{MAX_PICK} selected
                 </span>
@@ -644,54 +645,6 @@ export function TalentProfile() {
                   </div>
                 );
               })}
-
-              <div className="space-y-4 rounded-xl border border-dashed p-4">
-                <p className="text-sm font-medium">Optional extras</p>
-                <div className="space-y-2">
-                  <div className="flex items-start gap-2">
-                    <MicIcon className="mt-0.5 size-4 shrink-0 text-primary" />
-                    <div className="flex-1 space-y-0.5">
-                      <p className="text-sm leading-snug">{VOICE_PROMPT}</p>
-                      <button
-                        type="button"
-                        onClick={() => setAnswers((a) => ({ ...a, voice: EXAMPLES.voice }))}
-                        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-                      >
-                        <SparklesIcon className="size-3" /> Demo transcript
-                      </button>
-                    </div>
-                  </div>
-                  <IdeasFor
-                    ideas={starters?.prompts.voice}
-                    loading={loadingStarters}
-                    canStart={!(answers.voice ?? "").trim()}
-                    onStart={(st) => startWith("voice", st)}
-                  />
-                  <VoiceNote
-                    value={answers.voice ?? ""}
-                    onChange={(text) => {
-                      setAnswers((a) => ({ ...a, voice: text }));
-                      touch();
-                    }}
-                  />
-                </div>
-                <Separator />
-                <div className="space-y-2">
-                  <div className="flex items-start gap-2">
-                    <FileTextIcon className="mt-0.5 size-4 shrink-0 text-primary" />
-                    <p className="text-sm leading-snug">
-                      Work sample: a script, query, plan or notes you wrote.
-                    </p>
-                  </div>
-                  <WorkSample
-                    value={sample}
-                    onChange={(s) => {
-                      setSample(s);
-                      touch();
-                    }}
-                  />
-                </div>
-              </div>
             </section>
           )}
 
