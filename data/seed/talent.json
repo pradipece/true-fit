@@ -1,0 +1,767 @@
+{
+  "$comment": "Synthetic talent profiles. All people are fictional. `audit` is self-declared group data used ONLY for the aggregate fairness check; it is never scored or shown in matching. The pool is deliberately varied by origin, language, education and career path. Skill ids refer to data/esco/skills.json. `alias` defaults to 'Candidate <id>'.",
+  "talent": [
+    {
+      "id": "T-01",
+      "revealName": "Grace O.",
+      "headline": "Registered nurse from Lagos, in the Finnish licensing process for nurses trained abroad.",
+      "previousField": "Hospital nursing (surgical ward)",
+      "skills": [
+        { "id": "patient-care", "level": "evidenced" },
+        { "id": "medication", "level": "evidenced" },
+        { "id": "ehr", "level": "claimed" },
+        { "id": "intercultural", "level": "evidenced" }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A patient refuses their evening medication. What do you do?",
+          "excerpt": "Sit down, ask what worries them, check if it's side effects or confusion, then document and inform the doctor rather than pushing.",
+          "skills": ["patient-care", "medication"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: working with people from many backgrounds",
+          "excerpt": "On my ward we had patients speaking five languages. I learned to use pictures and family members carefully, and to check understanding twice.",
+          "skills": ["intercultural"]
+        }
+      ],
+      "languages": [
+        { "lang": "English", "level": "Native" },
+        { "lang": "Yoruba", "level": "Native" },
+        { "lang": "Finnish", "level": "Learning" }
+      ],
+      "availability": "From February",
+      "mode": "On-site",
+      "audit": { "origin": "Outside EU", "education": "University", "path": "Linear" }
+    },
+    {
+      "id": "T-02",
+      "revealName": "Pirjo K.",
+      "headline": "Practical nurse with 15 years in home care. Calm under pressure.",
+      "previousField": "Home care (lähihoitaja)",
+      "skills": [
+        { "id": "elderly-care", "level": "evidenced" },
+        { "id": "patient-care", "level": "evidenced" },
+        { "id": "medication", "level": "claimed" },
+        { "id": "team", "level": "evidenced" }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "You arrive and a client is confused and hasn't eaten. First steps?",
+          "excerpt": "Check blood sugar and fluids, look for signs of infection, call the nurse on duty, and leave a clear note for the next visit.",
+          "skills": ["elderly-care", "patient-care"]
+        }
+      ],
+      "languages": [
+        { "lang": "Finnish", "level": "Native" },
+        { "lang": "English", "level": "Learning" }
+      ],
+      "availability": "Immediately",
+      "mode": "On-site",
+      "audit": { "origin": "Finland", "education": "Vocational", "path": "Linear" }
+    },
+    {
+      "id": "T-03",
+      "revealName": "Lucía M.",
+      "headline": "Front-end developer who tests with screen readers before shipping.",
+      "previousField": "Graphic design",
+      "skills": [
+        { "id": "react", "level": "evidenced" },
+        { "id": "js", "level": "evidenced" },
+        { "id": "a11y", "level": "evidenced" },
+        { "id": "ux", "level": "claimed" }
+      ],
+      "evidence": [
+        {
+          "kind": "sample",
+          "prompt": "Small work sample",
+          "excerpt": "Rebuilt a date picker so it's fully keyboard-navigable; documented ARIA decisions in the PR.",
+          "skills": ["react", "a11y"]
+        },
+        {
+          "kind": "scenario",
+          "prompt": "A designer hands you a low-contrast mockup. What do you do?",
+          "excerpt": "Show them the contrast ratio next to WCAG AA, suggest two token tweaks, and ship with their sign-off.",
+          "skills": ["ux", "a11y"]
+        }
+      ],
+      "languages": [
+        { "lang": "Spanish", "level": "Native" },
+        { "lang": "English", "level": "Fluent" }
+      ],
+      "availability": "From February",
+      "mode": "Remote",
+      "audit": { "origin": "EU/EEA", "education": "Self-taught / bootcamp", "path": "Career changer" }
+    },
+    {
+      "id": "T-04",
+      "revealName": "Ahmed H.",
+      "headline": "Grew up in Espoo; six years on the warehouse floor, the last two as acting shift lead.",
+      "previousField": "Warehouse operations",
+      "skills": [
+        { "id": "warehouse", "level": "evidenced" },
+        { "id": "lead", "level": "evidenced" },
+        { "id": "logistics", "level": "claimed" },
+        { "id": "intercultural", "level": "evidenced" }
+      ],
+      "evidence": [
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: a shift that went wrong",
+          "excerpt": "Two pickers called in sick before a big order. I re-split zones by SKU weight, took a scanner myself, and we shipped 20 minutes late instead of two hours.",
+          "skills": ["warehouse", "lead"]
+        }
+      ],
+      "languages": [
+        { "lang": "Finnish", "level": "Native" },
+        { "lang": "Somali", "level": "Native" },
+        { "lang": "English", "level": "Fluent" }
+      ],
+      "availability": "From January",
+      "mode": "On-site",
+      "audit": { "origin": "Finland", "education": "Vocational", "path": "Linear" }
+    },
+    {
+      "id": "T-05",
+      "revealName": "Marta W.",
+      "headline": "Logistics coordinator who keeps carriers, customers and the warehouse on the same page.",
+      "previousField": "Freight forwarding",
+      "skills": [
+        { "id": "logistics", "level": "evidenced" },
+        { "id": "supply", "level": "evidenced" },
+        { "id": "stakeholders", "level": "evidenced" },
+        { "id": "procurement", "level": "claimed" }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A truck is stuck at the border and the customer is calling. What do you do?",
+          "excerpt": "Get a realistic ETA from the driver first, then call the customer with two options: partial delivery from local stock or a new slot tomorrow.",
+          "skills": ["logistics", "stakeholders"]
+        }
+      ],
+      "languages": [
+        { "lang": "Polish", "level": "Native" },
+        { "lang": "English", "level": "Fluent" },
+        { "lang": "Finnish", "level": "Learning" }
+      ],
+      "availability": "Immediately",
+      "mode": "Hybrid",
+      "audit": { "origin": "EU/EEA", "education": "University", "path": "Linear" }
+    },
+    {
+      "id": "T-06",
+      "revealName": "Daniel F.",
+      "headline": "Former chef, now a self-taught back-end developer who writes tests first.",
+      "previousField": "Restaurant kitchen (chef)",
+      "skills": [
+        { "id": "backend", "level": "evidenced" },
+        { "id": "python", "level": "evidenced" },
+        { "id": "testing", "level": "claimed" },
+        { "id": "sql", "level": "claimed" },
+        { "id": "team", "level": "evidenced" }
+      ],
+      "evidence": [
+        {
+          "kind": "sample",
+          "prompt": "Small work sample",
+          "excerpt": "A small Django API for a food bank's pickup schedule, with tests for double bookings.",
+          "skills": ["backend", "python", "testing"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: what your old job taught you",
+          "excerpt": "A kitchen at 8 pm is a production incident every night. You learn to call things out early and never leave your station messy.",
+          "skills": ["team"]
+        }
+      ],
+      "languages": [
+        { "lang": "Portuguese", "level": "Native" },
+        { "lang": "English", "level": "Working" }
+      ],
+      "availability": "Immediately",
+      "mode": "Any",
+      "audit": { "origin": "Outside EU", "education": "Self-taught / bootcamp", "path": "Career changer" }
+    },
+    {
+      "id": "T-07",
+      "revealName": "Amina K.",
+      "headline": "Moves messy sensor data into tidy, queryable tables.",
+      "previousField": "Industrial automation",
+      "skills": [
+        { "id": "python", "level": "evidenced" },
+        { "id": "pipelines", "level": "evidenced" },
+        { "id": "sql", "level": "claimed" },
+        { "id": "embedded", "level": "evidenced" },
+        { "id": "problem", "level": "claimed" }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A sensor feed suddenly doubles in volume. What do you do first?",
+          "excerpt": "Check whether it's real load or duplicated messages: I'd sample timestamps per device, then add idempotent keys at ingest so reprocessing is safe.",
+          "skills": ["pipelines", "problem"]
+        },
+        {
+          "kind": "sample",
+          "prompt": "Small work sample",
+          "excerpt": "Wrote a 40-line Python parser for CAN-bus logs with tests for malformed frames.",
+          "skills": ["python", "embedded"]
+        }
+      ],
+      "languages": [
+        { "lang": "English", "level": "Fluent" },
+        { "lang": "Arabic", "level": "Native" },
+        { "lang": "Finnish", "level": "Learning" }
+      ],
+      "availability": "From January",
+      "mode": "Hybrid",
+      "audit": { "origin": "Outside EU", "education": "University", "path": "Linear" }
+    },
+    {
+      "id": "T-08",
+      "revealName": "Liisa M.",
+      "headline": "Nurse turned health informatics specialist; speaks both clinician and developer.",
+      "previousField": "Nursing (emergency department)",
+      "skills": [
+        { "id": "ehr", "level": "evidenced" },
+        { "id": "health-regs", "level": "evidenced" },
+        { "id": "patient-care", "level": "evidenced" },
+        { "id": "analysis", "level": "claimed" }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "Developers want to reuse patient notes to train a triage model. What do you ask first?",
+          "excerpt": "What's the legal basis and is it secondary use under Findata rules? Then: can we do it with structured fields only, pseudonymised, before touching free text?",
+          "skills": ["health-regs", "ehr"]
+        }
+      ],
+      "languages": [
+        { "lang": "Finnish", "level": "Native" },
+        { "lang": "Swedish", "level": "Working" },
+        { "lang": "English", "level": "Fluent" }
+      ],
+      "availability": "From March",
+      "mode": "Hybrid",
+      "audit": { "origin": "Finland", "education": "University", "path": "Career changer" }
+    },
+    {
+      "id": "T-09",
+      "revealName": "Elina V.",
+      "headline": "Former teacher turned junior data analyst.",
+      "previousField": "Teaching (mathematics)",
+      "skills": [
+        { "id": "analysis", "level": "evidenced" },
+        { "id": "python", "level": "claimed" },
+        { "id": "mentoring", "level": "evidenced" },
+        { "id": "stakeholders", "level": "evidenced" }
+      ],
+      "evidence": [
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: explain something technical simply",
+          "excerpt": "I explained median vs mean to parents using bus delays — one very late bus shouldn't change how you plan your morning.",
+          "skills": ["stakeholders", "mentoring"]
+        },
+        {
+          "kind": "sample",
+          "prompt": "Small work sample",
+          "excerpt": "Notebook analysing school-meal waste by weekday; suggested menu swaps that cut waste ~20%.",
+          "skills": ["analysis"]
+        }
+      ],
+      "languages": [
+        { "lang": "Finnish", "level": "Native" },
+        { "lang": "English", "level": "Fluent" }
+      ],
+      "availability": "From January",
+      "mode": "Hybrid",
+      "audit": { "origin": "Finland", "education": "University", "path": "Career changer" }
+    },
+    {
+      "id": "T-10",
+      "revealName": "Wei Z.",
+      "headline": "Recent Aalto MSc graduate; builds forecasting models people actually use.",
+      "previousField": "Master's thesis (energy demand forecasting)",
+      "skills": [
+        { "id": "ml", "level": "evidenced" },
+        { "id": "python", "level": "evidenced" },
+        { "id": "analysis", "level": "evidenced" },
+        { "id": "cloud", "level": "claimed" }
+      ],
+      "evidence": [
+        {
+          "kind": "sample",
+          "prompt": "Small work sample",
+          "excerpt": "Thesis model forecasting district-heating demand 24 h ahead; beat the utility's baseline by 11% MAE and shipped as a nightly job.",
+          "skills": ["ml", "python", "analysis"]
+        }
+      ],
+      "languages": [
+        { "lang": "Mandarin", "level": "Native" },
+        { "lang": "English", "level": "Fluent" },
+        { "lang": "Finnish", "level": "Learning" }
+      ],
+      "availability": "Immediately",
+      "mode": "Hybrid",
+      "audit": { "origin": "Outside EU", "education": "University", "path": "Linear" }
+    },
+    {
+      "id": "T-11",
+      "revealName": "Kalle S.",
+      "headline": "HVAC technician who can explain a ventilation fault to any tenant.",
+      "previousField": "HVAC maintenance",
+      "skills": [
+        { "id": "hvac", "level": "evidenced" },
+        { "id": "energy", "level": "claimed" },
+        { "id": "problem", "level": "evidenced" },
+        { "id": "customer", "level": "evidenced" }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "Residents complain an apartment block is stuffy every evening. Where do you look?",
+          "excerpt": "Check the AHU schedule first — often it steps down at 17:00 for an office pattern. Then filters and exhaust balancing per stairwell.",
+          "skills": ["hvac", "problem"]
+        }
+      ],
+      "languages": [
+        { "lang": "Swedish", "level": "Native" },
+        { "lang": "Finnish", "level": "Fluent" },
+        { "lang": "English", "level": "Working" }
+      ],
+      "availability": "From February",
+      "mode": "On-site",
+      "audit": { "origin": "Finland", "education": "Vocational", "path": "Linear" }
+    },
+    {
+      "id": "T-12",
+      "revealName": "Jari L.",
+      "headline": "Ten years running a warehouse floor, now learning to automate it with data.",
+      "previousField": "Warehouse operations",
+      "skills": [
+        { "id": "logistics", "level": "evidenced" },
+        { "id": "lead", "level": "evidenced" },
+        { "id": "sql", "level": "evidenced" },
+        { "id": "analysis", "level": "claimed" },
+        { "id": "stakeholders", "level": "claimed" }
+      ],
+      "evidence": [
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: a decision you changed with numbers",
+          "excerpt": "We moved fast-moving SKUs closer to packing after I pulled pick-path data. Picking time dropped about 15%.",
+          "skills": ["logistics", "analysis"]
+        },
+        {
+          "kind": "scenario",
+          "prompt": "Write a query to find late shipments per carrier.",
+          "excerpt": "GROUP BY carrier with a HAVING on late ratio; flagged that timestamps are local time so I'd normalise them first.",
+          "skills": ["sql"]
+        }
+      ],
+      "languages": [
+        { "lang": "Finnish", "level": "Native" },
+        { "lang": "English", "level": "Working" }
+      ],
+      "availability": "Immediately",
+      "mode": "On-site",
+      "audit": { "origin": "Finland", "education": "Vocational", "path": "Career changer" }
+    },
+    {
+      "id": "T-13",
+      "revealName": "Fatima A.",
+      "headline": "Pharmacist from Baghdad retraining in Finland; strong on medication safety.",
+      "previousField": "Community pharmacy",
+      "skills": [
+        { "id": "medication", "level": "evidenced" },
+        { "id": "health-regs", "level": "evidenced" },
+        { "id": "customer", "level": "evidenced" },
+        { "id": "patient-care", "level": "claimed" }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "An elderly client has prescriptions from three doctors. What worries you?",
+          "excerpt": "Interactions and duplicates — I'd list every active substance, check for two drugs of the same class, and ask the GP for one medication review.",
+          "skills": ["medication", "patient-care"]
+        }
+      ],
+      "languages": [
+        { "lang": "Arabic", "level": "Native" },
+        { "lang": "Finnish", "level": "Working" },
+        { "lang": "English", "level": "Working" }
+      ],
+      "availability": "From January",
+      "mode": "On-site",
+      "audit": { "origin": "Outside EU", "education": "University", "path": "Career changer" }
+    },
+    {
+      "id": "T-14",
+      "revealName": "Jonas B.",
+      "headline": "QA engineer who automates the boring checks so humans can test the weird stuff.",
+      "previousField": "Software testing (automotive)",
+      "skills": [
+        { "id": "testing", "level": "evidenced" },
+        { "id": "js", "level": "evidenced" },
+        { "id": "a11y", "level": "claimed" },
+        { "id": "security", "level": "claimed" }
+      ],
+      "evidence": [
+        {
+          "kind": "sample",
+          "prompt": "Small work sample",
+          "excerpt": "Playwright suite with axe-core checks on every PR; cut regression testing from two days to 40 minutes.",
+          "skills": ["testing", "js", "a11y"]
+        }
+      ],
+      "languages": [
+        { "lang": "German", "level": "Native" },
+        { "lang": "English", "level": "Fluent" }
+      ],
+      "availability": "From March",
+      "mode": "Remote",
+      "audit": { "origin": "EU/EEA", "education": "University", "path": "Linear" }
+    },
+    {
+      "id": "T-15",
+      "revealName": "Mikko H.",
+      "headline": "Building services engineer, energy audits for older housing companies.",
+      "previousField": "Building services",
+      "skills": [
+        { "id": "energy", "level": "evidenced" },
+        { "id": "hvac", "level": "evidenced" },
+        { "id": "pm", "level": "claimed" },
+        { "id": "stakeholders", "level": "evidenced" }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A housing company board is sceptical about a heat-pump retrofit. How do you explain it?",
+          "excerpt": "Start from their annual heating bill, show payback in years, and bring one reference building they can visit.",
+          "skills": ["energy", "stakeholders"]
+        }
+      ],
+      "languages": [
+        { "lang": "Finnish", "level": "Native" },
+        { "lang": "Swedish", "level": "Working" },
+        { "lang": "English", "level": "Working" }
+      ],
+      "availability": "From March",
+      "mode": "On-site",
+      "audit": { "origin": "Finland", "education": "University", "path": "Linear" }
+    },
+    {
+      "id": "T-16",
+      "revealName": "Aino P.",
+      "headline": "Ex-barista, bootcamp UX designer. Runs usability tests in cafés.",
+      "previousField": "Hospitality",
+      "skills": [
+        { "id": "ux", "level": "evidenced" },
+        { "id": "customer", "level": "evidenced" },
+        { "id": "a11y", "level": "claimed" },
+        { "id": "react", "level": "claimed" }
+      ],
+      "evidence": [
+        {
+          "kind": "sample",
+          "prompt": "Small work sample",
+          "excerpt": "Redesigned a library booking flow after five guerrilla tests; task time fell from 3 min to 50 s.",
+          "skills": ["ux"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: what your old job taught you",
+          "excerpt": "You read a queue in seconds — who's in a hurry, who's confused. That's half of user research.",
+          "skills": ["customer", "ux"]
+        }
+      ],
+      "languages": [
+        { "lang": "Finnish", "level": "Native" },
+        { "lang": "English", "level": "Fluent" }
+      ],
+      "availability": "Immediately",
+      "mode": "Remote",
+      "audit": { "origin": "Finland", "education": "Self-taught / bootcamp", "path": "Career changer" }
+    },
+    {
+      "id": "T-17",
+      "revealName": "Nikolai I.",
+      "headline": "Freight dispatcher from Tallinn; keeps 40 trucks moving through bad weather.",
+      "previousField": "Road freight dispatching",
+      "skills": [
+        { "id": "logistics", "level": "evidenced" },
+        { "id": "problem", "level": "evidenced" },
+        { "id": "adapt", "level": "evidenced" },
+        { "id": "stakeholders", "level": "claimed" }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A snowstorm closes the main road at 6 am. What's your first hour?",
+          "excerpt": "Re-route the three most time-critical loads, warn customers with honest ETAs, and keep one driver in reserve for whatever breaks next.",
+          "skills": ["logistics", "problem", "adapt"]
+        }
+      ],
+      "languages": [
+        { "lang": "Estonian", "level": "Native" },
+        { "lang": "Russian", "level": "Native" },
+        { "lang": "Finnish", "level": "Working" },
+        { "lang": "English", "level": "Working" }
+      ],
+      "availability": "From January",
+      "mode": "On-site",
+      "audit": { "origin": "EU/EEA", "education": "Vocational", "path": "Linear" }
+    },
+    {
+      "id": "T-18",
+      "revealName": "Oleksandr P.",
+      "headline": "Electrician with solar and battery installation experience.",
+      "previousField": "Electrical installation",
+      "skills": [
+        { "id": "battery", "level": "evidenced" },
+        { "id": "energy", "level": "evidenced" },
+        { "id": "hvac", "level": "claimed" },
+        { "id": "problem", "level": "evidenced" }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A battery inverter keeps tripping at noon. Possible causes?",
+          "excerpt": "Peak PV output exceeding inverter rating, a loose DC connection heating up, or wrong grid-code setting after an update.",
+          "skills": ["battery", "problem"]
+        }
+      ],
+      "languages": [
+        { "lang": "Ukrainian", "level": "Native" },
+        { "lang": "English", "level": "Working" },
+        { "lang": "Finnish", "level": "Learning" }
+      ],
+      "availability": "Immediately",
+      "mode": "On-site",
+      "audit": { "origin": "Outside EU", "education": "Vocational", "path": "Linear" }
+    },
+    {
+      "id": "T-19",
+      "revealName": "Priya R.",
+      "headline": "Cloud security analyst; thinks about what could go wrong so others don't have to.",
+      "previousField": "IT services (security operations)",
+      "skills": [
+        { "id": "security", "level": "evidenced" },
+        { "id": "cloud", "level": "evidenced" },
+        { "id": "backend", "level": "claimed" },
+        { "id": "problem", "level": "claimed" }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "You find an S3 bucket with patient exports set to public. What now?",
+          "excerpt": "Lock it immediately, snapshot access logs before they rotate, then tell the DPO — 72-hour GDPR clock may already be running.",
+          "skills": ["security", "cloud"]
+        }
+      ],
+      "languages": [
+        { "lang": "Tamil", "level": "Native" },
+        { "lang": "English", "level": "Fluent" }
+      ],
+      "availability": "From February",
+      "mode": "Hybrid",
+      "audit": { "origin": "Outside EU", "education": "University", "path": "Linear" }
+    },
+    {
+      "id": "T-20",
+      "revealName": "Matti J.",
+      "headline": "Ex-Defence Forces logistics NCO moving into civilian project management.",
+      "previousField": "Military logistics",
+      "skills": [
+        { "id": "pm", "level": "evidenced" },
+        { "id": "lead", "level": "evidenced" },
+        { "id": "logistics", "level": "evidenced" },
+        { "id": "supply", "level": "claimed" }
+      ],
+      "evidence": [
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: a plan you had to change",
+          "excerpt": "Exercise supplies for 300 people, and the ferry was cancelled. We split loads across two routes and briefed every team lead the same evening.",
+          "skills": ["pm", "logistics", "lead"]
+        }
+      ],
+      "languages": [
+        { "lang": "Finnish", "level": "Native" },
+        { "lang": "English", "level": "Working" }
+      ],
+      "availability": "From January",
+      "mode": "On-site",
+      "audit": { "origin": "Finland", "education": "Vocational", "path": "Career changer" }
+    },
+    {
+      "id": "T-21",
+      "revealName": "Ravi S.",
+      "headline": "Supply-chain planner who loves a good spreadsheet model.",
+      "previousField": "Manufacturing procurement",
+      "skills": [
+        { "id": "supply", "level": "evidenced" },
+        { "id": "procurement", "level": "evidenced" },
+        { "id": "analysis", "level": "evidenced" },
+        { "id": "sql", "level": "claimed" }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A key supplier announces a 6-week delay. Walk us through your first day.",
+          "excerpt": "Quantify stock cover per SKU, rank customers by impact, then call two alternates with a pre-filled RFQ.",
+          "skills": ["supply", "procurement", "analysis"]
+        }
+      ],
+      "languages": [
+        { "lang": "English", "level": "Fluent" },
+        { "lang": "Hindi", "level": "Native" }
+      ],
+      "availability": "Immediately",
+      "mode": "Any",
+      "audit": { "origin": "Outside EU", "education": "University", "path": "Linear" }
+    },
+    {
+      "id": "T-22",
+      "revealName": "Isabel C.",
+      "headline": "Caregiver with eight years in assisted living in Manila and Espoo.",
+      "previousField": "Assisted living care",
+      "skills": [
+        { "id": "elderly-care", "level": "evidenced" },
+        { "id": "patient-care", "level": "evidenced" },
+        { "id": "team", "level": "evidenced" },
+        { "id": "adapt", "level": "claimed" }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A resident with dementia becomes agitated during a shower. What do you do?",
+          "excerpt": "Stop, lower my voice, give them a towel to hold, and try again later or with a colleague they trust. Note what triggered it.",
+          "skills": ["elderly-care", "patient-care"]
+        }
+      ],
+      "languages": [
+        { "lang": "Tagalog", "level": "Native" },
+        { "lang": "English", "level": "Fluent" },
+        { "lang": "Finnish", "level": "Working" }
+      ],
+      "availability": "Immediately",
+      "mode": "On-site",
+      "audit": { "origin": "Outside EU", "education": "Vocational", "path": "Linear" }
+    },
+    {
+      "id": "T-23",
+      "revealName": "Tuomas L.",
+      "headline": "Ex-musician, self-taught analyst who makes dashboards people open on Mondays.",
+      "previousField": "Music & event production",
+      "skills": [
+        { "id": "analysis", "level": "evidenced" },
+        { "id": "sql", "level": "evidenced" },
+        { "id": "stakeholders", "level": "evidenced" },
+        { "id": "python", "level": "claimed" }
+      ],
+      "evidence": [
+        {
+          "kind": "sample",
+          "prompt": "Small work sample",
+          "excerpt": "Ticket-sales dashboard for a festival: SQL on the box-office DB, one page, three numbers the producer actually asked for.",
+          "skills": ["analysis", "sql", "stakeholders"]
+        }
+      ],
+      "languages": [
+        { "lang": "Finnish", "level": "Native" },
+        { "lang": "English", "level": "Fluent" }
+      ],
+      "availability": "From February",
+      "mode": "Hybrid",
+      "audit": { "origin": "Finland", "education": "Self-taught / bootcamp", "path": "Career changer" }
+    },
+    {
+      "id": "T-24",
+      "revealName": "Sofia N.",
+      "headline": "Full-stack bootcamp graduate with a background in customer support.",
+      "previousField": "Customer support",
+      "skills": [
+        { "id": "js", "level": "evidenced" },
+        { "id": "react", "level": "claimed" },
+        { "id": "customer", "level": "evidenced" },
+        { "id": "team", "level": "evidenced" }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "Users say the form 'doesn't work'. How do you investigate?",
+          "excerpt": "Reproduce on their device, check the console and network tab, then ask one specific question instead of 'what happened?'.",
+          "skills": ["js", "customer"]
+        }
+      ],
+      "languages": [
+        { "lang": "Swedish", "level": "Native" },
+        { "lang": "Finnish", "level": "Fluent" },
+        { "lang": "English", "level": "Fluent" }
+      ],
+      "availability": "From January",
+      "mode": "Remote",
+      "audit": { "origin": "Finland", "education": "Self-taught / bootcamp", "path": "Career changer" }
+    },
+    {
+      "id": "T-27",
+      "revealName": "Hanna R.",
+      "headline": "Sustainability coordinator who made ESG reporting less painful.",
+      "previousField": "Retail operations",
+      "skills": [
+        { "id": "esg", "level": "evidenced" },
+        { "id": "circular", "level": "claimed" },
+        { "id": "pm", "level": "evidenced" },
+        { "id": "energy", "level": "claimed" }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "Your CEO wants emissions numbers by Friday. What do you send?",
+          "excerpt": "Scope 1–2 from invoices we already have, a clear note on what's estimated, and a plan for Scope 3 next quarter.",
+          "skills": ["esg", "pm"]
+        }
+      ],
+      "languages": [
+        { "lang": "German", "level": "Native" },
+        { "lang": "English", "level": "Fluent" },
+        { "lang": "Finnish", "level": "Working" }
+      ],
+      "availability": "Immediately",
+      "mode": "Hybrid",
+      "audit": { "origin": "EU/EEA", "education": "University", "path": "Career changer" }
+    },
+    {
+      "id": "T-30",
+      "revealName": "Thanh N.",
+      "headline": "Cloud data engineer, likes boring reliable pipelines.",
+      "previousField": "Banking IT",
+      "skills": [
+        { "id": "pipelines", "level": "evidenced" },
+        { "id": "cloud", "level": "evidenced" },
+        { "id": "sql", "level": "evidenced" },
+        { "id": "python", "level": "claimed" }
+      ],
+      "evidence": [
+        {
+          "kind": "sample",
+          "prompt": "Small work sample",
+          "excerpt": "Terraform + dbt project that loads open energy-price data hourly with freshness alerts.",
+          "skills": ["pipelines", "cloud", "sql"]
+        }
+      ],
+      "languages": [
+        { "lang": "Vietnamese", "level": "Native" },
+        { "lang": "English", "level": "Fluent" }
+      ],
+      "availability": "From February",
+      "mode": "Hybrid",
+      "audit": { "origin": "Outside EU", "education": "University", "path": "Linear" }
+    }
+  ]
+}

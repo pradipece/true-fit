@@ -1,0 +1,718 @@
+{
+  "$comment": "Cached ESCO skill subset for the demo personas. Curated fields: id, label, group, uri, match, keywords, related. ESCO fields (escoLabel, labels, altLabels) are filled by `node scripts/refresh-esco.mjs`. match = how closely our demo skill corresponds to the ESCO concept.",
+  "source": "ESCO (European Skills, Competences, Qualifications and Occupations), https://esco.ec.europa.eu",
+  "licence": "ESCO is published by the European Commission and reusable under the Commission's reuse policy (CC BY 4.0).",
+  "retrieved": "2026-11-14",
+  "skills": [
+    {
+      "id": "python",
+      "label": "Python programming",
+      "group": "Digital",
+      "uri": "http://data.europa.eu/esco/skill/ccd0a1d9-afda-43d9-b901-96344886e14d",
+      "match": "exact",
+      "keywords": ["python", "pandas", "script"],
+      "escoLabel": "Python (computer programming)",
+      "labels": {
+        "fi": "Python (tietokoneohjelmointi)",
+        "sv": "Python (datorprogrammering)"
+      },
+      "altLabels": ["Python3000", "Python prog", "Python2", "Python 3k", "Py3K"]
+    },
+    {
+      "id": "sql",
+      "label": "SQL / querying databases",
+      "group": "Digital",
+      "uri": "http://data.europa.eu/esco/skill/598de5b0-5b58-4ea7-8058-a4bc4d18c742",
+      "match": "exact",
+      "keywords": ["sql", "database", "postgres", "query", "queries"],
+      "escoLabel": "SQL",
+      "labels": {
+        "fi": "SQL",
+        "sv": "SQL"
+      },
+      "altLabels": ["Informix 4GL/SQL", "SEQUEL", "Subquery"]
+    },
+    {
+      "id": "pipelines",
+      "label": "Data pipelines (ETL)",
+      "group": "Digital",
+      "uri": "http://data.europa.eu/esco/skill/9d0d89be-bffa-4393-b6f6-8d05bea49051",
+      "match": "exact",
+      "keywords": ["pipeline", "etl", "ingest", "data stuff", "telemetry", "sensor", "stream"],
+      "escoLabel": "data extraction, transformation and loading tools",
+      "labels": {
+        "fi": "tietojen keräämisen, muuntamisen ja lataamisen työkalut",
+        "sv": "verktyg för datautvinning -omvandling och -inläsning"
+      },
+      "altLabels": ["ETL", "extract, transform, load"]
+    },
+    {
+      "id": "analysis",
+      "label": "Data analysis",
+      "group": "Digital",
+      "uri": "http://data.europa.eu/esco/skill/2b92a5b2-6758-4ee3-9fb4-b6387a55cc8f",
+      "match": "exact",
+      "keywords": ["analys", "dashboard", "insight", "report", "excel", "kpi", "clean the data"],
+      "escoLabel": "perform data analysis",
+      "labels": {
+        "fi": "analysoida tietoja",
+        "sv": "utföra dataanalys"
+      },
+      "altLabels": [
+        "performing data analysis",
+        "analyse data performance",
+        "perform analysis of data",
+        "undertake data analysis",
+        "complete data analysis"
+      ]
+    },
+    {
+      "id": "ml",
+      "label": "Machine learning",
+      "group": "Digital",
+      "uri": "http://data.europa.eu/esco/skill/8369c2d6-c100-4cf6-bd83-9668d8678433",
+      "match": "exact",
+      "keywords": ["machine learning", "ml ", "model", "predict", "ai "],
+      "escoLabel": "utilise machine learning",
+      "labels": {
+        "fi": "käyttää koneoppimista",
+        "sv": "använda sig av maskininlärning"
+      },
+      "altLabels": []
+    },
+    {
+      "id": "cloud",
+      "label": "Cloud platforms",
+      "group": "Digital",
+      "uri": "http://data.europa.eu/esco/skill/bd14968e-e409-45af-b362-3495ed7b10e0",
+      "match": "exact",
+      "keywords": ["cloud", "aws", "azure", "gcp"],
+      "escoLabel": "cloud technologies",
+      "labels": {
+        "fi": "pilviteknologiat",
+        "sv": "molnteknik"
+      },
+      "altLabels": ["cloud computing"]
+    },
+    {
+      "id": "js",
+      "label": "JavaScript / TypeScript",
+      "group": "Digital",
+      "uri": "http://data.europa.eu/esco/skill/3cd569a2-4f88-4c1e-9995-8dce8c5e51a7",
+      "match": "exact",
+      "keywords": ["javascript", "typescript", "frontend", "front-end", "web app"],
+      "escoLabel": "JavaScript",
+      "labels": {
+        "fi": "JavaScript",
+        "sv": "JavaScript"
+      },
+      "altLabels": ["JavaScript 1.7", "JavaScript 1.6", "Escript", "CSJS", "Live Script"]
+    },
+    {
+      "id": "react",
+      "label": "React front-end",
+      "group": "Digital",
+      "uri": "http://data.europa.eu/esco/skill/9b9de2a4-d8af-4a7b-933a-a8334ae60067",
+      "match": "close",
+      "keywords": ["react", "next.js", "frontend", "front-end"],
+      "escoLabel": "JavaScript Framework",
+      "labels": {
+        "fi": "JavaScript Framework",
+        "sv": "JavaScript Framework"
+      },
+      "altLabels": []
+    },
+    {
+      "id": "backend",
+      "label": "Back-end & APIs",
+      "group": "Digital",
+      "uri": "http://data.europa.eu/esco/skill/69bbd53f-fbb0-4476-b4b2-ef7844464e28",
+      "match": "close",
+      "keywords": ["backend", "back-end", " api", "apis", "server", "node.js", "django"],
+      "escoLabel": "web programming",
+      "labels": {
+        "fi": "verkko-ohjelmointi",
+        "sv": "webbprogrammering"
+      },
+      "altLabels": ["markup programming"]
+    },
+    {
+      "id": "testing",
+      "label": "Software testing",
+      "group": "Digital",
+      "uri": "http://data.europa.eu/esco/skill/85f46538-ae70-498a-bfbc-b8ddafe96c7d",
+      "match": "close",
+      "keywords": ["testing", "qa ", "quality assurance", "test automation", "testaus"],
+      "escoLabel": "levels of software testing",
+      "labels": {
+        "fi": "ohjelmistotestauksen tasot",
+        "sv": "nivåer för programvarutestning"
+      },
+      "altLabels": []
+    },
+    {
+      "id": "ux",
+      "label": "User experience design",
+      "group": "Digital",
+      "uri": "http://data.europa.eu/esco/skill/7364cc39-b9c0-449f-9416-57723e2fd9c4",
+      "match": "exact",
+      "keywords": ["ux", "user experience", "design", "usability", "figma"],
+      "escoLabel": "utilise methodologies for user centered design",
+      "labels": {
+        "fi": "käyttää käyttäjäkeskeisen suunnittelun menetelmiä",
+        "sv": "använda tekniker för användarcentrerad design"
+      },
+      "altLabels": ["utilise user-centered design methodologies"]
+    },
+    {
+      "id": "a11y",
+      "label": "Web accessibility",
+      "group": "Digital",
+      "uri": "http://data.europa.eu/esco/skill/3e23db60-0c3d-498a-a6ac-ffbed0ecb033",
+      "match": "exact",
+      "keywords": ["accessib", "saavutettav", "wcag"],
+      "escoLabel": "ICT accessibility standards",
+      "labels": {
+        "fi": "ICT-saavutettavuusstandardit",
+        "sv": "IT-tillgänglighetsstandarder"
+      },
+      "altLabels": ["accessibility standards and guidelines"]
+    },
+    {
+      "id": "embedded",
+      "label": "Embedded systems",
+      "group": "Digital",
+      "uri": "http://data.europa.eu/esco/skill/2180bd8c-86de-4889-8165-adac902eee9d",
+      "match": "exact",
+      "keywords": ["embedded", "firmware", "microcontroller"],
+      "escoLabel": "embedded systems",
+      "labels": {
+        "fi": "sulautetut järjestelmät",
+        "sv": "inbäddade system"
+      },
+      "altLabels": ["embedded systems software architectures"]
+    },
+    {
+      "id": "security",
+      "label": "Cybersecurity basics",
+      "group": "Digital",
+      "uri": "http://data.europa.eu/esco/skill/8088750d-8388-4170-a76f-48354c469c44",
+      "match": "exact",
+      "keywords": ["security", "secure", "tietoturva"],
+      "escoLabel": "cyber security",
+      "labels": {
+        "fi": "kyberturvallisuus",
+        "sv": "cybersäkerhet"
+      },
+      "altLabels": []
+    },
+    {
+      "id": "battery",
+      "label": "Battery technology",
+      "group": "Green transition",
+      "uri": "http://data.europa.eu/esco/skill/8cf03262-b6b0-4fe8-9d66-91063bb32db3",
+      "match": "close",
+      "keywords": ["battery", "batteries", "akku", "cell", "battery pack"],
+      "escoLabel": "battery components",
+      "labels": {
+        "fi": "akkukomponentit",
+        "sv": "batterikomponenter"
+      },
+      "altLabels": [
+        "battery elements",
+        "electronics",
+        "voltaic cells",
+        "battery parts",
+        "components of batteries"
+      ]
+    },
+    {
+      "id": "energy",
+      "label": "Energy efficiency assessment",
+      "group": "Green transition",
+      "uri": "http://data.europa.eu/esco/skill/4e09e2d2-e317-47d2-bf5e-1d6c66be3efc",
+      "match": "close",
+      "keywords": ["energy", "energia", "efficien", "audit"],
+      "escoLabel": "energy performance of buildings",
+      "labels": {
+        "fi": "rakennusten energiatehokkuus",
+        "sv": "byggnaders energiprestanda"
+      },
+      "altLabels": [
+        "building's energy performance",
+        "energy performance of buildings",
+        "energy saving building techniques",
+        "building techniques to save energy",
+        "building energy performance"
+      ]
+    },
+    {
+      "id": "hvac",
+      "label": "HVAC systems",
+      "group": "Green transition",
+      "uri": "http://data.europa.eu/esco/skill/539edd73-5c9b-4498-96f2-68a9cd2e6073",
+      "match": "close",
+      "keywords": ["hvac", "ventilation", "heating", "ilmanvaihto", "lvi"],
+      "escoLabel": "ventilation systems",
+      "labels": {
+        "fi": "ilmastointijärjestelmät",
+        "sv": "ventilationssystem"
+      },
+      "altLabels": ["systems for ventilation", "mechanical ventilation", "HVAC systems", "ventilation system"]
+    },
+    {
+      "id": "esg",
+      "label": "Sustainability reporting",
+      "group": "Green transition",
+      "uri": "http://data.europa.eu/esco/skill/b2f05068-c409-43ec-ba58-b5dfe991ca5e",
+      "match": "close",
+      "keywords": ["esg", "sustainab", "csrd", "emission", "carbon"],
+      "escoLabel": "advise on social responsibility and sustainability matters",
+      "labels": {
+        "fi": "antaa yhteiskuntavastuuseen ja kestävään kehitykseen liittyviä neuvoja",
+        "sv": "ge råd om socialt ansvar och hållbarhetsfrågor"
+      },
+      "altLabels": [
+        "counsel on social responsibility and sustainability matters",
+        "offer suggestions on social responsibility and sustainability matters",
+        "give recommendations on social responsibility and sustainability matters",
+        "advising on social responsibility and sustainability matters",
+        "advise on matters of social responsibility and sustainability"
+      ]
+    },
+    {
+      "id": "circular",
+      "label": "Circular economy",
+      "group": "Green transition",
+      "uri": "http://data.europa.eu/esco/skill/4e87c852-602a-4a0e-b8d8-20709ce14ac5",
+      "match": "close",
+      "keywords": ["circular", "recycl", "reuse", "kierrätys"],
+      "escoLabel": "assess the life cycle of resources",
+      "labels": {
+        "fi": "arvioida resurssien elinkaarta",
+        "sv": "bedöma resursers livscykel"
+      },
+      "altLabels": [
+        "study the life cycle of resources",
+        "assess resource life cycles",
+        "evaluate the life cycle of resources",
+        "examine the life cycle of resources",
+        "assessing resource life cycle"
+      ]
+    },
+    {
+      "id": "patient-care",
+      "label": "Person-centred patient care",
+      "group": "Healthcare",
+      "uri": "http://data.europa.eu/esco/skill/7a63f944-6948-4ae4-9c1f-d08e492535c9",
+      "match": "exact",
+      "keywords": ["patient", "potilas", "nurse", "nursing", "hoitaja", "care work"],
+      "escoLabel": "apply person-centred care",
+      "labels": {
+        "fi": "soveltaa henkilökeskeistä hoitotapaa",
+        "sv": "ge personcentrerad vård"
+      },
+      "altLabels": [
+        "employ person-centred care",
+        "apply patient-centred care",
+        "use person-centred care",
+        "apply patient-focused care",
+        "apply person-focused care"
+      ]
+    },
+    {
+      "id": "elderly-care",
+      "label": "Elderly care",
+      "group": "Healthcare",
+      "uri": "http://data.europa.eu/esco/skill/261e740b-d32d-4356-94a8-3ea29128b70b",
+      "match": "exact",
+      "keywords": ["elderly", "older adults", "older people", "ikäihmi", "vanhus", "home care", "kotihoito"],
+      "escoLabel": "tend to elderly people",
+      "labels": {
+        "fi": "huolehtia vanhuksista",
+        "sv": "ta hand om äldre personer"
+      },
+      "altLabels": [
+        "tend to the elderly",
+        "look after elderly people",
+        "tend to elderly people",
+        "provide care for elderly people",
+        "tending to elderly people"
+      ]
+    },
+    {
+      "id": "medication",
+      "label": "Medication administration",
+      "group": "Healthcare",
+      "uri": "http://data.europa.eu/esco/skill/1fd57242-267e-46df-bd8c-849fdd593a50",
+      "match": "exact",
+      "keywords": ["medication", "medicine", "lääke", "pharma", "prescription"],
+      "escoLabel": "administer prescribed medication",
+      "labels": {
+        "fi": "annostella lääkemääräyksen mukaisia lääkkeitä",
+        "sv": "administrera ordinerade läkemedel"
+      },
+      "altLabels": [
+        "administer prescribed drugs",
+        "manage a person's medicines",
+        "manage a person's medication",
+        "administer prescribed medicines",
+        "administer medication"
+      ]
+    },
+    {
+      "id": "ehr",
+      "label": "Electronic health records",
+      "group": "Healthcare",
+      "uri": "http://data.europa.eu/esco/skill/53141450-2fa9-4890-a64e-7ffd4e1144be",
+      "match": "exact",
+      "keywords": ["health record", " ehr", "patient data", "potilastieto", "clinical data"],
+      "escoLabel": "use electronic health records management system",
+      "labels": {
+        "fi": "käyttää sähköistä potilastietojärjestelmää",
+        "sv": "använda system för hantering av elektroniska journaler"
+      },
+      "altLabels": [
+        "use electronic health-record-management-system",
+        "use electronic health records management systems",
+        "use electronic health records software",
+        "use electronic health records' management systems",
+        "use electronic health record management systems"
+      ]
+    },
+    {
+      "id": "health-regs",
+      "label": "Healthcare regulation & compliance",
+      "group": "Healthcare",
+      "uri": "http://data.europa.eu/esco/skill/9fcf9918-fdef-49c3-aedc-518eb1e7e1f5",
+      "match": "exact",
+      "keywords": ["mdr", "medical device", "healthcare regulation", "valvira", "health data", "compliance"],
+      "escoLabel": "comply with legislation related to health care",
+      "labels": {
+        "fi": "noudattaa terveydenhuoltolainsäädäntöä",
+        "sv": "följa hälso- och sjukvårdslagstiftning"
+      },
+      "altLabels": [
+        "obey legislation related to health care",
+        "adhere to legislation related to health care",
+        "comply with legislation related to health-care",
+        "comply with legislation related to healthcare",
+        "comply with health care laws and regulations"
+      ]
+    },
+    {
+      "id": "pm",
+      "label": "Project management",
+      "group": "Business",
+      "uri": "http://data.europa.eu/esco/skill/7111b95d-0ce3-441a-9d92-4c75d05c4388",
+      "match": "exact",
+      "keywords": ["project", "projekti", "chef de projet", "coordinat", "plan the"],
+      "escoLabel": "project management",
+      "labels": {
+        "fi": "projektinhallinta",
+        "sv": "projektledning"
+      },
+      "altLabels": [
+        "project management activities",
+        "management of projects",
+        "fundamentals of programme management",
+        "managing of programmes",
+        "management of programmes"
+      ]
+    },
+    {
+      "id": "supply",
+      "label": "Supply chain management",
+      "group": "Business",
+      "uri": "http://data.europa.eu/esco/skill/f929c89e-c363-4132-a918-e021d57b307c",
+      "match": "exact",
+      "keywords": ["supply", "supplier", "toimitusketju", "lieferkette", "inventory"],
+      "escoLabel": "supply chain management",
+      "labels": {
+        "fi": "toimitusketjun hallinta",
+        "sv": "hantering av distributionskedja"
+      },
+      "altLabels": [
+        "supply chain oversight",
+        "management of a supply chain",
+        "supply chain regulation",
+        "supply chain managing",
+        "manage a supply chain"
+      ]
+    },
+    {
+      "id": "logistics",
+      "label": "Logistics planning",
+      "group": "Business",
+      "uri": "http://data.europa.eu/esco/skill/953c0b65-537a-42fe-a90b-26cd36c64361",
+      "match": "exact",
+      "keywords": [
+        "logist",
+        "warehouse",
+        "varasto",
+        "lager",
+        "kuljetus",
+        "transport",
+        "shipping",
+        "entrepôt",
+        "almacén"
+      ],
+      "escoLabel": "manage logistics",
+      "labels": {
+        "fi": "hallita logistiikkaa",
+        "sv": "hantera logistik"
+      },
+      "altLabels": [
+        "supervise logistics",
+        "managing logistics",
+        "logistics management",
+        "regulate logistics",
+        "maintain logistics"
+      ]
+    },
+    {
+      "id": "warehouse",
+      "label": "Warehouse operations",
+      "group": "Business",
+      "uri": "http://data.europa.eu/esco/skill/089ddb19-1c7a-43ff-ba64-070f7ce4787a",
+      "match": "exact",
+      "keywords": ["warehouse", "varasto", "lager", "forklift", "trukki", "picking", "almacén"],
+      "escoLabel": "warehouse operations",
+      "labels": {
+        "fi": "varastotoiminnot",
+        "sv": "lagerverksamhet"
+      },
+      "altLabels": [
+        "principles and practices of warehouse operations",
+        "operations of warehouses",
+        "fundamental principles of warehouse operations",
+        "principles of warehouse operations",
+        "functions of warehouses"
+      ]
+    },
+    {
+      "id": "procurement",
+      "label": "Procurement",
+      "group": "Business",
+      "uri": "http://data.europa.eu/esco/skill/9e9a4209-c7cf-4f6e-973e-dc2ffadccc74",
+      "match": "exact",
+      "keywords": ["procure", "purchas", "hankinta", "buyer", "einkauf"],
+      "escoLabel": "apply procurement",
+      "labels": {
+        "fi": "hallita ostotoimia",
+        "sv": "ansvara för inköp"
+      },
+      "altLabels": ["order goods and equipment", "purchase", "applying procurement"]
+    },
+    {
+      "id": "customer",
+      "label": "Customer service",
+      "group": "Business",
+      "uri": "http://data.europa.eu/esco/skill/15a33d76-4640-438d-ae64-fdc0c1d3eebc",
+      "match": "exact",
+      "keywords": ["customer", "asiakas", "client", "service desk", "support"],
+      "escoLabel": "customer service",
+      "labels": {
+        "fi": "asiakaspalvelu",
+        "sv": "kundservice"
+      },
+      "altLabels": [
+        "customer well being",
+        "customer services",
+        "customer satisfaction",
+        "customer care",
+        "customer servicing"
+      ]
+    },
+    {
+      "id": "sales",
+      "label": "B2B sales",
+      "group": "Business",
+      "uri": "http://data.europa.eu/esco/skill/450de541-797a-4da0-9fe4-a81471c8047d",
+      "match": "close",
+      "keywords": ["sales", "myynti", "vertrieb", "account manager"],
+      "escoLabel": "sales activities",
+      "labels": {
+        "fi": "myyntitoimet",
+        "sv": "försäljningsverksamhet"
+      },
+      "altLabels": [
+        "sales operations",
+        "sales strategies",
+        "sales exercises",
+        "sales activity",
+        "selling activities"
+      ]
+    },
+    {
+      "id": "stakeholders",
+      "label": "Stakeholder communication",
+      "group": "Transversal",
+      "uri": "http://data.europa.eu/esco/skill/477173ca-5fc2-406b-9122-95d92811f284",
+      "match": "exact",
+      "keywords": ["stakeholder", "communicat", "engineers", "explain", "present"],
+      "escoLabel": "communicate with stakeholders",
+      "labels": {
+        "fi": "olla vuorovaikutuksessa sidosryhmien kanssa",
+        "sv": "kommunicera med intressenter"
+      },
+      "altLabels": [
+        "communicating with stakeholders",
+        "inform stakeholders of ideas and objectives",
+        "communicate with providers of business support services",
+        "communicate to stakeholders"
+      ]
+    },
+    {
+      "id": "problem",
+      "label": "Problem solving",
+      "group": "Transversal",
+      "uri": "http://data.europa.eu/esco/skill/334e3e49-fb02-4051-809a-f06adfdc1c40",
+      "match": "close",
+      "keywords": ["problem", "troubleshoot", "debug", "fix"],
+      "escoLabel": "troubleshoot",
+      "labels": {
+        "fi": "tunnistaa ongelmia",
+        "sv": "göra felsökning"
+      },
+      "altLabels": [
+        "troubleshoot problems",
+        "perform troubleshooting",
+        "solve problems",
+        "identify problems",
+        "troubleshooting"
+      ]
+    },
+    {
+      "id": "team",
+      "label": "Teamwork",
+      "group": "Transversal",
+      "uri": "http://data.europa.eu/esco/skill/60c78287-22eb-4103-9c8c-28deaa460da0",
+      "match": "exact",
+      "keywords": ["team", "tiimi", "collaborat"],
+      "escoLabel": "work in teams",
+      "labels": {
+        "fi": "työskennellä ryhmässä",
+        "sv": "arbeta i lag"
+      },
+      "altLabels": [
+        "working in teams",
+        "foster social networks",
+        "work in groups",
+        "cooperate",
+        "cooperate with colleagues"
+      ]
+    },
+    {
+      "id": "lead",
+      "label": "Leading a team",
+      "group": "Transversal",
+      "uri": "http://data.europa.eu/esco/skill/1f1d2ff8-c4c1-45cc-9812-6a7ee84a73cb",
+      "match": "exact",
+      "keywords": ["lead", "manager", "päällikkö", "supervisor", "esimies", "jefe", "leiter", "shift lead"],
+      "escoLabel": "lead a team",
+      "labels": {
+        "fi": "johtaa ryhmää",
+        "sv": "leda en grupp"
+      },
+      "altLabels": ["direct a team", "supervise a group of people", "leading a team", "lead teams"]
+    },
+    {
+      "id": "mentoring",
+      "label": "Mentoring & teaching",
+      "group": "Transversal",
+      "uri": "http://data.europa.eu/esco/skill/a584a638-a2c0-4b3c-bdf3-a64f87225be9",
+      "match": "exact",
+      "keywords": ["teach", "mentor", "train", "opettaja", "lehrer", "profesor", "enseignant"],
+      "escoLabel": "mentor individuals",
+      "labels": {
+        "fi": "opastaa henkilöitä",
+        "sv": "handleda individer"
+      },
+      "altLabels": [
+        "help people",
+        "support individuals",
+        "guide individuals",
+        "guide people",
+        "help individuals"
+      ]
+    },
+    {
+      "id": "adapt",
+      "label": "Adapting to change",
+      "group": "Transversal",
+      "uri": "http://data.europa.eu/esco/skill/49de9958-2aa4-4eef-a89d-fe5d5bcd28c4",
+      "match": "exact",
+      "keywords": ["startup", "fast-paced", "change", "flexible"],
+      "escoLabel": "adapt to change",
+      "labels": {
+        "fi": "sopeutua muutoksiin",
+        "sv": "anpassa sig till förändringar"
+      },
+      "altLabels": [
+        "assimilate to change",
+        "adjust to change",
+        "adapting to change",
+        "conform to change",
+        "adapt to changes"
+      ]
+    },
+    {
+      "id": "intercultural",
+      "label": "Intercultural communication",
+      "group": "Transversal",
+      "uri": "http://data.europa.eu/esco/skill/7d23c508-c007-4221-bb84-0c9a479b8ea6",
+      "match": "exact",
+      "keywords": ["international", "multicultural", "global", "intercultural"],
+      "escoLabel": "show intercultural awareness",
+      "labels": {
+        "fi": "osoittaa muiden kulttuurien tuntemusta",
+        "sv": "visa interkulturell medvetenhet"
+      },
+      "altLabels": [
+        "evidence intercultural awareness",
+        "commit to intercultural awareness",
+        "commit to multi cultural awareness",
+        "evidence multi cultural awareness",
+        "demonstrate multi cultural awareness"
+      ]
+    }
+  ],
+  "related": [
+    ["logistics", "supply", 0.7],
+    ["logistics", "analysis", 0.35],
+    ["logistics", "warehouse", 0.7],
+    ["warehouse", "supply", 0.5],
+    ["supply", "analysis", 0.4],
+    ["supply", "procurement", 0.6],
+    ["sql", "analysis", 0.5],
+    ["python", "pipelines", 0.5],
+    ["sql", "pipelines", 0.4],
+    ["python", "ml", 0.4],
+    ["analysis", "ml", 0.3],
+    ["python", "backend", 0.4],
+    ["js", "backend", 0.4],
+    ["sql", "backend", 0.3],
+    ["js", "react", 0.6],
+    ["js", "testing", 0.3],
+    ["backend", "testing", 0.3],
+    ["ux", "a11y", 0.5],
+    ["ux", "react", 0.25],
+    ["security", "cloud", 0.35],
+    ["security", "health-regs", 0.3],
+    ["embedded", "battery", 0.35],
+    ["energy", "hvac", 0.6],
+    ["energy", "esg", 0.4],
+    ["esg", "circular", 0.5],
+    ["patient-care", "elderly-care", 0.6],
+    ["patient-care", "medication", 0.4],
+    ["ehr", "health-regs", 0.4],
+    ["ehr", "analysis", 0.3],
+    ["customer", "patient-care", 0.3],
+    ["pm", "stakeholders", 0.4],
+    ["lead", "mentoring", 0.4],
+    ["customer", "stakeholders", 0.5],
+    ["customer", "sales", 0.4],
+    ["cloud", "pipelines", 0.4]
+  ]
+}

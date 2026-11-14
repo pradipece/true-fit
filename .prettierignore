@@ -1,0 +1,7 @@
+.next
+out
+build
+node_modules
+yarn.lock
+next-env.d.ts
+*.pdf

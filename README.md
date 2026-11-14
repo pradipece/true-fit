@@ -14,11 +14,11 @@ Espoo runs recruitment and matchmaking events online, in person and in hybrid fo
 
 ## 2. Who uses it and what goes wrong
 
-| Who | What goes wrong |
-|---|---|
-| **Companies** | They don't see the city as a real source of candidates ("free means low quality"). They describe their needs vaguely and send them too late, right before the event. During the event they get flooded with irrelevant approaches. |
-| **Talent** | They can't put their skills, transferable skills or value into words. Their AI-written CVs all sound the same. International candidates also face language, culture, permit, relocation and onboarding issues. |
-| **Organisers (the city)** | They get a lot of applications and have little time to judge real ability, especially for tech skills. The current platform is clunky and crashes when everyone logs in at the start of an event. |
+| Who                       | What goes wrong                                                                                                                                                                                                                    |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Companies**             | They don't see the city as a real source of candidates ("free means low quality"). They describe their needs vaguely and send them too late, right before the event. During the event they get flooded with irrelevant approaches. |
+| **Talent**                | They can't put their skills, transferable skills or value into words. Their AI-written CVs all sound the same. International candidates also face language, culture, permit, relocation and onboarding issues.                     |
+| **Organisers (the city)** | They get a lot of applications and have little time to judge real ability, especially for tech skills. The current platform is clunky and crashes when everyone logs in at the start of an event.                                  |
 
 ## 3. Hard constraints
 
@@ -29,17 +29,17 @@ Espoo runs recruitment and matchmaking events online, in person and in hybrid fo
 
 ## 4. Judging criteria
 
-| Criterion | Weight | What it means for us |
-|---|---|---|
-| Impact & Relevance | 45% | Solve one listed pain point end to end, with a clear before and after. It should work for organisers as well as companies and talent. |
-| Innovation & UX | 35% | Challenge existing approaches; another swipe-and-match app won't stand out. The demo must feel effortless. |
-| Responsible & Feasible Execution | 20% | Credible tech, privacy by design and a realistic path to a pilot in Espoo. |
+| Criterion                        | Weight | What it means for us                                                                                                                  |
+| -------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Impact & Relevance               | 45%    | Solve one listed pain point end to end, with a clear before and after. It should work for organisers as well as companies and talent. |
+| Innovation & UX                  | 35%    | Challenge existing approaches; another swipe-and-match app won't stand out. The demo must feel effortless.                            |
+| Responsible & Feasible Execution | 20%    | Credible tech, privacy by design and a realistic path to a pilot in Espoo.                                                            |
 
 ## 5. Solution directions
 
 1. **Evidence instead of documents:** short, structured proof of skill (scenario answers, a 60-second voice note, a small work sample) mapped to **ESCO** skills. It's harder to fake with AI and quicker for a human to judge.
 2. **AI-guided needs intake for companies:** a short chat helps a company turn "we need a dev" into concrete, ESCO-mapped needs **weeks before** the event. It sends reminders and shows how many relevant candidates are already in the pool, which addresses the "low quality" belief.
-3. **Explainable, two-way matching:** both sides see *why* a match was suggested ("shared skill: data pipelines; transferable: logistics → supply-chain analytics"). Both must opt in. Short scheduled slots replace open-floor chaos.
+3. **Explainable, two-way matching:** both sides see _why_ a match was suggested ("shared skill: data pipelines; transferable: logistics → supply-chain analytics"). Both must opt in. Short scheduled slots replace open-floor chaos.
 4. **Anonymised first round:** name, nationality, photo and school are hidden until both sides opt in.
 5. **Skills translator:** turns foreign job titles and unusual career paths into ESCO skills and local job vocabulary.
 6. **Follow-up loop:** structured feedback after the event improves the next one and gives the city impact metrics.
@@ -81,8 +81,8 @@ One flow that combines directions 1–4:
 ## Getting started
 
 ```bash
-npm install
-npm run dev
+yarn install
+yarn dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
