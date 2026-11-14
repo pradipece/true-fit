@@ -328,7 +328,7 @@ export function TalentProfile() {
     });
     setJoined(true);
     toast.success("You're registered for the event", {
-      description: "Companies with a matching need can now see your skill card and invite you.",
+      description: "The event organiser can now introduce you to companies with a matching need.",
     });
   };
 

@@ -22,7 +22,7 @@ import { useDemo } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 const DECISIONS: Series[] = [
-  { key: "approved", label: "Invited", color: CHART.blue },
+  { key: "approved", label: "Introduced", color: CHART.blue },
   { key: "waiting", label: "Not decided yet", color: CHART.amber },
   { key: "rejected", label: "Not now", color: CHART.magenta },
 ];
@@ -79,10 +79,10 @@ export function EventInsights() {
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-transfer/30 bg-transfer-soft/40 px-4 py-3 text-sm">
           <span>
             <strong className="font-medium">{d.tiles.waiting.value} suggested matches</strong> are waiting for
-            a company decision.
+            an introduction decision.
           </span>
-          <Button size="sm" nativeButton={false} render={<Link href="/company/candidates" />}>
-            Review candidates <ArrowRightIcon data-icon="inline-end" />
+          <Button size="sm" nativeButton={false} render={<Link href="/organiser" />}>
+            Review introductions <ArrowRightIcon data-icon="inline-end" />
           </Button>
         </div>
       )}
@@ -113,11 +113,11 @@ export function EventInsights() {
         </ChartCard>
 
         <ChartCard
-          title="Company decisions per need"
-          description="Suggested matches each company invited, passed on or still has to look at, across the event."
+          title="Introductions per need"
+          description="Suggested matches the organiser introduced, passed on or still has to look at, per company need."
           legend={DECISIONS}
           table={{
-            columns: ["Need", "Approved", "Waiting", "Rejected"],
+            columns: ["Need", "Introduced", "Waiting", "Not now"],
             rows: d.decisionsPerNeed.map((n) => [`${n.label} · ${n.sub}`, n.approved, n.waiting, n.rejected]),
           }}
         >

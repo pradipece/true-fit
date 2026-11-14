@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     template: "%s · True Fit",
   },
   description:
-    "More signal, less noise: companies describe real needs and invite people, talent shows real evidence and decides whom to meet, with explainable matches before, during and after the event.",
+    "More signal, less noise: companies describe real needs, talent shows real evidence, the event organiser introduces them and both decide whom to meet, with explainable matches before, during and after the event.",
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {

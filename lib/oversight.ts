@@ -4,27 +4,33 @@ import { biasAudit, matchesForNeed, pairKey, poolCoverage } from "./match";
 import type { AuditEntry, Decision, Feedback, MatchExplanation, Need, SkillGroup, Talent } from "./types";
 
 /**
- * Human oversight by the company: reasons, the append-only audit log and the review queue.
+ * Human oversight by the organiser, the event's broker: reasons, the append-only audit log
+ * and the review queue. An introduction is not a meeting: the company and the candidate
+ * each still say yes or no.
  * Matching only suggests. People below the overlap guide are listed for review too:
  * nobody is rejected, hidden or removed automatically.
  */
 
-export const ACTOR = "Company (demo)";
+export const ACTOR = "Organiser (demo)";
 
 export const REASONS = {
   approve: [
     "Must-haves shown in their answers",
     "Strong transferable skills",
     "Worth a conversation despite gaps",
-    "Fits how our team works",
+    "One side asked to meet",
   ],
   reject: [
     "Key must-have not shown yet",
-    "We need a different level of experience",
+    "Level of experience doesn't fit the need",
     "Way of working or start date doesn't fit",
-    "Already meeting this candidate",
+    "Already introduced to this company",
   ],
-  edit: ["New information from the candidate", "We changed the need card", "Correcting my earlier decision"],
+  edit: [
+    "New information from the candidate",
+    "The company changed the need card",
+    "Correcting my earlier decision",
+  ],
 } as const;
 
 export const OTHER = "Other (explain in the note)";
@@ -150,7 +156,7 @@ export function funnel(
       stage: "Suggested by skills",
       value: needs.flatMap((n) => matchesForNeed(n, pool).filter((m) => m.suggested)).length,
     },
-    { stage: "Approved by you", value: approved.length },
+    { stage: "Introduced by the organiser", value: approved.length },
     { stage: "Both said yes", value: both.length },
     { stage: "Meeting booked", value: both.filter((k) => slots[k]).length },
     {

@@ -1,10 +1,39 @@
 import { describe, expect, it } from "vitest";
 import { SEED_NEEDS, SEED_TALENT } from "@/lib/data";
-import { interestStatus, proofBoost, rolesFor, unlockSkills } from "@/lib/explore";
+import { companiesFor, interestStatus, proofBoost, rolesFor, unlockSkills } from "@/lib/explore";
 import type { MatchNeed, MatchTalent } from "@/lib/match";
 
 const need = (id: string, must: string[], nice: string[] = []): MatchNeed => ({ id, must, nice });
 const me = (skills: MatchTalent["skills"]): MatchTalent => ({ id: "T-T", skills, evidence: [] });
+
+describe("companiesFor", () => {
+  it("lists each company once, ranked by its best role", () => {
+    const t = SEED_TALENT[0];
+    const ranked = companiesFor(SEED_NEEDS, t);
+    const ids = ranked.map((c) => c.companyId);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(ranked.reduce((n, c) => n + c.roles.length, 0)).toBe(SEED_NEEDS.length);
+    for (const c of ranked) {
+      expect(c.best).toBe(c.roles[0]);
+      expect(c.strong).toBe(c.roles.filter((r) => r.m.suggested).length);
+    }
+    for (let i = 1; i < ranked.length; i++)
+      expect(ranked[i - 1].best.m.score).toBeGreaterThanOrEqual(ranked[i].best.m.score);
+  });
+
+  it("does not depend on protected attributes", () => {
+    for (const t of SEED_TALENT.slice(0, 5)) {
+      const flipped = {
+        ...t,
+        audit: { origin: "Outside EU", education: "Self-taught / bootcamp", path: "Career changer" } as const,
+        languages: [{ lang: "Arabic", level: "Native" as const }],
+      };
+      const order = (x: typeof t) =>
+        companiesFor(SEED_NEEDS, x).map((c) => [c.companyId, c.best.m.score, c.strong]);
+      expect(order(flipped)).toEqual(order(t));
+    }
+  });
+});
 
 describe("rolesFor", () => {
   it("ranks every role by skill match, best first", () => {
@@ -72,6 +101,8 @@ describe("interestStatus", () => {
     expect(interestStatus(undefined, undefined, undefined)).toBe("none");
     expect(interestStatus({ talent: true }, undefined, undefined)).toBe("asked");
     expect(interestStatus({ company: true }, { status: "approved" }, undefined)).toBe("invited");
+    expect(interestStatus(undefined, { status: "approved" }, undefined)).toBe("invited");
+    expect(interestStatus({ talent: true }, { status: "approved" }, undefined)).toBe("accepted");
     expect(interestStatus({ company: true, talent: true }, { status: "approved" }, undefined)).toBe("both");
     expect(interestStatus({ company: true, talent: true }, { status: "approved" }, "10:20")).toBe("booked");
     expect(interestStatus({ talent: true }, { status: "rejected" }, undefined)).toBe("passed");

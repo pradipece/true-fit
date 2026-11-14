@@ -23,7 +23,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { IdentitySwitch, useIdentity } from "@/components/identity";
-import { MatchExplanationView } from "@/components/match-explanation";
+import { MatchExplanationView, ScoreMeter } from "@/components/match-explanation";
 import { SkillChip } from "@/components/skill-chip";
 import { EVENT } from "@/lib/data";
 import { pairOwner } from "@/lib/identity";
@@ -84,15 +84,15 @@ export function Meetings({ side }: { side: MeetingSide }) {
           <CardContent className="space-y-3 py-12 text-center">
             <p className="text-muted-foreground">
               {side === "company"
-                ? "No invitations yet. Invite suitable candidates from the Candidates page."
-                : "No invitations yet. Companies invite people whose skills fit their needs; build your skill card so they can find you."}
+                ? "No introductions yet. The event organiser introduces people whose skills fit your needs; you can ask for anyone on Find candidates."
+                : "No introductions yet. The event organiser introduces you to companies whose needs fit your skills; build your skill card so they can find you."}
             </p>
             <Button
               variant="outline"
               nativeButton={false}
-              render={<Link href={side === "company" ? "/company/candidates" : "/talent"} />}
+              render={<Link href={side === "company" ? "/company" : "/talent"} />}
             >
-              {side === "company" ? "See suitable candidates" : "Build your skill card"}
+              {side === "company" ? "Find candidates" : "Build your skill card"}
             </Button>
           </CardContent>
         </Card>
@@ -110,7 +110,7 @@ export function Meetings({ side }: { side: MeetingSide }) {
   const firstFree = earliestFree(availability);
   const room = roomFor(current.need, needs);
   const fb = feedback[current.key];
-  // Companies already see the candidate's name on the Candidates page; candidates see their own alias until it's mutual.
+  // Companies already see the candidate's name on Find candidates; candidates see their own alias until it's mutual.
   const talentName = side === "company" || mutual ? current.t.revealName : current.t.alias;
   const me = side === "company" ? current.need.company : talentName;
   const otherSide: MeetingSide = side === "company" ? "talent" : "company";
@@ -138,7 +138,9 @@ export function Meetings({ side }: { side: MeetingSide }) {
       <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
         <div className="space-y-2">
           <p className="px-1 text-xs font-medium text-muted-foreground">
-            {side === "company" ? "Candidates suggested to companies" : "Companies suggested to candidates"}
+            {side === "company"
+              ? "Candidates the organiser introduced"
+              : "Companies the organiser introduced"}
           </p>
           {pairs.map((p) => {
             const po = optIns[p.key] ?? {};
@@ -164,7 +166,7 @@ export function Meetings({ side }: { side: MeetingSide }) {
                 </p>
                 <p className="truncate text-xs text-muted-foreground">
                   {side === "company"
-                    ? `for ${p.need.company} · ${p.need.title}`
+                    ? `${Math.round(p.m.score * 100)}% match for ${p.need.title}`
                     : `${p.need.company} · as ${pm ? p.t.revealName : p.t.alias}`}
                 </p>
                 <div className="mt-2 flex items-center gap-1.5">
@@ -188,8 +190,8 @@ export function Meetings({ side }: { side: MeetingSide }) {
               }
               done={mutual}
             >
-              You see why the match was suggested. A meeting is booked only when both sides say yes, and
-              nobody is told who said no.
+              The event organiser introduced you and you see why. A meeting is booked only when both sides say
+              yes, and nobody is told who said no.
             </StepTitle>
             {side === "company" ? (
               <Card>
@@ -207,11 +209,12 @@ export function Meetings({ side }: { side: MeetingSide }) {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
+                  <ScoreMeter score={current.m.score} role={current.need.title} />
                   <p className="text-sm text-muted-foreground">{current.t.headline}</p>
                   <MatchExplanationView m={current.m} />
                   {current.d.note && (
                     <p className="rounded-lg bg-accent p-2.5 text-xs text-accent-foreground">
-                      Company note: {current.d.note}
+                      Organiser note: {current.d.note}
                     </p>
                   )}
                 </CardContent>
@@ -223,7 +226,7 @@ export function Meetings({ side }: { side: MeetingSide }) {
               <Card>
                 <CardHeader>
                   <CardDescription className="flex items-center gap-1.5">
-                    <UserRoundIcon className="size-3.5" /> Suggested to {talentName}
+                    <UserRoundIcon className="size-3.5" /> Introduced to {talentName} by the organiser
                   </CardDescription>
                   <CardTitle className="text-base">{current.need.title}</CardTitle>
                 </CardHeader>

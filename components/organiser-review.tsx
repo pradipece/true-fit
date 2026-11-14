@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
   ArrowRightIcon,
+  Building2Icon,
   CheckIcon,
   ChevronDownIcon,
   ClipboardListIcon,
@@ -12,6 +13,9 @@ import {
   HandshakeIcon,
   LanguagesIcon,
   ListChecksIcon,
+  NetworkIcon,
+  SearchIcon,
+  UsersIcon,
   MailIcon,
   MapPinIcon,
   MessageSquareIcon,
@@ -33,21 +37,23 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { AiFitBadge, RankToggle, useAiRanking } from "@/components/ai-rank";
-import { IdentitySwitch, useIdentity } from "@/components/identity";
-import { MatchExplanationView, ScoreMeter } from "@/components/match-explanation";
+import { MatchPanel, type CompanyScore } from "@/components/candidate-profile";
+import { CompanyRanking } from "@/components/company-ranking";
+import { MatchExplanationView } from "@/components/match-explanation";
 import { SkillChip, SkillLegend } from "@/components/skill-chip";
 import { WhyThisMatch } from "@/components/why-this-match";
+import { companiesFor } from "@/lib/explore";
 import { pairKey, SUGGEST_THRESHOLD } from "@/lib/match";
 import { auditCsv, OTHER, REASONS, reasonError, reviewList } from "@/lib/oversight";
-import { companyOf } from "@/lib/schedule";
 import { useDemo } from "@/lib/store";
-import type { AuditEntry, Decision, MatchExplanation, Need, Talent } from "@/lib/types";
+import type { AuditEntry, Decision, Feedback, MatchExplanation, Need, Talent } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type DialogType = "approve" | "reject" | "edit" | "revert";
@@ -83,57 +89,75 @@ const ACTION_STYLE: Record<AuditEntry["action"], string> = {
   reverted: "border-dashed",
 };
 
+type OptInRow = { company?: boolean; talent?: boolean };
+
+const answerLabel = (v: boolean | undefined) => (v === true ? "Yes" : v === false ? "No" : "Not yet");
+
+/** Where an introduction stands after the organiser made it. */
+function pipelineLabel(o: OptInRow | undefined, slot: string | undefined, fb: Feedback | undefined) {
+  if (fb?.company && fb?.talent) return "Feedback from both sides";
+  if (fb?.company || fb?.talent) return "Feedback from one side";
+  if (slot) return `Meeting at ${slot}`;
+  if (o?.company === false || o?.talent === false) return "One side said no";
+  if (o?.company && o?.talent) return "Both said yes, time to book";
+  if (o?.company) return "Company said yes, waiting for the candidate";
+  if (o?.talent) return "Candidate said yes, waiting for the company";
+  return "Waiting for both to answer";
+}
+
 /**
- * The company reviews the people suggested for its own needs and decides, with a reason,
- * whom to invite. Matching only suggests; nothing is automatic and every decision is logged.
- * Only the signed-in company's needs, decisions and audit entries are shown.
+ * The organiser, the event's broker (City of Espoo), reviews the people suggested for every
+ * company's needs and decides, with a reason, whom to introduce. Matching only suggests;
+ * nothing is automatic and every decision is logged. An introduction is not a meeting: the
+ * company and the candidate each say yes or no in their own Introductions / Meetings view.
  */
-export function CandidateReview() {
-  const {
-    needs: allNeeds,
-    talent,
-    decisions,
-    audit: allAudit,
-    optIns,
-    slots,
-    feedback,
-    decide,
-    undoDecision,
-    setOptIn,
-  } = useDemo();
-  const { id: companyId } = useIdentity("company");
-  const needs = useMemo(() => allNeeds.filter((n) => companyOf(n) === companyId), [allNeeds, companyId]);
-  const audit = useMemo(() => {
-    const own = new Set(needs.map((n) => n.id));
-    return allAudit.filter((e) => own.has(e.needId));
-  }, [allAudit, needs]);
+export function OrganiserReview() {
+  const { needs, talent, decisions, audit, optIns, slots, feedback, decide, undoDecision } = useDemo();
   const [selected, setSelected] = useState<string>(needs[0]?.id ?? "");
   const [showOthers, setShowOthers] = useState(false);
   const [dialog, setDialog] = useState<DialogState | null>(null);
+  const [view, setView] = useState<"need" | "candidate">("need");
 
   const need = needs.find((n) => n.id === selected) ?? needs[0];
   const list = useMemo(() => (need ? reviewList(need, talent) : null), [need, talent]);
   const talentById = useMemo(() => new Map(talent.map((t) => [t.id, t])), [talent]);
   const ranking = useAiRanking(need, list?.suggested ?? [], talentById);
-  const [tab, setTab] = useState<"review" | "log">("review");
+  const [tab, setTab] = useState<"review" | "pipeline" | "log">("review");
   const awaitingReview = needs.reduce(
     (sum, n) =>
       sum + reviewList(n, talent).suggested.filter((m) => !decisions[pairKey(m.needId, m.talentId)]).length,
     0,
   );
 
-  const pipeline = (key: string) =>
-    feedback[key]?.company && feedback[key]?.talent
-      ? "Feedback from both sides"
-      : feedback[key]?.company || feedback[key]?.talent
-        ? "Feedback from one side"
-        : slots[key]
-          ? `Meeting at ${slots[key]}`
-          : optIns[key]?.company && optIns[key]?.talent
-            ? "Both opted in"
-            : optIns[key]?.company
-              ? "Invited, waiting for the candidate"
-              : "Waiting for your yes in Meetings";
+  const pipeline = (key: string) => pipelineLabel(optIns[key], slots[key], feedback[key]);
+  // Every company ranked for each person, so a card can show where this need's company stands.
+  const companyScores = useMemo(
+    () =>
+      new Map(
+        talent.map((t) => [
+          t.id,
+          companiesFor(needs, t).map((c): CompanyScore => ({
+            id: c.companyId,
+            name: c.best.need.company,
+            score: c.best.m.score,
+            strong: c.strong,
+          })),
+        ]),
+      ),
+    [needs, talent],
+  );
+  const introductions = useMemo(
+    () =>
+      Object.entries(decisions)
+        .filter(([, d]) => d.status === "approved")
+        .map(([key, d]) => {
+          const [needId, talentId] = key.split("::");
+          return { key, d, need: needs.find((n) => n.id === needId), t: talentById.get(talentId) };
+        })
+        .filter((r) => r.need && r.t)
+        .sort((a, b) => b.d.at.localeCompare(a.d.at)),
+    [decisions, needs, talentById],
+  );
 
   const confirm = (reason: string, note: string, status?: Decision["status"]) => {
     if (!dialog) return;
@@ -141,25 +165,22 @@ export function CandidateReview() {
     const n = note.trim() || undefined;
     if (dialog.type === "revert") {
       undoDecision(key, reason);
-      toast("Decision withdrawn", { description: "Back in your review list. Logged in the audit trail." });
+      toast("Decision withdrawn", { description: "Back in the review list. Logged in the audit trail." });
     } else {
       const next = dialog.type === "edit" ? status! : dialog.type === "approve" ? "approved" : "rejected";
       decide(key, { status: next, reason, note: n });
-      // Inviting is the company's yes; the candidate answers in their Meetings view.
-      if (next === "approved" && optIns[key]?.company === undefined) setOptIn(key, "company", true);
+      // An introduction is not a yes from either side: both answer in their own view.
       toast.success(
         dialog.type === "edit"
-          ? `Decision changed to ${next === "approved" ? "invited" : "not now"}`
+          ? `Decision changed to ${next === "approved" ? "introduced" : "not now"}`
           : next === "approved"
-            ? "Invited to meet"
+            ? "Introduction sent"
             : "Passed for this need, with reason logged",
         {
           description:
             next === "approved"
-              ? optIns[key]?.talent
-                ? "They already asked to meet you, so you both said yes. Pick a time in Meetings."
-                : "The candidate sees the invitation in their Meetings view and answers yes or no."
-              : "The candidate can still be matched to other needs.",
+              ? "The company and the candidate each see it in their own view and answer yes or no."
+              : "The candidate can still be introduced for other needs.",
         },
       );
     }
@@ -169,7 +190,10 @@ export function CandidateReview() {
   const exportCsv = () => {
     const blob = new Blob([auditCsv(audit, needs, talent)], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
-    const a = Object.assign(document.createElement("a"), { href: url, download: "truefit-audit-log.csv" });
+    const a = Object.assign(document.createElement("a"), {
+      href: url,
+      download: "truefit-introductions-log.csv",
+    });
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -187,6 +211,8 @@ export function CandidateReview() {
         decision={d}
         status={d?.status === "approved" ? pipeline(key) : undefined}
         asked={!d && optIns[key]?.talent === true}
+        companyAsked={!d && optIns[key]?.company === true}
+        companies={companyScores.get(m.talentId) ?? []}
         fit={ranking.fitOf(m.talentId)}
         onAction={(type) => setDialog({ type, m, current: d })}
       />
@@ -195,7 +221,6 @@ export function CandidateReview() {
 
   return (
     <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="gap-6">
-      <IdentitySwitch side="company" />
       <TabsList className="h-10">
         <TabsTrigger value="review" className="px-3">
           <ListChecksIcon /> Suitable candidates
@@ -203,8 +228,16 @@ export function CandidateReview() {
             <Badge className="ml-1 h-5 min-w-5 px-1.5 tabular-nums">{awaitingReview}</Badge>
           )}
         </TabsTrigger>
+        <TabsTrigger value="pipeline" className="px-3">
+          <NetworkIcon /> All introductions
+          {introductions.length > 0 && (
+            <Badge variant="secondary" className="ml-1 h-5 min-w-5 px-1.5 tabular-nums">
+              {introductions.length}
+            </Badge>
+          )}
+        </TabsTrigger>
         <TabsTrigger value="log" className="px-3">
-          <ClipboardListIcon /> Your decisions log
+          <ClipboardListIcon /> Decisions log
         </TabsTrigger>
       </TabsList>
 
@@ -212,35 +245,79 @@ export function CandidateReview() {
         <p className="flex items-start gap-2 rounded-xl border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
           <ScaleIcon className="mt-0.5 size-4 shrink-0 text-primary" />
           <span>
-            <span className="font-medium text-foreground">You decide whom to invite.</span> Nobody is rejected
+            <span className="font-medium text-foreground">You decide whom to introduce.</span> The company and
+            the candidate then each say yes or no; nobody meets without both. Nobody is rejected
             automatically: people below the {Math.round(SUGGEST_THRESHOLD * 100)}% suggestion line are listed
             too. The order comes from skills only; there are no hidden scores, and every percentage is a skill
             match you can open. Names and contact details are fictional demo data.
           </span>
         </p>
 
-        {needs.length === 0 && (
+        <div className="flex w-fit gap-1 rounded-lg border p-0.5 text-sm" role="group" aria-label="Review by">
+          {(
+            [
+              ["need", "By company need", Building2Icon],
+              ["candidate", "By candidate", UsersIcon],
+            ] as const
+          ).map(([v, label, Icon]) => (
+            <button
+              key={v}
+              type="button"
+              aria-pressed={view === v}
+              onClick={() => setView(v)}
+              className={cn(
+                "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-muted-foreground transition-colors hover:text-foreground",
+                view === v && "bg-secondary text-foreground",
+              )}
+            >
+              <Icon className="size-3.5" /> {label}
+            </button>
+          ))}
+        </div>
+
+        {view === "candidate" && (
+          <ByCandidate
+            needs={needs}
+            talent={talent}
+            decisions={decisions}
+            optIns={optIns}
+            onAction={(type, m) => setDialog({ type, m, current: decisions[pairKey(m.needId, m.talentId)] })}
+          />
+        )}
+
+        {view === "need" && needs.length === 0 && (
           <Card>
             <CardContent className="space-y-3 py-10 text-center">
               <p className="text-muted-foreground">
-                Nothing to show yet. Tell TrueFit Assistant who you need to see suitable candidates.
+                No needs yet. Companies describe whom they need in the company view.
               </p>
               <Button nativeButton={false} render={<Link href="/company" />}>
-                Find candidates <ArrowRightIcon data-icon="inline-end" />
+                Open the company view <ArrowRightIcon data-icon="inline-end" />
               </Button>
             </CardContent>
           </Card>
         )}
-        <div className={cn("grid gap-6 lg:grid-cols-[320px_1fr]", !needs.length && "hidden")}>
+        <div
+          className={cn(
+            "grid gap-6 lg:grid-cols-[320px_1fr]",
+            (!needs.length || view !== "need") && "hidden",
+          )}
+        >
           {/* Need list */}
           <div className="space-y-2">
-            <p className="px-1 text-xs font-medium text-muted-foreground">Your needs</p>
+            <p className="px-1 text-xs font-medium text-muted-foreground">
+              Needs from {new Set(needs.map((n) => n.company)).size} companies
+            </p>
             {needs.map((n) => {
               const { suggested } = reviewList(n, talent);
               const open = suggested.filter((m) => !decisions[pairKey(m.needId, m.talentId)]).length;
               const asks = talent.filter((t) => {
                 const k = pairKey(n.id, t.id);
                 return optIns[k]?.talent === true && !decisions[k];
+              }).length;
+              const companyAsks = talent.filter((t) => {
+                const k = pairKey(n.id, t.id);
+                return optIns[k]?.company === true && !decisions[k];
               }).length;
               return (
                 <button
@@ -269,7 +346,13 @@ export function CandidateReview() {
                   </p>
                   {asks > 0 && (
                     <p className="mt-1 flex items-center gap-1 text-xs font-medium text-primary tabular-nums">
-                      <HandIcon className="size-3.5" /> {asks} asked to meet you
+                      <HandIcon className="size-3.5" /> {asks} {asks === 1 ? "candidate" : "candidates"} asked
+                      to meet
+                    </p>
+                  )}
+                  {companyAsks > 0 && (
+                    <p className="mt-1 flex items-center gap-1 text-xs font-medium text-primary tabular-nums">
+                      <Building2Icon className="size-3.5" /> Company asked about {companyAsks}
                     </p>
                   )}
                 </button>
@@ -293,7 +376,7 @@ export function CandidateReview() {
                 <Card>
                   <CardContent className="py-6 text-center text-sm text-muted-foreground">
                     No one reaches the suggestion line for this need yet. Look through the people below
-                    yourself, or move a rare must-have skill to nice-to-have on your card.
+                    yourself, or suggest the company moves a rare must-have skill to nice-to-have.
                   </CardContent>
                 </Card>
               )}
@@ -328,6 +411,19 @@ export function CandidateReview() {
         </div>
       </TabsContent>
 
+      <TabsContent value="pipeline">
+        <IntroductionsTable
+          rows={introductions.map(({ key, d, need: n, t }) => ({
+            key,
+            d,
+            need: n!,
+            name: displayName(t) ?? t!.alias,
+            o: optIns[key],
+            status: pipeline(key),
+          }))}
+        />
+      </TabsContent>
+
       <TabsContent value="log">
         <AuditLog
           entries={audit}
@@ -341,7 +437,7 @@ export function CandidateReview() {
       </TabsContent>
 
       <DecisionDialog
-        key={dialog ? `${dialog.type}:${dialog.m.talentId}` : "closed"}
+        key={dialog ? `${dialog.type}:${dialog.m.needId}:${dialog.m.talentId}` : "closed"}
         state={dialog}
         onClose={() => setDialog(null)}
         onConfirm={confirm}
@@ -389,6 +485,8 @@ function MatchCard({
   decision: d,
   status,
   asked,
+  companyAsked,
+  companies,
   fit,
   onAction,
 }: {
@@ -399,6 +497,10 @@ function MatchCard({
   status?: string;
   /** The candidate asked to meet for this need (from Explore roles). Not part of the score. */
   asked?: boolean;
+  /** The company asked the organiser to introduce this person (from Find candidates). Not part of the score. */
+  companyAsked?: boolean;
+  /** Every company ranked for this person, best first. */
+  companies: CompanyScore[];
   fit?: ReturnType<ReturnType<typeof useAiRanking>["fitOf"]>;
   onAction: (type: DialogType) => void;
 }) {
@@ -414,9 +516,17 @@ function MatchCard({
           {asked && (
             <Badge
               className="bg-primary text-primary-foreground"
-              title="They asked to meet you about this role. It doesn't change the skill match."
+              title="They asked to meet this company about this role. It doesn't change the skill match."
             >
-              <HandIcon data-icon="inline-start" /> Asked to meet you
+              <HandIcon data-icon="inline-start" /> Candidate asked to meet
+            </Badge>
+          )}
+          {companyAsked && (
+            <Badge
+              className="bg-primary text-primary-foreground"
+              title="The company asked you to introduce this person. It doesn't change the skill match."
+            >
+              <Building2Icon data-icon="inline-start" /> Company asked for an introduction
             </Badge>
           )}
           {!m.suggested && (
@@ -426,11 +536,29 @@ function MatchCard({
           )}
         </CardTitle>
         <CardDescription className="pl-10">{t.headline}</CardDescription>
-        <div className="col-start-2 row-span-2 row-start-1 self-start justify-self-end">
-          <ScoreMeter score={m.score} />
-        </div>
       </CardHeader>
       <CardContent className="space-y-3">
+        {(() => {
+          const i = companies.findIndex((c) => c.id === (need.companyId ?? "C-YOU"));
+          return (
+            <MatchPanel
+              score={m.score}
+              role={need.title}
+              company={
+                i < 0
+                  ? undefined
+                  : {
+                      name: companies[i].name,
+                      score: companies[i].score,
+                      rank: i + 1,
+                      total: companies.length,
+                    }
+              }
+              companies={companies}
+              currentId={companies[i]?.id}
+            />
+          );
+        })()}
         <AiFitBadge fit={fit} />
         {t.contact && (
           <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm" aria-label="Contact details">
@@ -482,7 +610,7 @@ function MatchCard({
             </div>
           </dl>
           <p className="mt-1.5 text-muted-foreground">
-            This is context for you. None of it is part of the match percentage.
+            This is context for the introduction. None of it is part of the match percentage.
           </p>
         </details>
       </CardContent>
@@ -498,7 +626,7 @@ function MatchCard({
               ) : (
                 <XIcon data-icon="inline-start" />
               )}
-              {d.status === "approved" ? "Invited" : "Not now"} · {d.reason}
+              {d.status === "approved" ? "Introduced" : "Not now"} · {d.reason}
             </Badge>
             {status && <span className="text-xs text-muted-foreground">{status}</span>}
             {d.note && (
@@ -518,7 +646,7 @@ function MatchCard({
         ) : (
           <>
             <Button size="sm" onClick={() => onAction("approve")}>
-              <CheckIcon data-icon="inline-start" /> Invite to meet
+              <CheckIcon data-icon="inline-start" /> Introduce
             </Button>
             <Button size="sm" variant="outline" onClick={() => onAction("reject")}>
               <XIcon data-icon="inline-start" /> Not now
@@ -533,13 +661,13 @@ function MatchCard({
 
 const DIALOG_COPY: Record<DialogType, { title: string; body: string; cta: string }> = {
   approve: {
-    title: "Invite this candidate to meet?",
-    body: "The candidate sees your invitation and the role in their Meetings view and answers yes or no. You book a slot once they say yes.",
-    cta: "Invite with reason",
+    title: "Introduce this candidate to the company?",
+    body: "The company sees the candidate in its Introductions view, and the candidate sees the role in their Meetings view. Each answers yes or no; a slot can be booked once both say yes.",
+    cta: "Introduce with reason",
   },
   reject: {
     title: "Not now for this need?",
-    body: "Passing needs a reason so decisions can be checked for bias. The candidate can still be matched to other needs and is not told.",
+    body: "Passing needs a reason so decisions can be checked for bias. The candidate can still be introduced for other needs and is not told.",
     cta: "Pass with reason",
   },
   edit: {
@@ -549,7 +677,7 @@ const DIALOG_COPY: Record<DialogType, { title: string; body: string; cta: string
   },
   revert: {
     title: "Undo this decision?",
-    body: "The pair goes back to your review list. The withdrawal is logged; nothing is erased.",
+    body: "The pair goes back to the review list and drops out of both sides' views. The withdrawal is logged; nothing is erased.",
     cta: "Undo decision",
   },
 };
@@ -601,7 +729,7 @@ function DecisionDialog({
                     setReason("");
                   }}
                 >
-                  {s === "approved" ? "Invited" : "Not now"}
+                  {s === "approved" ? "Introduced" : "Not now"}
                   {state?.current?.status === s && " (current)"}
                 </Button>
               ))}
@@ -682,18 +810,23 @@ function AuditLog({
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
-          <ClipboardListIcon className="size-4" /> Your decisions log
+          <ClipboardListIcon className="size-4" /> Decisions log
         </CardTitle>
         <CardDescription>
-          Every invitation, pass, edit and undo for your needs, with when and why. Append-only: entries are
-          never changed or deleted.
+          Every introduction, pass, edit and undo, with when and why. Append-only: entries are never changed
+          or deleted.
         </CardDescription>
         <div className="col-start-2 row-span-2 row-start-1 flex flex-wrap gap-2 self-start justify-self-end">
           <Button size="sm" variant="outline" onClick={onExport} disabled={!entries.length}>
             <DownloadIcon data-icon="inline-start" /> Export CSV
           </Button>
-          <Button size="sm" variant="outline" nativeButton={false} render={<Link href="/meetings/company" />}>
-            <HandshakeIcon data-icon="inline-start" /> Meetings <ArrowRightIcon data-icon="inline-end" />
+          <Button
+            size="sm"
+            variant="outline"
+            nativeButton={false}
+            render={<Link href="/organiser/insights" />}
+          >
+            <HandshakeIcon data-icon="inline-start" /> Insights <ArrowRightIcon data-icon="inline-end" />
           </Button>
         </div>
       </CardHeader>
@@ -744,5 +877,279 @@ function AuditLog({
         </Table>
       </CardContent>
     </Card>
+  );
+}
+
+function IntroductionsTable({
+  rows,
+}: {
+  rows: { key: string; d: Decision; need: Need; name: string; o?: OptInRow; status: string }[];
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <NetworkIcon className="size-4" /> All introductions
+        </CardTitle>
+        <CardDescription>
+          Every introduction you made, newest first, and where it stands. The company and the candidate answer
+          in their own views; you only see whether they said yes, never a reason for a no.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Introduced</TableHead>
+              <TableHead>Need</TableHead>
+              <TableHead>Candidate</TableHead>
+              <TableHead>Company&apos;s answer</TableHead>
+              <TableHead>Candidate&apos;s answer</TableHead>
+              <TableHead>Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {rows.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={6} className="py-6 text-center text-muted-foreground">
+                  No introductions yet. Introduce people from the Suitable candidates tab.
+                </TableCell>
+              </TableRow>
+            )}
+            {rows.map((r) => (
+              <TableRow key={r.key}>
+                <TableCell className="text-muted-foreground tabular-nums">{fmtTime(r.d.at)}</TableCell>
+                <TableCell className="max-w-56 truncate" title={`${r.need.title} · ${r.need.company}`}>
+                  {r.need.title} <span className="text-muted-foreground">· {r.need.company}</span>
+                </TableCell>
+                <TableCell>{r.name}</TableCell>
+                <TableCell>
+                  <AnswerBadge value={r.o?.company} />
+                </TableCell>
+                <TableCell>
+                  <AnswerBadge value={r.o?.talent} />
+                </TableCell>
+                <TableCell className="text-xs text-muted-foreground">{r.status}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+  );
+}
+
+function AnswerBadge({ value }: { value?: boolean }) {
+  return (
+    <Badge
+      variant="outline"
+      className={cn(
+        "font-normal",
+        value === true && "border-evidence/30 bg-evidence-soft text-evidence",
+        value === undefined && "border-dashed text-muted-foreground",
+      )}
+    >
+      {answerLabel(value)}
+    </Badge>
+  );
+}
+
+/**
+ * The other way round: pick a candidate and see every company ranked for them (best role
+ * first, same skills-only match), then introduce them to a role or pass, with a reason.
+ */
+function ByCandidate({
+  needs,
+  talent,
+  decisions,
+  optIns,
+  onAction,
+}: {
+  needs: Need[];
+  talent: Talent[];
+  decisions: Record<string, Decision>;
+  optIns: Record<string, OptInRow>;
+  onAction: (type: DialogType, m: MatchExplanation) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const people = useMemo(
+    () =>
+      talent
+        .map((t) => ({ t, companies: companiesFor(needs, t) }))
+        .sort(
+          (a, b) =>
+            (b.companies[0]?.best.m.score ?? 0) - (a.companies[0]?.best.m.score ?? 0) ||
+            (displayName(a.t) ?? a.t.alias).localeCompare(displayName(b.t) ?? b.t.alias),
+        ),
+    [needs, talent],
+  );
+  const [selected, setSelected] = useState(people[0]?.t.id ?? "");
+  const q = query.trim().toLowerCase();
+  const shown = q
+    ? people.filter(({ t }) => `${displayName(t) ?? ""} ${t.alias} ${t.headline}`.toLowerCase().includes(q))
+    : people;
+  const current = people.find((p) => p.t.id === selected) ?? people[0];
+
+  if (!current)
+    return (
+      <Card>
+        <CardContent className="py-10 text-center text-muted-foreground">No candidates yet.</CardContent>
+      </Card>
+    );
+  const t = current.t;
+
+  return (
+    <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
+      <div className="space-y-2">
+        <div className="relative">
+          <SearchIcon className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search candidates"
+            aria-label="Search candidates"
+            className="pl-8"
+          />
+        </div>
+        <p className="px-1 text-xs font-medium text-muted-foreground">
+          {people.length} candidates, best company match first
+        </p>
+        <div className="max-h-[70vh] space-y-2 overflow-y-auto pr-1">
+          {shown.map(({ t: p, companies }) => {
+            const top = companies[0];
+            const strong = companies.reduce((n, c) => n + c.strong, 0);
+            const asks = needs.filter((n) => {
+              const k = pairKey(n.id, p.id);
+              return optIns[k]?.talent === true && !decisions[k];
+            }).length;
+            return (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => setSelected(p.id)}
+                aria-current={current.t.id === p.id}
+                className={cn(
+                  "w-full rounded-xl border bg-card p-3 text-left transition-colors hover:bg-muted/50",
+                  current.t.id === p.id && "border-primary ring-2 ring-primary/20",
+                )}
+              >
+                <p className="truncate text-sm font-medium">{displayName(p) ?? p.alias}</p>
+                <p className="truncate text-xs text-muted-foreground">{p.headline}</p>
+                {top && (
+                  <p className="mt-2 truncate text-xs text-muted-foreground tabular-nums">
+                    Best: {top.best.need.company} · {Math.round(top.best.m.score * 100)}% · {strong} strong{" "}
+                    {strong === 1 ? "fit" : "fits"}
+                  </p>
+                )}
+                {asks > 0 && (
+                  <p className="mt-1 flex items-center gap-1 text-xs font-medium text-primary tabular-nums">
+                    <HandIcon className="size-3.5" /> Asked to meet {asks}{" "}
+                    {asks === 1 ? "company" : "companies"}
+                  </p>
+                )}
+              </button>
+            );
+          })}
+          {shown.length === 0 && (
+            <p className="px-1 py-4 text-center text-sm text-muted-foreground">Nobody matches that search.</p>
+          )}
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex flex-wrap items-center gap-2 text-base">
+              <Avatar>
+                <AvatarFallback>{initials(displayName(t) ?? t.alias)}</AvatarFallback>
+              </Avatar>
+              {displayName(t) ?? t.alias}
+              {t.createdByUser && <Badge>New</Badge>}
+            </CardTitle>
+            <CardDescription className="pl-10">{t.headline}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {t.contact && (
+              <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm" aria-label="Contact details">
+                <li className="flex items-center gap-1.5 text-muted-foreground">
+                  <MapPinIcon className="size-3.5" /> {t.contact.city}
+                </li>
+                <li className="flex items-center gap-1.5">
+                  <MailIcon className="size-3.5 text-muted-foreground" /> {t.contact.email}
+                </li>
+              </ul>
+            )}
+            <div className="flex flex-wrap gap-1.5">
+              {t.skills.map((s) => (
+                <SkillChip key={s.id} id={s.id} kind={s.level} />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="space-y-1">
+          <h2 className="text-sm font-medium">Companies ranked for this candidate</h2>
+          <p className="text-xs text-muted-foreground">
+            Each company by its best role for this person&apos;s skills, then by how many roles are strong
+            fits. Below the line is not rejected: you can introduce anyone.
+          </p>
+        </div>
+        <CompanyRanking
+          companies={current.companies}
+          renderRole={(need, m) => {
+            const key = pairKey(need.id, t.id);
+            const d = decisions[key];
+            const o = optIns[key];
+            if (d)
+              return (
+                <>
+                  <Badge
+                    variant={d.status === "approved" ? "default" : "secondary"}
+                    className={cn("font-normal", d.status === "approved" && "bg-evidence text-white")}
+                    title={d.reason}
+                  >
+                    {d.status === "approved" ? "Introduced" : "Not now"}
+                  </Badge>
+                  <Button
+                    size="xs"
+                    variant="ghost"
+                    onClick={() => onAction("edit", m)}
+                    aria-label="Edit decision"
+                  >
+                    <PencilIcon />
+                  </Button>
+                  <Button
+                    size="xs"
+                    variant="ghost"
+                    onClick={() => onAction("revert", m)}
+                    aria-label="Undo decision"
+                  >
+                    <Undo2Icon />
+                  </Button>
+                </>
+              );
+            return (
+              <>
+                {o?.talent === true && (
+                  <HandIcon className="size-3.5 text-primary" aria-label="Candidate asked to meet" />
+                )}
+                {o?.company === true && (
+                  <Building2Icon
+                    className="size-3.5 text-primary"
+                    aria-label="Company asked for an introduction"
+                  />
+                )}
+                <Button size="xs" onClick={() => onAction("approve", m)}>
+                  <CheckIcon data-icon="inline-start" /> Introduce
+                </Button>
+                <Button size="xs" variant="outline" onClick={() => onAction("reject", m)}>
+                  Not now
+                </Button>
+              </>
+            );
+          }}
+        />
+      </div>
+    </div>
   );
 }

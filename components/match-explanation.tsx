@@ -26,12 +26,24 @@ function listJoin(xs: string[]) {
   return `${xs.slice(0, -1).join(", ")} and ${xs.at(-1)}`;
 }
 
-export function ScoreMeter({ score, className }: { score: number; className?: string }) {
+export function ScoreMeter({
+  score,
+  role,
+  className,
+}: {
+  score: number;
+  /** The job title the percentage is for, e.g. "Backend developer". */
+  role?: string;
+  className?: string;
+}) {
   const pct = Math.round(score * 100);
   const segments = 10;
   const filled = Math.round(score * segments);
   return (
-    <div className={cn("flex items-center gap-2", className)} aria-label={`Skill match ${pct}%`}>
+    <div
+      className={cn("flex items-center gap-2", className)}
+      aria-label={role ? `Skill match ${pct}% for ${role}` : `Skill match ${pct}%`}
+    >
       <div className="flex gap-0.5">
         {Array.from({ length: segments }, (_, i) => (
           <span
@@ -43,7 +55,16 @@ export function ScoreMeter({ score, className }: { score: number; className?: st
           />
         ))}
       </div>
-      <span className="text-xs text-muted-foreground tabular-nums">{pct}% skill match</span>
+      <span className="text-xs text-muted-foreground tabular-nums">
+        {role ? (
+          <>
+            <span className="font-medium text-foreground">{pct}%</span> match for{" "}
+            <span className="font-medium text-foreground">{role}</span>
+          </>
+        ) : (
+          `${pct}% skill match`
+        )}
+      </span>
     </div>
   );
 }

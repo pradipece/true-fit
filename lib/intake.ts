@@ -330,7 +330,7 @@ const hasAny = (t: Talent, skills: string[]) => t.skills.some((s) => skills.incl
 /** People in the pool who list at least one of the skills. */
 export const poolCount = (skills: string[], pool: Talent[]) => pool.filter((t) => hasAny(t, skills)).length;
 
-/** Same rule as the Candidates page suggestions: people at or above the overlap guide. */
+/** Same rule as the organiser's suggestions: people at or above the overlap guide. */
 export const relevantCount = (d: NeedDraft, pool: Talent[]) =>
   d.must.length ? matchesForNeed(draftToNeed(d, ""), pool).filter((m) => m.suggested).length : 0;
 

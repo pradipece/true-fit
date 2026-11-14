@@ -6,7 +6,7 @@ import { companyOf, rooms, SLOT_TIMES } from "./schedule";
 import type { Decision, Feedback, Need, Talent } from "./types";
 
 /**
- * Numbers for the company Insights page. Everything is an aggregate count or average:
+ * Numbers for the organiser's Insights page. Everything is an aggregate count or average:
  * nothing here ranks, scores or lists individual people.
  */
 export type DashboardInput = {
@@ -52,7 +52,7 @@ export function dashboardData({ needs, talent, decisions, optIns, slots, feedbac
       },
       needs: { value: needs.length, sub: `from ${new Set(needs.map(companyOf)).size} companies` },
       suggested: { value: stages[0].value, sub: "pairs with a good skill match" },
-      waiting: { value: o.awaitingReview, sub: "waiting for your decision" },
+      waiting: { value: o.awaitingReview, sub: "waiting for an introduction decision" },
       booked: { value: bookedAt.length, sub: `${pct(bookedAt.length, capacity)}% of meeting time used` },
       followUps: {
         value: impact.followUps,

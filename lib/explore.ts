@@ -14,6 +14,46 @@ export function rolesFor<N extends MatchNeed>(needs: N[], talent: MatchTalent) {
   return needs.map((need) => ({ need, m: explainMatch(need, talent) })).sort((a, b) => b.m.score - a.m.score);
 }
 
+export type CompanyFit<N> = {
+  /** The company's id (its needs' `companyId`; needs made in the demo belong to "C-YOU"). */
+  companyId: string;
+  /** The company's best role for this candidate, which sets its rank. */
+  best: { need: N; m: MatchExplanation };
+  /** All of the company's roles, best match first. */
+  roles: { need: N; m: MatchExplanation }[];
+  /** Roles at or above the suggestion line. */
+  strong: number;
+};
+
+/**
+ * Companies ranked for one candidate: each company by its best-matching role, then by how
+ * many of its roles are strong fits, then by name. Same skills-only score as everywhere
+ * else; the company fields are only used to group, never to score.
+ */
+export function companiesFor<N extends MatchNeed & { companyId?: string; company: string }>(
+  needs: N[],
+  talent: MatchTalent,
+): CompanyFit<N>[] {
+  const groups = new Map<string, { need: N; m: MatchExplanation }[]>();
+  for (const r of rolesFor(needs, talent)) {
+    const id = r.need.companyId ?? "C-YOU";
+    groups.set(id, [...(groups.get(id) ?? []), r]);
+  }
+  return [...groups.entries()]
+    .map(([companyId, roles]) => ({
+      companyId,
+      best: roles[0],
+      roles,
+      strong: roles.filter((r) => r.m.suggested).length,
+    }))
+    .sort(
+      (a, b) =>
+        b.best.m.score - a.best.m.score ||
+        b.strong - a.strong ||
+        a.best.need.company.localeCompare(b.best.need.company),
+    );
+}
+
 export type ProofBoost = {
   /** Stated skills that, once shown in an answer, raise the match. */
   skills: string[];
@@ -87,7 +127,8 @@ export function unlockSkills(needs: MatchNeed[], talent: MatchTalent, limit = 3)
     .slice(0, limit);
 }
 
-export type InterestStatus = "none" | "asked" | "invited" | "both" | "booked" | "passed" | "declined";
+export type InterestStatus =
+  "none" | "asked" | "invited" | "accepted" | "both" | "booked" | "passed" | "declined";
 
 /** Where a candidate stands with one role, from their own point of view. */
 export function interestStatus(
@@ -97,9 +138,10 @@ export function interestStatus(
 ): InterestStatus {
   if (optIn?.talent === false) return "declined";
   if (decision?.status === "rejected" || optIn?.company === false) return "passed";
-  // Only a standing invitation counts: an invite that was withdrawn leaves company: true behind.
+  // Only a standing introduction by the organiser counts; then both sides still have to say yes.
   const invited = decision?.status === "approved";
-  if (invited && optIn?.talent) return slot ? "booked" : "both";
+  if (invited && optIn?.talent && optIn?.company) return slot ? "booked" : "both";
+  if (invited && optIn?.talent) return "accepted";
   if (invited) return "invited";
   if (optIn?.talent) return "asked";
   return "none";

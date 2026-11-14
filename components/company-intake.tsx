@@ -2,10 +2,13 @@
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import {
   ArrowRightIcon,
   AudioLinesIcon,
   BotIcon,
+  CheckIcon,
+  HandIcon,
   MicIcon,
   MicOffIcon,
   PhoneOffIcon,
@@ -14,6 +17,7 @@ import {
   RotateCcwIcon,
   SendHorizonalIcon,
   SparklesIcon,
+  Undo2Icon,
   UsersIcon,
   WifiOffIcon,
   XIcon,
@@ -39,7 +43,10 @@ import {
   type Topic,
 } from "@/lib/intake";
 import { cardFromToolArgs, liveToolResult } from "@/lib/intake-live";
-import { matchesForNeed } from "@/lib/match";
+import { explainMatch, matchesForNeed, pairKey } from "@/lib/match";
+import { companyOf } from "@/lib/schedule";
+import { companiesFor } from "@/lib/explore";
+import type { Need, Talent } from "@/lib/types";
 import { useDemo } from "@/lib/store";
 import { cn, isSubmitEnter } from "@/lib/utils";
 
@@ -64,7 +71,7 @@ const GREETING: Msg = {
 };
 
 export function CompanyIntake() {
-  const { talent, addNeed } = useDemo();
+  const { talent, needs, addNeed, decisions, optIns, setOptIn } = useDemo();
   const [messages, setMessages] = useState<Msg[]>([GREETING]);
   // Opening suggestions tailored by Gemini to who is registered; fixed ones until they arrive.
   const [starters, setStarters] = useState<string[]>(DEFAULT_STARTERS);
@@ -152,10 +159,18 @@ export function CompanyIntake() {
     [need, talent],
   );
   const byId = useMemo(() => new Map(talent.map((t) => [t.id, t])), [talent]);
+  // Every role at the event with the current draft in place of its saved copy, so each
+  // candidate shows how well they match this company overall and where it ranks for them.
+  const eventNeeds = useMemo(() => [need, ...needs.filter((n) => n.id !== need.id)], [needs, need]);
+  // The company's other saved roles, so each candidate also shows their match for those.
+  const otherNeeds = useMemo(
+    () => needs.filter((n) => companyOf(n) === companyOf(need) && n.id !== need.id),
+    [needs, need],
+  );
   const ranking = useAiRanking(need, suitable, byId);
 
   // No separate need card to approve: once the chat has a role and must-have skills, the
-  // need is saved so the Candidates and Meetings pages can invite these people.
+  // need is saved so the organiser can introduce these people (and the company can ask it to).
   useEffect(() => {
     if (need.title !== "New role" && need.must.length)
       addNeed({ ...need, submittedWeeksBefore: EVENT.weeksAway });
@@ -595,17 +610,18 @@ export function CompanyIntake() {
                 <UsersIcon className="size-5 text-primary" /> Suitable candidates
               </h2>
               <p className="text-sm text-muted-foreground">
-                Best skill match first. Names and contact details are fictional demo data; name, city and
-                languages never change the skill match.
+                Best skill match first. The event organiser makes the introductions: ask it to introduce
+                anyone you&apos;d like to meet. Names and contact details are fictional demo data; name, city
+                and languages never change the skill match.
               </p>
             </div>
             <Button
               size="sm"
               variant="outline"
               nativeButton={false}
-              render={<Link href="/company/candidates" />}
+              render={<Link href="/meetings/company" />}
             >
-              Invite on the Candidates page <ArrowRightIcon data-icon="inline-end" />
+              Your introductions <ArrowRightIcon data-icon="inline-end" />
             </Button>
           </div>
           <RankToggle ranking={ranking} />
@@ -613,9 +629,31 @@ export function CompanyIntake() {
           <div className="grid gap-4 lg:grid-cols-2">
             {ranking.ordered.map((m) => {
               const t = byId.get(m.talentId);
-              return t ? (
-                <CandidateProfile key={t.id} t={t} m={m} note={<AiFitBadge fit={ranking.fitOf(t.id)} />} />
-              ) : null;
+              if (!t) return null;
+              const key = pairKey(need.id, t.id);
+              return (
+                <CandidateProfile
+                  key={t.id}
+                  t={t}
+                  m={m}
+                  role={need.title}
+                  company={companyFit(eventNeeds, t, companyOf(need))}
+                  otherRoles={otherNeeds.map((n) => {
+                    const o = explainMatch(n, t);
+                    return { id: n.id, title: n.title, score: o.score, suggested: o.suggested };
+                  })}
+                  note={<AiFitBadge fit={ranking.fitOf(t.id)} />}
+                  footer={
+                    <IntroRequest
+                      pair={key}
+                      introduced={decisions[key]?.status === "approved"}
+                      passed={decisions[key]?.status === "rejected"}
+                      asked={optIns[key]?.company === true}
+                      onAsk={(v) => setOptIn(key, "company", v)}
+                    />
+                  }
+                />
+              );
             })}
           </div>
         </section>
@@ -658,3 +696,84 @@ function useOnline() {
 
 /** Close a live transcript bubble once its turn is over. */
 const closeBubble = (m: Msg): Msg => ({ ...m, live: false, content: m.content.trim() });
+
+/**
+ * The company can't invite directly: it asks the organiser (the event's broker) for an
+ * introduction, which counts as the company's yes. The organiser still decides, with a reason.
+ */
+function IntroRequest({
+  pair,
+  introduced,
+  passed,
+  asked,
+  onAsk,
+}: {
+  pair: string;
+  introduced: boolean;
+  passed: boolean;
+  asked: boolean;
+  onAsk: (v: true | undefined) => void;
+}) {
+  if (introduced)
+    return (
+      <Button
+        size="sm"
+        className="ml-auto"
+        nativeButton={false}
+        render={<Link href={`/meetings/company?pair=${encodeURIComponent(pair)}`} />}
+      >
+        Introduced by the organiser · answer <ArrowRightIcon data-icon="inline-end" />
+      </Button>
+    );
+  if (passed)
+    return (
+      <span className="ml-auto text-xs text-muted-foreground">
+        The organiser didn&apos;t introduce this time
+      </span>
+    );
+  return asked ? (
+    <>
+      <Badge variant="outline" className="border-primary/30 bg-accent font-normal text-accent-foreground">
+        <CheckIcon data-icon="inline-start" /> Asked the organiser
+      </Badge>
+      <Button
+        size="sm"
+        variant="ghost"
+        className="ml-auto"
+        onClick={() => {
+          onAsk(undefined);
+          toast("Request withdrawn");
+        }}
+      >
+        <Undo2Icon data-icon="inline-start" /> Withdraw
+      </Button>
+    </>
+  ) : (
+    <Button
+      size="sm"
+      className="ml-auto"
+      onClick={() => {
+        onAsk(true);
+        toast.success("Introduction requested", {
+          description:
+            "The organiser sees your request and decides. If they introduce you, the candidate answers yes or no.",
+        });
+      }}
+    >
+      <HandIcon data-icon="inline-start" /> Ask the organiser to introduce
+    </Button>
+  );
+}
+
+/** This company's match for one person (its best role) and its rank among all companies. */
+function companyFit(needs: Need[], t: Talent, companyId: string) {
+  const ranked = companiesFor(needs, t);
+  const i = ranked.findIndex((c) => c.companyId === companyId);
+  if (i < 0) return undefined;
+  return {
+    name: ranked[i].best.need.company,
+    score: ranked[i].best.m.score,
+    rank: i + 1,
+    total: ranked.length,
+  };
+}

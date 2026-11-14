@@ -26,8 +26,8 @@ export default function CompanyPage() {
             text: "Suitable candidates appear as you chat, best skill match first, with their contact details.",
           },
           {
-            title: "Invite them",
-            text: "Invite people on the Candidates page, with a reason. They answer yes or no in their Meetings view.",
+            title: "Ask for introductions",
+            text: "The event organiser introduces people to you. Ask it to introduce anyone you like; answer in Introductions.",
           },
         ]}
       />

@@ -30,8 +30,13 @@ const nextConfig: NextConfig = {
     agentFeedback: true,
   },
   // The old meetings picker: each role now has its own meetings page, chosen on the home page.
+  // Candidate review and insights moved from the company to the organiser (the broker).
   async redirects() {
-    return [{ source: "/meetings", destination: "/", permanent: false }];
+    return [
+      { source: "/meetings", destination: "/", permanent: false },
+      { source: "/company/candidates", destination: "/organiser", permanent: false },
+      { source: "/company/insights", destination: "/organiser/insights", permanent: false },
+    ];
   },
   cacheComponents: true,
   partialPrefetching: true,

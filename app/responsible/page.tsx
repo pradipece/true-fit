@@ -44,13 +44,14 @@ const DECISIONS = [
     step: "Which matches go ahead",
     machine: `Rules suggest pairs at ${Math.round(SUGGEST_THRESHOLD * 100)}%+ overlap; everyone else stays listed`,
     kind: "rules",
-    human: "The company invites or passes on each candidate, always with a reason",
+    human:
+      "The event organiser (the broker) introduces or passes on each pair, always with a reason; companies and candidates can ask it for an introduction",
   },
   {
     step: "Whether to meet",
     machine: "Nothing",
     kind: "none",
-    human: "Both sides opt in before a meeting is booked",
+    human: "The company and the candidate both say yes before a meeting is booked",
   },
   {
     step: "What happens next",
@@ -213,9 +214,9 @@ const AI_ACT = [
     ref: "Art. 14",
     title: "Human oversight",
     today:
-      "Companies decide every invitation; nobody is rejected automatically; candidates accept or decline; decisions can be edited or undone.",
+      "The organiser decides every introduction with a reason; nobody is rejected automatically; companies and candidates each accept or decline; decisions can be edited or undone.",
     production:
-      "Company recruiters trained on the tool; the event organiser spot-checks passed and non-suggested people in aggregate.",
+      "Organiser staff trained on the tool and its limits; a second organiser spot-checks passed and non-suggested people in aggregate.",
   },
   {
     ref: "Art. 15",
@@ -353,8 +354,8 @@ export default async function ResponsiblePage() {
           ))}
           <p className="text-muted-foreground sm:col-span-2 lg:col-span-4">
             Overlap = credit earned ÷ credit possible. Pairs at {Math.round(SUGGEST_THRESHOLD * 100)}% or more
-            are shown as suggestions, but companies see and can invite anyone in the pool. Rule-based, not a
-            trained model, so there are no learned proxies for protected characteristics.
+            are shown as suggestions, but the organiser sees and can introduce anyone in the pool. Rule-based,
+            not a trained model, so there are no learned proxies for protected characteristics.
           </p>
           <p className="flex items-start gap-1.5 text-muted-foreground sm:col-span-2 lg:col-span-4">
             <FlaskConicalIcon className="mt-0.5 size-4 shrink-0 text-evidence" />

@@ -1,7 +1,9 @@
 /**
- * The demo has two separate views, one per role: companies and job seekers. Each side
- * decides for itself (companies invite, candidates accept); there is no organiser role. Each role only sees its own pages;
- * the header shows the role tabs and the current role's page nav from this list.
+ * The demo has three separate views, one per role. The organiser (the City of Espoo event
+ * team) is the broker: it reviews skill matches across every company and introduces people,
+ * always with a reason. The company and the candidate then each say yes or no; a meeting is
+ * booked only when both do. Each role only sees its own pages; the header shows the role
+ * tabs and the current role's page nav from this list.
  */
 export const ROLES = [
   {
@@ -16,15 +18,22 @@ export const ROLES = [
     ],
   },
   {
+    id: "organiser",
+    label: "Espoo Esbo",
+    title: "City of Espoo event team",
+    pages: [
+      { href: "/organiser", label: "Introductions" },
+      { href: "/organiser/insights", label: "Insights" },
+    ],
+  },
+  {
     id: "company",
     label: "Company",
     title: "Hiring companies",
     pages: [
       { href: "/company", label: "Find candidates" },
-      { href: "/company/candidates", label: "Candidates" },
-      { href: "/meetings/company", label: "Meetings" },
+      { href: "/meetings/company", label: "Introductions" },
       { href: "/company/agenda", label: "My agenda" },
-      { href: "/company/insights", label: "Insights" },
     ],
   },
 ] as const;

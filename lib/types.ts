@@ -149,7 +149,7 @@ export type MatchExplanation = {
   suggested: boolean;
 };
 
-/** A company's decision on one suggested pair (invite or not now). Only a person creates one; nothing is automatic. */
+/** The organiser's decision on one suggested pair (introduce or not now). Only a person creates one; nothing is automatic. */
 export type Decision = {
   status: "approved" | "rejected";
   reason: string;
