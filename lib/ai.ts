@@ -8,7 +8,7 @@ import { ApiError, GoogleGenAI, ThinkingLevel, type Content } from "@google/gena
  * Set AI_MODE=rules to force the fallback even when a key is configured.
  */
 
-export const AI_MODEL = process.env.GEMINI_MODEL || "gemini-3.8-flash";
+export const AI_MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash-lite";
 
 const apiKey = () => process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
 

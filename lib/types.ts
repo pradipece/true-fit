@@ -135,11 +135,27 @@ export type MatchExplanation = {
   suggested: boolean;
 };
 
+/** A human decision on one suggested pair. Only an organiser creates one; nothing is automatic. */
 export type Decision = {
-  status: "approved" | "dismissed";
+  status: "approved" | "rejected";
+  reason: string;
   note?: string;
-  reason?: string;
   at: string;
+};
+
+/** Append-only audit trail. Entries are never edited or removed. */
+export type AuditEntry = {
+  id: string;
+  at: string;
+  actor: string;
+  action: "approved" | "rejected" | "edited" | "reverted";
+  needId: string;
+  talentId: string;
+  /** Decision status before and after this action ("none" = no decision). */
+  from: Decision["status"] | "none";
+  to: Decision["status"] | "none";
+  reason: string;
+  note?: string;
 };
 
 export type Feedback = {

@@ -3,7 +3,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { SEED_NEEDS, SEED_TALENT } from "./data";
 import { pairKey } from "./match";
-import type { Decision, Feedback, Need, Talent } from "./types";
+import { actionFor, auditEntry } from "./oversight";
+import type { AuditEntry, Decision, Feedback, Need, Talent } from "./types";
 
 type OptIn = { company?: boolean; talent?: boolean };
 
@@ -11,26 +12,35 @@ type DemoState = {
   needs: Need[];
   talent: Talent[];
   decisions: Record<string, Decision>;
+  /** Append-only: every approve, reject, edit and revert, never removed. */
+  audit: AuditEntry[];
   optIns: Record<string, OptIn>;
   slots: Record<string, string>;
   feedback: Record<string, Feedback>;
 };
 
+const SEED_DECISIONS: Record<string, Decision> = {
+  [pairKey("N-01", "T-30")]: {
+    status: "approved",
+    reason: "Must-haves shown in their answers",
+    note: "Strong pipeline evidence; ask about battery domain interest.",
+    at: "2026-11-10T09:12:00.000Z",
+  },
+  [pairKey("N-02", "T-12")]: {
+    status: "approved",
+    reason: "Strong transferable skills",
+    note: "Career changer with real ops data experience — worth a conversation.",
+    at: "2026-11-11T13:40:00.000Z",
+  },
+};
+
 const SEED_STATE: DemoState = {
   needs: SEED_NEEDS,
   talent: SEED_TALENT,
-  decisions: {
-    [pairKey("N-01", "T-30")]: {
-      status: "approved",
-      note: "Strong pipeline evidence; ask about battery domain interest.",
-      at: "2026-11-10T09:12:00.000Z",
-    },
-    [pairKey("N-02", "T-12")]: {
-      status: "approved",
-      note: "Career changer with real ops data experience — worth a conversation.",
-      at: "2026-11-11T13:40:00.000Z",
-    },
-  },
+  decisions: SEED_DECISIONS,
+  audit: Object.entries(SEED_DECISIONS).map(([key, d]) =>
+    auditEntry(key, "approved", "none", "approved", d.reason, d.note, d.at),
+  ),
   optIns: {
     [pairKey("N-01", "T-30")]: { company: true },
     [pairKey("N-02", "T-12")]: { company: true, talent: true },
@@ -40,13 +50,15 @@ const SEED_STATE: DemoState = {
 };
 
 // Bump when seeds change so stale persisted state does not hide new personas.
-const STORAGE_KEY = "truefit-demo-v2";
+const STORAGE_KEY = "truefit-demo-v3";
 
 type Ctx = DemoState & {
   addNeed: (n: Need) => void;
   addTalent: (t: Talent) => void;
+  /** Approve, reject or edit a pair's decision. Always logged with a reason. */
   decide: (key: string, d: Omit<Decision, "at">) => void;
-  undoDecision: (key: string) => void;
+  /** Withdraw a decision (back to undecided). Logged, never erased. */
+  undoDecision: (key: string, reason: string) => void;
   setOptIn: (key: string, side: "company" | "talent", value: boolean) => void;
   bookSlot: (key: string, slot: string) => void;
   giveFeedback: (key: string, f: Feedback) => void;
@@ -89,18 +101,34 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
   );
   const decide = useCallback(
     (key: string, d: Omit<Decision, "at">) =>
-      setState((s) => ({
-        ...s,
-        decisions: { ...s.decisions, [key]: { ...d, at: new Date().toISOString() } },
-      })),
+      setState((s) => {
+        const at = new Date().toISOString();
+        const prev = s.decisions[key];
+        const entry = auditEntry(
+          key,
+          actionFor(prev, d.status),
+          prev?.status ?? "none",
+          d.status,
+          d.reason,
+          d.note,
+          at,
+        );
+        return { ...s, decisions: { ...s.decisions, [key]: { ...d, at } }, audit: [...s.audit, entry] };
+      }),
     [],
   );
   const undoDecision = useCallback(
-    (key: string) =>
+    (key: string, reason: string) =>
       setState((s) => {
+        const prev = s.decisions[key];
+        if (!prev) return s;
         const decisions = { ...s.decisions };
         delete decisions[key];
-        return { ...s, decisions };
+        return {
+          ...s,
+          decisions,
+          audit: [...s.audit, auditEntry(key, "reverted", prev.status, "none", reason)],
+        };
       }),
     [],
   );

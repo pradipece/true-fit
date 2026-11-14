@@ -76,7 +76,7 @@ const AI_ACT = [
   {
     ref: "Art. 12",
     title: "Record-keeping",
-    body: "Every suggestion, approval and dismissal is logged with time, actor and reason.",
+    body: "Every approval, rejection, edit and undo is logged with time, actor and reason in an append-only audit log, exportable as CSV.",
   },
   {
     ref: "Art. 13 & 50",
@@ -219,7 +219,7 @@ export default function ResponsiblePage() {
                   ))}
                   {!ok && (
                     <p className="text-xs text-destructive">
-                      Below 0.8: organisers review this group&apos;s dismissals and recruit more matching
+                      Below 0.8: organisers review this group&apos;s rejections and recruit more matching
                       needs before the event.
                     </p>
                   )}
