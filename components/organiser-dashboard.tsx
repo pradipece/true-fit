@@ -172,6 +172,11 @@ export function OrganiserDashboard() {
               </CardHeader>
               <CardContent className="space-y-3">
                 <p className="text-sm text-muted-foreground">{need.summary}</p>
+                {need.timing && (
+                  <p className="text-xs text-muted-foreground">
+                    Starts {need.timing.start} · {need.timing.engagement} · {need.mode}
+                  </p>
+                )}
                 <div className="flex flex-wrap gap-1.5">
                   {need.must.map((s) => (
                     <SkillChip
