@@ -1,4 +1,4 @@
-import { SEED_NEEDS, SEED_TALENT } from "./data";
+import { OWN_COMPANY, SEED_NEEDS, SEED_TALENT } from "./data";
 import { rooms, type Participant } from "./schedule";
 
 /**
@@ -18,7 +18,7 @@ export function participants(): ParticipantEntry[] {
     {
       kind: "company",
       id: "C-YOU",
-      name: "Your company (demo)",
+      name: OWN_COMPANY.name,
       sub: "Need card created in the company view",
     },
     { kind: "talent", id: "T-YOU", name: "Candidate T-YOU", sub: "Skill card created in the talent view" },

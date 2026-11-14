@@ -1,4 +1,4 @@
-import { COMPANIES, EVENT } from "./data";
+import { COMPANIES, EVENT, OWN_COMPANY } from "./data";
 import { modeKind } from "./need-terms";
 import type { Need, Talent } from "./types";
 
@@ -41,7 +41,7 @@ export function rooms(needs: Need[]): Room[] {
   let online = 0;
   return ids.map((id) => {
     const own = needs.filter((n) => companyOf(n) === id);
-    const name = COMPANIES.find((c) => c.id === id)?.name ?? own[0]?.company ?? "Your company";
+    const name = COMPANIES.find((c) => c.id === id)?.name ?? own[0]?.company ?? OWN_COMPANY.name;
     const remote = own.length > 0 && own.every((n) => modeKind(n.mode) === "Remote");
     return {
       companyId: id,

@@ -11,12 +11,14 @@ import {
   type StarterPromptId,
   type StartersRequest,
 } from "@/lib/talent-ai";
+import { getEsco } from "@/lib/seed-db";
 
 /**
  * Writing ideas for the evidence answers, tailored to the person's picked skills and
  * background. Ideas and half-sentence starters only, never full answers.
  */
 export async function POST(request: Request) {
+  await getEsco(); // load the data from the database into the registries (lib/seed-db.ts)
   const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
   const req: StartersRequest = {
     picked: Array.isArray(body?.picked)

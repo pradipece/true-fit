@@ -13,6 +13,7 @@ import {
   type CvModelOutput,
   type CvScan,
 } from "@/lib/cv-import";
+import { getEsco } from "@/lib/seed-db";
 
 /**
  * CV import: a LinkedIn "Save to PDF" export or any ATS-style CV (text-based PDF, Word .docx,
@@ -66,6 +67,7 @@ async function readCv(request: Request): Promise<string | { error: string; statu
 }
 
 export async function POST(request: Request) {
+  await getEsco(); // load the data from the database into the registries (lib/seed-db.ts)
   const raw = await readCv(request);
   if (typeof raw !== "string") return Response.json({ error: raw.error }, { status: raw.status });
 
@@ -85,8 +87,8 @@ export async function POST(request: Request) {
   if (aiEnabled()) {
     try {
       const out = await generateJson<CvModelOutput>({
-        system: CV_SYSTEM_PROMPT,
-        schema: CV_SCHEMA,
+        system: CV_SYSTEM_PROMPT(),
+        schema: CV_SCHEMA(),
         messages: [{ role: "user", content: cvUserMessage(text) }],
       });
       return Response.json({

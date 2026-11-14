@@ -47,3 +47,5 @@ next-env.d.ts
 # generated migration SQL (yarn db:sql); may include scraped third-party data
 /db/migrate*.sql
 /db/csv/
+# database snapshots (yarn db:dump)
+/db/snapshot/

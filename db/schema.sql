@@ -1,12 +1,13 @@
--- true-fit schema for Supabase (Postgres). Loaded by `yarn db:migrate` / `yarn db:sql`.
--- The JSON files in data/ stay the source of truth: the migration replaces table
--- contents from them on every run. All people and companies are synthetic.
+-- true-fit schema (Postgres: Tiger Data, or Supabase). Applied by `yarn db:migrate`.
+-- The database is the source of truth: the app reads every row from it, with no local copy.
+-- `yarn db:dump` snapshots it to JSON, and `yarn db:migrate --from <dir>` loads a snapshot
+-- back (replacing table contents). All people and companies are synthetic.
 --
 -- Row-level security is on for every table with no policies, so the publishable
 -- (anon) key gets nothing through Supabase's REST/GraphQL APIs. Only the server reads
 -- the data, over a direct Postgres connection (lib/db.ts).
 
--- ── ESCO subset (data/esco) ─────────────────────────────────────────────────
+-- ── ESCO subset ────────────────────────────────────────────────────────────
 
 CREATE TABLE IF NOT EXISTS esco_meta (
   dataset    text PRIMARY KEY,           -- 'skills' | 'occupations'
@@ -24,13 +25,15 @@ CREATE TABLE IF NOT EXISTS esco_skills (
   esco_label  text,
   keywords    text[] NOT NULL DEFAULT '{}',
   labels      jsonb NOT NULL DEFAULT '{}', -- { fi, sv, … }
-  alt_labels  text[] NOT NULL DEFAULT '{}'
+  alt_labels  text[] NOT NULL DEFAULT '{}',
+  position    int
 );
 
 CREATE TABLE IF NOT EXISTS esco_skill_relations (
   skill_id   text NOT NULL REFERENCES esco_skills (id) ON DELETE CASCADE,
   related_id text NOT NULL REFERENCES esco_skills (id) ON DELETE CASCADE,
   weight     real NOT NULL,
+  position   int,
   PRIMARY KEY (skill_id, related_id)
 );
 
@@ -41,7 +44,9 @@ CREATE TABLE IF NOT EXISTS esco_occupations (
   isco         text,
   labels       jsonb NOT NULL DEFAULT '{}', -- { en, fi, sv, … }
   alt_labels   jsonb NOT NULL DEFAULT '{}', -- { en: [...], fi: [...] }
-  extra_titles text[] NOT NULL DEFAULT '{}'
+  extra_titles text[] NOT NULL DEFAULT '{}',
+  fi_title     text,                         -- everyday Finnish title when ESCO's is awkward
+  position     int
 );
 
 CREATE TABLE IF NOT EXISTS esco_occupation_skills (
@@ -51,8 +56,14 @@ CREATE TABLE IF NOT EXISTS esco_occupation_skills (
   PRIMARY KEY (occupation_id, skill_id)
 );
 
--- ── Synthetic seeds (data/seed) ─────────────────────────────────────────────
--- `position` keeps the seed files' order, so reads match the JSON exactly.
+-- Columns added after the first release, for databases created before them.
+ALTER TABLE esco_skills          ADD COLUMN IF NOT EXISTS position int;
+ALTER TABLE esco_skill_relations ADD COLUMN IF NOT EXISTS position int;
+ALTER TABLE esco_occupations     ADD COLUMN IF NOT EXISTS fi_title text;
+ALTER TABLE esco_occupations     ADD COLUMN IF NOT EXISTS position int;
+
+-- ── Synthetic seeds ────────────────────────────────────────────────────────
+-- `position` keeps the authored order (the UI lists rows in it).
 
 CREATE TABLE IF NOT EXISTS companies (
   id       text PRIMARY KEY,
@@ -138,7 +149,7 @@ CREATE TABLE IF NOT EXISTS talent_contact (
   city      text NOT NULL
 );
 
--- ── Scraped public data (data/scraped, research only) ───────────────────────
+-- ── Scraped public data (yarn scrape, research only) ───────────────────────
 
 CREATE TABLE IF NOT EXISTS scraped_sources (
   source    text PRIMARY KEY,

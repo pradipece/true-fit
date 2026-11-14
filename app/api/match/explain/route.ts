@@ -9,6 +9,7 @@ import {
   type WhyText,
 } from "@/lib/match-explain";
 import type { Evidence, SkillClaim } from "@/lib/types";
+import { getEsco } from "@/lib/seed-db";
 
 /**
  * "Why this match" text. The browser sends only the need's skills and the talent's skills
@@ -60,6 +61,7 @@ function parseBody(body: unknown): { role: string; need: MatchNeed; talent: Matc
 }
 
 export async function POST(request: Request) {
+  await getEsco(); // load the data from the database into the registries (lib/seed-db.ts)
   const req = parseBody(await request.json().catch(() => null));
   if (!req) return Response.json({ error: "Invalid match" }, { status: 400 });
 

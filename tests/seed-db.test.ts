@@ -5,11 +5,11 @@ import { join } from "node:path";
 import { PGlite } from "@electric-sql/pglite";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { dbConfig, supabaseDbConfig, tigerDbConfig } from "@/lib/db-config.mjs";
-import { SEED } from "@/lib/seed";
+import { ESCO, SEED } from "./fixtures";
 
 /**
- * Round trip: data/ → `yarn db:sql` → Postgres (in-memory PGlite) → getSeed().
- * What the app reads from the database must equal what it would read from the JSON seeds.
+ * Round trip: a snapshot (tests/fixtures) → `yarn db:sql --from` → Postgres (in-memory
+ * PGlite) → getSeed() / getEsco(). What the app reads must equal the snapshot exactly.
  */
 
 const pg = new PGlite();
@@ -27,18 +27,31 @@ vi.mock("@/lib/db", () => ({
   }),
 }));
 
-const { getSeed } = await import("@/lib/seed-db");
+const { getEsco, getSeed } = await import("@/lib/seed-db");
 
 beforeAll(async () => {
   const out = join(mkdtempSync(join(tmpdir(), "truefit-sql-")), "migrate.sql");
-  execFileSync("node", ["scripts/db/migrate.mjs", "--sql", out, "--no-scraped"], { stdio: "ignore" });
+  execFileSync("node", ["scripts/db/migrate.mjs", "--sql", out, "--from", "tests/fixtures"], {
+    stdio: "ignore",
+  });
   const sql = readFileSync(out, "utf8");
   await pg.exec(sql);
   await pg.exec(sql); // the migration must be safe to rerun
 }, 60_000);
 
 describe("Database seed source", () => {
-  it("reads back exactly the JSON seeds, in the same order", async () => {
+  it("reads back exactly the ESCO snapshot, in the same order", async () => {
+    const esco = await getEsco();
+    const strip = <T extends object>(o: T) => {
+      const { $comment, ...rest } = JSON.parse(JSON.stringify(o));
+      void $comment;
+      return rest;
+    };
+    expect(esco.skills).toEqual(strip(ESCO.skills));
+    expect(esco.occupations).toEqual(strip(ESCO.occupations));
+  });
+
+  it("reads back exactly the seed snapshot, in the same order", async () => {
     const seed = await getSeed();
     expect(seed.source).toBe("database");
     expect(seed.provider).toBe("Tiger Data");
@@ -49,7 +62,11 @@ describe("Database seed source", () => {
 
   it("candidate-only SQL replaces the talent tables and reads back the same, with full names", async () => {
     const out = join(mkdtempSync(join(tmpdir(), "truefit-sql-")), "talent.sql");
-    execFileSync("node", ["scripts/db/migrate.mjs", "--talent-only", "--sql", out], { stdio: "ignore" });
+    execFileSync(
+      "node",
+      ["scripts/db/migrate.mjs", "--talent-only", "--sql", out, "--from", "tests/fixtures"],
+      { stdio: "ignore" },
+    );
     const sql = readFileSync(out, "utf8");
     expect(sql).not.toMatch(/TRUNCATE (esco|companies)/);
     await pg.exec(sql);
@@ -101,17 +118,16 @@ describe("Database seed source", () => {
     expect(seen.rows).toHaveLength(0);
   });
 
-  it("falls back to the JSON seeds when the database is unreachable or not configured", async () => {
+  it("has no local fallback: an unreachable database is an error", async () => {
     state.fail = true;
-    const down = await getSeed();
-    expect(down.source).toBe("json");
-    expect(down.reason).toMatch(/timeout/);
-    expect(down.talent).toEqual(SEED.talent);
+    await expect(getSeed()).rejects.toThrow(/timeout/);
     state.fail = false;
+  });
 
-    state.configured = false;
-    expect((await getSeed()).source).toBe("json");
-    state.configured = true;
+  it("refuses to write SQL without a snapshot to load", () => {
+    expect(() =>
+      execFileSync("node", ["scripts/db/migrate.mjs", "--sql", join(tmpdir(), "x.sql")], { stdio: "pipe" }),
+    ).toThrow(/--from/);
   });
 });
 
@@ -149,6 +165,16 @@ describe("Tiger Data connection config", () => {
     expect(c?.connectionString).not.toContain("sslmode");
     expect(c?.connectionString).toContain("tsdb.cloud.timescale.com:31633/tsdb");
     expect(c?.ssl).toEqual({ rejectUnauthorized: true });
+  });
+
+  it("takes the password from TIGER_DATABASE_PASSWORD over the one in the URL", () => {
+    const c = tigerDbConfig({ TIGER_DATABASE_URL: url, TIGER_DATABASE_PASSWORD: "s3cr3t/+" });
+    expect(new URL(c!.connectionString!).password).toBe(encodeURIComponent("s3cr3t/+"));
+    const bare = tigerDbConfig({
+      TIGER_DATABASE_URL: url.replace(":pw@", "@"),
+      TIGER_DATABASE_PASSWORD: "x",
+    });
+    expect(new URL(bare!.connectionString!).password).toBe("x");
   });
 
   it("is preferred over Supabase when both are configured", () => {

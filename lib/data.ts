@@ -1,6 +1,6 @@
 /** All data in this prototype is synthetic. Company names and people are fictional. */
 
-// Personas live in data/seed/*.json and are validated by the seed loader.
+// Personas live in the database (lib/seed-db.ts) and are validated by the seed loader.
 export { COMPANIES, SEED_NEEDS, SEED_TALENT } from "./seed";
 
 export const EVENT = {
@@ -13,6 +13,16 @@ export const EVENT = {
   place: "Hybrid · Otaniemi + online",
   weeksAway: 3,
   slotMinutes: 10,
+};
+
+/**
+ * The company the demo user describes in the intake chat (id C-YOU). Fictional, like every
+ * other company here.
+ */
+export const OWN_COMPANY = {
+  id: "C-YOU",
+  name: "Tapiola Data Works",
+  blurb: "Data and software consultancy in Espoo, 60 people",
 };
 
 /** Short written scenario prompts for the talent skill card. Plain language, no CV. */

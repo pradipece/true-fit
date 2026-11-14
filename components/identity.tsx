@@ -8,12 +8,11 @@ import { participants } from "@/lib/participants";
 import { useDemo } from "@/lib/store";
 import type { FeedbackSide } from "@/lib/types";
 
-const PEOPLE = participants();
-
 /** Who is using this side's pages, and the participants they could switch to (demo). */
 export function useIdentity(side: FeedbackSide) {
   const { actingAs, decisions, needs, talent, setActingAs } = useDemo();
-  const options = useMemo(() => PEOPLE.filter((p) => p.kind === side), [side]);
+  // participants() reads the seed registry, which DemoProvider fills before this renders.
+  const options = useMemo(() => participants().filter((p) => p.kind === side), [side]);
   const id = currentIdentity(
     side,
     actingAs?.[side],

@@ -1,13 +1,11 @@
-import companiesJson from "@/data/seed/companies.json";
-import talentJson from "@/data/seed/talent.json";
 import { OCCUPATION_BY_ID, SKILL_BY_ID } from "./esco";
 import type { AuditAttributes, Company, Need, Talent } from "./types";
 
 /**
- * Seed loader: reads the synthetic personas from data/seed/*.json, checks them
- * against the cached ESCO subset and the domain enums, and returns typed data.
- * Invalid seeds fail loudly at load time (in dev, build and the browser alike)
- * with every problem listed, instead of producing silent mismatches.
+ * Seed loader: checks the synthetic personas read from the database (lib/db-read.mjs
+ * readSeed) against the ESCO subset and the domain enums, and returns typed data. Invalid
+ * rows fail loudly with every problem listed, instead of producing silent mismatches.
+ * The ESCO registry (lib/esco.ts) must be loaded first.
  */
 
 const LANGUAGE_REQ = ["English OK", "Finnish required", "Finnish or English"] as const;
@@ -35,7 +33,13 @@ export class SeedError extends Error {
 
 export type Seed = { companies: Company[]; needs: Need[]; talent: Talent[] };
 
-export function loadSeed(raw = { companies: companiesJson.companies, talent: talentJson.talent }): Seed {
+/** The snapshot shape: seed/companies.json + seed/talent.json, as readSeed() returns them. */
+export type RawSeed = {
+  companies: (Company & { needs: Omit<Need, "companyId" | "company" | "companyBlurb">[] })[];
+  talent: Omit<Talent, "alias">[];
+};
+
+export function loadSeed(raw: RawSeed): Seed {
   const problems: string[] = [];
   const ids = new Set<string>();
 
@@ -44,7 +48,7 @@ export function loadSeed(raw = { companies: companiesJson.companies, talent: tal
     ids.add(id);
   };
   const skill = (id: string, where: string) => {
-    if (!SKILL_BY_ID[id]) problems.push(`${where}: unknown skill "${id}" (not in data/esco/skills.json)`);
+    if (!SKILL_BY_ID[id]) problems.push(`${where}: unknown skill "${id}" (not in esco_skills)`);
   };
   const oneOf = (value: unknown, allowed: readonly string[], where: string) => {
     if (!allowed.includes(value as string))
@@ -120,7 +124,19 @@ export function loadSeed(raw = { companies: companiesJson.companies, talent: tal
   return { companies, needs, talent };
 }
 
-export const SEED = loadSeed();
-export const COMPANIES = SEED.companies;
-export const SEED_NEEDS = SEED.needs;
-export const SEED_TALENT = SEED.talent;
+/**
+ * The loaded seed, filled in place by setSeed: on the server by getSeed() (lib/seed-db.ts),
+ * in the browser by DemoProvider (lib/store.tsx) before anything renders.
+ */
+export const COMPANIES: Company[] = [];
+export const SEED_NEEDS: Need[] = [];
+export const SEED_TALENT: Talent[] = [];
+let current: Seed | null = null;
+
+export function setSeed(seed: Seed) {
+  if (seed === current) return;
+  current = seed;
+  COMPANIES.splice(0, COMPANIES.length, ...seed.companies);
+  SEED_NEEDS.splice(0, SEED_NEEDS.length, ...seed.needs);
+  SEED_TALENT.splice(0, SEED_TALENT.length, ...seed.talent);
+}

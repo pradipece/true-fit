@@ -7,7 +7,7 @@ import { extractSkills, normalize, SKILLS } from "./esco";
  * URIs are sent: never names or profile data. Responses are cached for a day, so
  * repeated lookups during the event are served from cache, not the EU's API.
  *
- * Matching still runs on the cached skill subset (data/esco): live ESCO concepts are
+ * Matching still runs on the ESCO subset in the database (lib/esco.ts): live ESCO concepts are
  * mapped to it by exact URI, or by keyword as a "close" link.
  */
 
@@ -32,11 +32,11 @@ export type EscoOccupation = {
   url: string;
 };
 
-const BY_URI = new Map(SKILLS.map((s) => [s.uri, s.id]));
+const byUri = (uri: string) => SKILLS.find((s) => s.uri === uri)?.id;
 
 /** Link an ESCO skill to the event's skill set: exact concept, else a keyword hint on its label. */
 export function toSubset(uri: string, title: string): SubsetLink | undefined {
-  const exact = BY_URI.get(uri);
+  const exact = byUri(uri);
   if (exact) return { id: exact, via: "uri" };
   const kw = extractSkills(title)[0];
   return kw ? { id: kw, via: "keyword" } : undefined;

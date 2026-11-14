@@ -9,6 +9,7 @@ import {
   SKILLS,
   skillLabel,
 } from "./esco";
+import { OWN_COMPANY } from "./data";
 import { matchesForNeed } from "./match";
 import { openToMode, speaksRequired } from "./need-terms";
 import type { Engagement, Need, Talent } from "./types";
@@ -114,8 +115,8 @@ export function draftToNeed(d: NeedDraft, company: string): Need {
   return {
     id: "N-YOU",
     companyId: "C-YOU",
-    company: company.trim() || "Your company",
-    companyBlurb: "Submitted through the intake chat",
+    company: company.trim() || OWN_COMPANY.name,
+    companyBlurb: OWN_COMPANY.blurb,
     title: d.title || "New role",
     occupation: d.occupation || undefined,
     summary: d.summary,
@@ -145,10 +146,11 @@ const capitalise = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 // ── LLM: prompt and output schema ─────────────────────────────────────────
 
-const SKILL_IDS = SKILLS.map((s) => s.id);
-const OCCUPATION_IDS = OCCUPATIONS.map((o) => o.id);
+const skillIds = () => SKILLS.map((s) => s.id);
+const occupationIds = () => OCCUPATIONS.map((o) => o.id);
 
-export const INTAKE_SYSTEM_PROMPT = `You are TrueFit Assistant, the intake assistant for a recruitment matchmaking event run by the City of Espoo, Finland. A company representative describes a role, often vaguely ("we need a dev"). Turn that into a precise need card through a short conversation.
+export const INTAKE_SYSTEM_PROMPT =
+  () => `You are TrueFit Assistant, the intake assistant for a recruitment matchmaking event run by the City of Espoo, Finland. A company representative describes a role, often vaguely ("we need a dev"). Turn that into a precise need card through a short conversation.
 
 How to run the conversation:
 - Ask one clarifying question per turn, in plain language, at most two sentences plus the question. Aim to finish in 4–6 turns.
@@ -159,6 +161,7 @@ How to run the conversation:
   - Make them genuinely different options, ordered from most likely to least, and keep one flexible or uncertain option when it fits ("Not sure yet, English is fine to start").
   - Use the <pool_summary> (aggregate counts of who is registered) to favour options the pool can actually fill: areas and skills many people have, start dates people are available by and, when discussing must-haves, moving a rare skill to nice-to-have. Name skills by their labels.
   - Keep each under 60 characters. Leave the list empty only when the card is ready.
+  - When you ask about the working language, the quick replies are exactly: "Finnish", "Swedish", "English", "Another language". If the user picks "Another language", ask which one and whether English or Finnish could work to start.
 - You may cite pool numbers from <pool_summary> in your reply ("6 people at this event work with Python"). They are counts only; never imply you know who those people are.
 - Gently challenge requirements that shrink the pool without serving the work. If Finnish isn't needed from day one, suggest "Finnish or English". Keep must-haves to 2–3 skills. Do not add degree, nationality, age, gender, accent or "native speaker" requirements; if the user asks for one, explain briefly that matching uses skills only and steer back to the skill behind it.
 - Never invent candidates or mention specific people. You do not see the talent pool.
@@ -187,54 +190,55 @@ const str = (description: string) => ({ type: "string", description });
 const skillList = (description: string) => ({
   type: "array",
   description,
-  items: { type: "string", enum: SKILL_IDS },
+  items: { type: "string", enum: skillIds() },
 });
 
 /** JSON schema for the model's structured output. Enums keep it inside the cached ESCO subset. */
-export const INTAKE_OUTPUT_SCHEMA = {
-  type: "object",
-  additionalProperties: false,
-  required: ["reply", "quick_replies", "draft", "ready"],
-  properties: {
-    reply: str("Your chat message to the company: brief context plus one clarifying question."),
-    quick_replies: {
-      type: "array",
-      description:
-        "2–4 suggested answers to your question, in the user's voice and language, tailored to what they said. Under 60 characters each.",
-      items: { type: "string" },
-    },
-    ready: { type: "boolean", description: "True only when every required field is filled." },
-    draft: {
-      type: "object",
-      additionalProperties: false,
-      required: ["title", "occupation", "summary", "must", "nice", "language", "mode", "timing"],
-      properties: {
-        title: str("Short job title, or empty."),
-        occupation: { type: "string", enum: ["", ...OCCUPATION_IDS] },
-        summary: str("One or two sentences on the work."),
-        must: skillList("Essential skills. Keep to 2–3."),
-        nice: skillList("Helpful but not essential skills."),
-        language: str(
-          `Working language in plain words. Use a preset when it fits (${LANGUAGES.join(", ")}), otherwise the user's own wording, e.g. "Swedish or English". Empty if not discussed.`,
-        ),
-        mode: str(
-          `Way of working in plain words. Use a preset when it fits (${MODES.join(", ")}), otherwise the user's own wording, e.g. "On-site 4 days, 1 remote". Empty if not discussed.`,
-        ),
-        timing: {
-          type: "object",
-          additionalProperties: false,
-          required: ["start", "engagement"],
-          properties: {
-            start: str('When the person should start, e.g. "ASAP", "February 2027", or empty.'),
-            engagement: str(
-              `Contract type in plain words. Use a preset when it fits (${ENGAGEMENTS.join(", ")}), otherwise the user's wording, e.g. "6-month project". Empty if not discussed.`,
-            ),
+export const INTAKE_OUTPUT_SCHEMA = () =>
+  ({
+    type: "object",
+    additionalProperties: false,
+    required: ["reply", "quick_replies", "draft", "ready"],
+    properties: {
+      reply: str("Your chat message to the company: brief context plus one clarifying question."),
+      quick_replies: {
+        type: "array",
+        description:
+          "2–4 suggested answers to your question, in the user's voice and language, tailored to what they said. Under 60 characters each.",
+        items: { type: "string" },
+      },
+      ready: { type: "boolean", description: "True only when every required field is filled." },
+      draft: {
+        type: "object",
+        additionalProperties: false,
+        required: ["title", "occupation", "summary", "must", "nice", "language", "mode", "timing"],
+        properties: {
+          title: str("Short job title, or empty."),
+          occupation: { type: "string", enum: ["", ...occupationIds()] },
+          summary: str("One or two sentences on the work."),
+          must: skillList("Essential skills. Keep to 2–3."),
+          nice: skillList("Helpful but not essential skills."),
+          language: str(
+            `Working language in plain words. Use a preset when it fits (${LANGUAGES.join(", ")}), otherwise the user's own wording, e.g. "Swedish or English". Empty if not discussed.`,
+          ),
+          mode: str(
+            `Way of working in plain words. Use a preset when it fits (${MODES.join(", ")}), otherwise the user's own wording, e.g. "On-site 4 days, 1 remote". Empty if not discussed.`,
+          ),
+          timing: {
+            type: "object",
+            additionalProperties: false,
+            required: ["start", "engagement"],
+            properties: {
+              start: str('When the person should start, e.g. "ASAP", "February 2027", or empty.'),
+              engagement: str(
+                `Contract type in plain words. Use a preset when it fits (${ENGAGEMENTS.join(", ")}), otherwise the user's wording, e.g. "6-month project". Empty if not discussed.`,
+              ),
+            },
           },
         },
       },
     },
-  },
-} as const;
+  }) as const;
 
 export const QUICK_REPLY_MAX = 60;
 
@@ -266,6 +270,20 @@ export function cleanQuickReplies(list: unknown, lastUserText = ""): string[] {
     if (out.length === 4) break;
   }
   return out;
+}
+
+/** The suggested replies whenever the assistant asks about the working language. */
+export const LANGUAGE_REPLIES = ["Finnish", "Swedish", "English", "Another language"];
+
+const ASKS_LANGUAGE = /language|\bkiel|työkiel|språk/i;
+
+/**
+ * While the card has no working language and the assistant's reply asks about it, the
+ * suggested replies are the language options (Finnish, Swedish, English, another one)
+ * instead of whatever the model wrote.
+ */
+export function withLanguageReplies(reply: string, draftLanguage: string, replies: string[]): string[] {
+  return !draftLanguage.trim() && ASKS_LANGUAGE.test(reply) ? [...LANGUAGE_REPLIES] : replies;
 }
 
 /** Fixed opening suggestions, used until (or instead of) the tailored ones. */

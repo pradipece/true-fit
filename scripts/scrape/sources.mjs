@@ -283,6 +283,6 @@ export const SKIPPED = {
   esco: {
     title: "ESCO",
     origin: "https://ec.europa.eu/esco/api",
-    reason: "Already handled by `yarn esco:refresh` (data/esco) and the live ESCO routes.",
+    reason: "Already handled by `yarn esco:refresh` (the esco_* tables) and the live ESCO routes.",
   },
 };

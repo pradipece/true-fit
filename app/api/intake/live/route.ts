@@ -15,6 +15,7 @@ import { getSeed } from "@/lib/seed-db";
 const apiKey = () => process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
 
 export async function POST(request: Request) {
+  await getSeed(); // load the data from the database into the registries (lib/seed-db.ts)
   const key = apiKey();
   if (!key)
     return Response.json({ error: "Live voice needs the AI, which isn't configured." }, { status: 503 });

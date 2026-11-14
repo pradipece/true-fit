@@ -8,6 +8,7 @@ import {
   INTAKE_SYSTEM_PROMPT,
   missingFields,
   sanitizeDraft,
+  withLanguageReplies,
   poolSummary,
   recheckNote,
   roleChanged,
@@ -59,8 +60,8 @@ async function aiTurn(req: IntakeRequest): Promise<IntakeTurn> {
     draft: IntakeRequest["draft"];
     ready: boolean;
   }>({
-    system: INTAKE_SYSTEM_PROMPT,
-    schema: INTAKE_OUTPUT_SCHEMA,
+    system: INTAKE_SYSTEM_PROMPT(),
+    schema: INTAKE_OUTPUT_SCHEMA(),
     messages: history.map((m, i) => ({
       role: m.role,
       content:
@@ -82,7 +83,11 @@ async function aiTurn(req: IntakeRequest): Promise<IntakeTurn> {
   }
   return {
     reply,
-    quickReplies: cleanQuickReplies(out.quick_replies, history[history.length - 1]?.content),
+    quickReplies: withLanguageReplies(
+      reply,
+      draft.language,
+      cleanQuickReplies(out.quick_replies, history[history.length - 1]?.content),
+    ),
     draft,
     asked: req.asked,
     // Trust the card, not the flag: ready means every required field is filled.
@@ -93,6 +98,7 @@ async function aiTurn(req: IntakeRequest): Promise<IntakeTurn> {
 }
 
 export async function POST(request: Request) {
+  await getSeed(); // load the data from the database into the registries (lib/seed-db.ts)
   const req = parseBody(await request.json().catch(() => null));
   if (!req) return Response.json({ error: "Invalid intake request" }, { status: 400 });
 

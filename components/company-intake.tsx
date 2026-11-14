@@ -31,7 +31,7 @@ import { CandidateProfile } from "@/components/candidate-profile";
 import { SkillChip, SkillLegend } from "@/components/skill-chip";
 import { useLiveIntake } from "@/components/use-live-intake";
 import { VoiceInput } from "@/components/voice-input";
-import { EVENT } from "@/lib/data";
+import { EVENT, OWN_COMPANY } from "@/lib/data";
 import {
   DEFAULT_STARTERS,
   draftToNeed,
@@ -61,8 +61,6 @@ type Msg = ChatMessage & {
   /** "card": a note that the live conversation updated the need card (not sent to the model). */
   kind?: "card";
 };
-
-const COMPANY = "Your company (demo)";
 
 const GREETING: Msg = {
   role: "assistant",
@@ -152,7 +150,7 @@ export function CompanyIntake() {
     return () => window.removeEventListener("keydown", onKey);
   }, [chatOpen]);
 
-  const need = useMemo(() => draftToNeed(draft, COMPANY), [draft]);
+  const need = useMemo(() => draftToNeed(draft, OWN_COMPANY.name), [draft]);
   // Live: who fits the card right now. Ranked by skills only (lib/match.ts).
   const suitable = useMemo(
     () => (need.must.length ? matchesForNeed(need, talent).filter((m) => m.suggested) : []),

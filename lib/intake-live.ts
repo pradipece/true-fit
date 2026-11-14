@@ -32,7 +32,7 @@ export const LIVE_TOOLS = [
         name: UPDATE_CARD_TOOL,
         description:
           "Replace the company's need card with this complete, updated version. Call it every time anything on the card changes. The reply gives aggregate counts of how many people at the event fit the card.",
-        parametersJsonSchema: INTAKE_OUTPUT_SCHEMA.properties.draft,
+        parametersJsonSchema: INTAKE_OUTPUT_SCHEMA().properties.draft,
       },
     ],
   },
@@ -50,7 +50,7 @@ Voice rules (these override the chat rules below):
 - Don't call the tool during the greeting or before the user has said anything about the role.
 - Start by greeting them in one sentence and asking who they would like to meet at the event.
 
-${INTAKE_SYSTEM_PROMPT}
+${INTAKE_SYSTEM_PROMPT()}
 
 <current_need_card>
 ${JSON.stringify(draft, null, 2)}

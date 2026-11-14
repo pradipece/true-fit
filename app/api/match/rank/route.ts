@@ -1,15 +1,16 @@
 import { aiEnabled, generateJson, logFallback } from "@/lib/ai";
-import { SKILL_BY_ID } from "@/lib/esco";
-import { explainMatch, type MatchNeed, type MatchTalent } from "@/lib/match";
+import { explainMatch, type MatchNeed } from "@/lib/match";
 import {
   finishRanking,
   MAX_RANKED,
+  parseTalent,
+  skillIds,
   RANK_SYSTEM_PROMPT,
   rankInput,
   rankSchema,
   type RankResult,
 } from "@/lib/match-rank";
-import type { Evidence, SkillClaim } from "@/lib/types";
+import { getEsco } from "@/lib/seed-db";
 
 /**
  * "AI fit rate" for the candidates matched to one need. The browser sends the need's skills and
@@ -18,37 +19,8 @@ import type { Evidence, SkillClaim } from "@/lib/types";
  * ids. Rules fallback without a key or on any error.
  */
 
-const skillIds = (xs: unknown) =>
-  Array.isArray(xs)
-    ? [...new Set(xs.filter((s): s is string => typeof s === "string" && !!SKILL_BY_ID[s]))]
-    : [];
-
-function parseTalent(t: unknown): MatchTalent | null {
-  if (!t || typeof t !== "object") return null;
-  const o = t as Record<string, unknown>;
-  if (typeof o.id !== "string" || !Array.isArray(o.skills)) return null;
-  const skills: SkillClaim[] = o.skills
-    .filter(
-      (s): s is SkillClaim =>
-        !!s &&
-        typeof s === "object" &&
-        !!SKILL_BY_ID[s.id] &&
-        (s.level === "evidenced" || s.level === "claimed"),
-    )
-    .map((s) => ({ id: s.id, level: s.level }));
-  const evidence: Evidence[] = (Array.isArray(o.evidence) ? o.evidence : [])
-    .filter((e): e is Evidence => !!e && typeof e.prompt === "string" && typeof e.excerpt === "string")
-    .slice(0, 6)
-    .map((e) => ({
-      kind: e.kind,
-      prompt: e.prompt.slice(0, 300),
-      excerpt: e.excerpt.slice(0, 400),
-      skills: skillIds(e.skills),
-    }));
-  return { id: o.id.slice(0, 40), skills, evidence };
-}
-
 export async function POST(request: Request) {
+  await getEsco(); // load the data from the database into the registries (lib/seed-db.ts)
   const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
   const n = body?.need as Record<string, unknown> | undefined;
   const must = skillIds(n?.must);

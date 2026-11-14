@@ -1,10 +1,12 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { SEED_NEEDS, SEED_TALENT } from "./data";
+import { OWN_COMPANY } from "./data";
+import { setEsco, type EscoSnapshot } from "./esco";
 import { pairKey } from "./match";
 import { actionFor, auditEntry } from "./oversight";
 import { withOptIn, type OptIn, type OptInAnswer } from "./schedule";
+import { setSeed, type Seed } from "./seed";
 import type { AuditEntry, Decision, Feedback, FeedbackSide, Need, SideFeedback, Talent } from "./types";
 
 type DemoState = {
@@ -35,10 +37,10 @@ const SEED_DECISIONS: Record<string, Decision> = {
   },
 };
 
-/** Seed rows the server loaded (the database, or the JSON seeds as fallback). */
-export type DemoSeed = { needs: Need[]; talent: Talent[] };
+/** Seed rows the server loaded from the database (lib/seed-db.ts). */
+export type DemoSeed = Seed;
 
-const seedState = ({ needs, talent }: DemoSeed = { needs: SEED_NEEDS, talent: SEED_TALENT }): DemoState => ({
+const seedState = ({ needs, talent }: Pick<Seed, "needs" | "talent">): DemoState => ({
   needs,
   talent,
   decisions: SEED_DECISIONS,
@@ -91,7 +93,12 @@ export function hydrate(initial: DemoState, saved: Partial<DemoState>): DemoStat
   return {
     ...initial,
     ...saved,
-    needs: mine(saved.needs, initial.needs),
+    // Needs saved before the demo company had a name pick up the current one.
+    needs: mine(saved.needs, initial.needs).map((n) =>
+      n.createdByUser && n.companyId === OWN_COMPANY.id
+        ? { ...n, company: OWN_COMPANY.name, companyBlurb: OWN_COMPANY.blurb }
+        : n,
+    ),
     talent: mine(saved.talent, initial.talent),
   };
 }
@@ -116,7 +123,19 @@ type Ctx = DemoState & {
 
 const DemoContext = createContext<Ctx | null>(null);
 
-export function DemoProvider({ children, seed }: { children: React.ReactNode; seed?: DemoSeed }) {
+export function DemoProvider({
+  children,
+  seed,
+  esco,
+}: {
+  children: React.ReactNode;
+  seed: DemoSeed;
+  esco: EscoSnapshot;
+}) {
+  // Fill the browser's registries (lib/esco.ts, lib/seed.ts) before any child renders:
+  // the matching helpers read them synchronously. Idempotent, so safe during render.
+  setEsco(esco);
+  setSeed(seed);
   const initial = useMemo(() => seedState(seed), [seed]);
   const [state, setState] = useState<DemoState>(initial);
   const [loaded, setLoaded] = useState(false);

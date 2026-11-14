@@ -1,6 +1,7 @@
+import { SKILL_BY_ID } from "./esco";
 import { explainInput, type ExplainInput } from "./match-explain";
-import { SCORING } from "./match";
-import type { MatchExplanation } from "./types";
+import { SCORING, type MatchTalent } from "./match";
+import type { Evidence, MatchExplanation, SkillClaim } from "./types";
 
 /**
  * "AI fit rate": an optional, suggested order for the candidates already matched to one need.
@@ -113,4 +114,38 @@ export function finishRanking(
     .map((c, i) => ({ talentId: talentIds[i], ...(seen.get(c.label) ?? rules.get(c.label)!), order: i }))
     .sort((a, b) => b.fit - a.fit || a.order - b.order)
     .map(({ talentId, fit, reason }) => ({ talentId, fit, reason }));
+}
+
+// ── Request parsing (shared by the ranking routes) ──────────────────────────
+
+/** Known ESCO skill ids from untrusted input, de-duplicated. */
+export const skillIds = (xs: unknown) =>
+  Array.isArray(xs)
+    ? [...new Set(xs.filter((s): s is string => typeof s === "string" && !!SKILL_BY_ID[s]))]
+    : [];
+
+/** A talent's skills and evidence from untrusted input; nothing else about them is kept. */
+export function parseTalent(t: unknown): MatchTalent | null {
+  if (!t || typeof t !== "object") return null;
+  const o = t as Record<string, unknown>;
+  if (typeof o.id !== "string" || !Array.isArray(o.skills)) return null;
+  const skills: SkillClaim[] = o.skills
+    .filter(
+      (s): s is SkillClaim =>
+        !!s &&
+        typeof s === "object" &&
+        !!SKILL_BY_ID[s.id] &&
+        (s.level === "evidenced" || s.level === "claimed"),
+    )
+    .map((s) => ({ id: s.id, level: s.level }));
+  const evidence: Evidence[] = (Array.isArray(o.evidence) ? o.evidence : [])
+    .filter((e): e is Evidence => !!e && typeof e.prompt === "string" && typeof e.excerpt === "string")
+    .slice(0, 6)
+    .map((e) => ({
+      kind: e.kind,
+      prompt: e.prompt.slice(0, 300),
+      excerpt: e.excerpt.slice(0, 400),
+      skills: skillIds(e.skills),
+    }));
+  return { id: o.id.slice(0, 40), skills, evidence };
 }

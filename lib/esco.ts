@@ -1,21 +1,56 @@
-import occupationsJson from "@/data/esco/occupations.json";
-import skillsJson from "@/data/esco/skills.json";
 import type { Occupation, Skill } from "./types";
 
 /**
- * Cached ESCO subset (skills + occupations) for the prototype, with lookup helpers.
- * Data lives in data/esco/*.json; `node scripts/refresh-esco.mjs` re-syncs the ESCO
- * labels from the public API. A real deployment would sync the full taxonomy.
+ * The ESCO subset (skills + occupations) the app matches on, with lookup helpers.
+ *
+ * The data lives in the database (esco_* tables; there is no local copy). It is loaded at
+ * runtime and filled in here with setEsco: on the server by getEsco()/getSeed() in
+ * lib/seed-db.ts, in the browser by DemoProvider (lib/store.tsx) before anything renders.
+ * The exported arrays and maps are filled in place, so imports stay valid after loading.
+ * `yarn esco:refresh` re-syncs the ESCO labels from the public API.
  */
 
-export const SKILLS = skillsJson.skills as Skill[];
-export const OCCUPATIONS = occupationsJson.occupations as Occupation[];
-export const ESCO_RETRIEVED = skillsJson.retrieved;
+/** The snapshot shape: what lib/db-read.mjs readEsco() returns. */
+export type EscoSnapshot = {
+  skills: { retrieved?: string; skills: Skill[]; related: [string, string, number][] };
+  occupations: { retrieved?: string; occupations: Occupation[] };
+};
 
-export const SKILL_BY_ID: Record<string, Skill> = Object.fromEntries(SKILLS.map((s) => [s.id, s]));
-export const OCCUPATION_BY_ID: Record<string, Occupation> = Object.fromEntries(
-  OCCUPATIONS.map((o) => [o.id, o]),
-);
+export const SKILLS: Skill[] = [];
+export const OCCUPATIONS: Occupation[] = [];
+export const SKILL_BY_ID: Record<string, Skill> = {};
+export const OCCUPATION_BY_ID: Record<string, Occupation> = {};
+const ADJ = new Map<string, Map<string, number>>();
+let retrieved = "";
+let current: EscoSnapshot | null = null;
+
+/** When the ESCO labels were last synced from the public API (ISO date). */
+export const escoRetrieved = () => retrieved;
+export const escoLoaded = () => current !== null;
+
+const refill = <T>(target: T[], items: T[]) => target.splice(0, target.length, ...items);
+const refillMap = <T>(target: Record<string, T>, items: T[], key: (t: T) => string) => {
+  for (const k of Object.keys(target)) delete target[k];
+  for (const it of items) target[key(it)] = it;
+};
+
+/** Fill the registry from a snapshot. Cheap and idempotent; a new snapshot replaces the old one. */
+export function setEsco(snapshot: EscoSnapshot) {
+  if (snapshot === current) return;
+  current = snapshot;
+  refill(SKILLS, snapshot.skills.skills);
+  refill(OCCUPATIONS, snapshot.occupations.occupations);
+  refillMap(SKILL_BY_ID, SKILLS, (s) => s.id);
+  refillMap(OCCUPATION_BY_ID, OCCUPATIONS, (o) => o.id);
+  retrieved = snapshot.skills.retrieved ?? "";
+  ADJ.clear();
+  for (const [a, b, w] of snapshot.skills.related) {
+    if (!ADJ.has(a)) ADJ.set(a, new Map());
+    if (!ADJ.has(b)) ADJ.set(b, new Map());
+    ADJ.get(a)!.set(b, w);
+    ADJ.get(b)!.set(a, w);
+  }
+}
 
 export const getSkill = (id: string): Skill | undefined => SKILL_BY_ID[id];
 export const skillLabel = (id: string) => SKILL_BY_ID[id]?.label ?? id;
@@ -93,15 +128,6 @@ export const findSkill = (query: string) => searchSkills(query, { limit: 1, keyw
  * Adjacency between skills, used to surface *transferable* experience.
  * Values are credit fractions (0..1), symmetric.
  */
-const ADJACENT = skillsJson.related as [string, string, number][];
-const ADJ = new Map<string, Map<string, number>>();
-for (const [a, b, w] of ADJACENT) {
-  if (!ADJ.has(a)) ADJ.set(a, new Map());
-  if (!ADJ.has(b)) ADJ.set(b, new Map());
-  ADJ.get(a)!.set(b, w);
-  ADJ.get(b)!.set(a, w);
-}
-
 export function adjacency(a: string, b: string): number {
   return ADJ.get(a)?.get(b) ?? 0;
 }

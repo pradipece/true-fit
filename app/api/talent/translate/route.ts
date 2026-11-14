@@ -9,12 +9,14 @@ import {
   type TranslateModelOutput,
   type Translation,
 } from "@/lib/talent-ai";
+import { getEsco } from "@/lib/seed-db";
 
 /**
  * Skills translator: past job title and/or career path → ESCO occupation, skills and
  * Finnish job-ad vocabulary. Gemini when configured, rules otherwise.
  */
 export async function POST(request: Request) {
+  await getEsco(); // load the data from the database into the registries (lib/seed-db.ts)
   const body = (await request.json().catch(() => null)) as { title?: unknown; path?: unknown } | null;
   const title = typeof body?.title === "string" ? body.title.trim().slice(0, 120) : "";
   const path = typeof body?.path === "string" ? body.path.trim().slice(0, 1500) : "";
@@ -26,8 +28,8 @@ export async function POST(request: Request) {
   if (aiEnabled()) {
     try {
       const out = await generateJson<TranslateModelOutput>({
-        system: TRANSLATE_SYSTEM_PROMPT,
-        schema: TRANSLATE_SCHEMA,
+        system: TRANSLATE_SYSTEM_PROMPT(),
+        schema: TRANSLATE_SCHEMA(),
         messages: [
           {
             role: "user",

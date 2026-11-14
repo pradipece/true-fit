@@ -117,6 +117,13 @@ export function OrganiserReview() {
   const [showOthers, setShowOthers] = useState(false);
   const [dialog, setDialog] = useState<DialogState | null>(null);
   const [view, setView] = useState<"need" | "candidate">("need");
+  const [candidate, setCandidate] = useState<string>("");
+  // From a card in the need view: open this person in "By candidate" to pick another company.
+  const otherCompany = (talentId: string) => {
+    setCandidate(talentId);
+    setView("candidate");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const need = needs.find((n) => n.id === selected) ?? needs[0];
   const list = useMemo(() => (need ? reviewList(need, talent) : null), [need, talent]);
@@ -215,6 +222,7 @@ export function OrganiserReview() {
         companies={companyScores.get(m.talentId) ?? []}
         fit={ranking.fitOf(m.talentId)}
         onAction={(type) => setDialog({ type, m, current: d })}
+        onOtherCompany={() => otherCompany(m.talentId)}
       />
     );
   };
@@ -281,6 +289,8 @@ export function OrganiserReview() {
             talent={talent}
             decisions={decisions}
             optIns={optIns}
+            selected={candidate}
+            onSelect={setCandidate}
             onAction={(type, m) => setDialog({ type, m, current: decisions[pairKey(m.needId, m.talentId)] })}
           />
         )}
@@ -489,6 +499,7 @@ function MatchCard({
   companies,
   fit,
   onAction,
+  onOtherCompany,
 }: {
   need: Need;
   m: MatchExplanation;
@@ -503,6 +514,8 @@ function MatchCard({
   companies: CompanyScore[];
   fit?: ReturnType<ReturnType<typeof useAiRanking>["fitOf"]>;
   onAction: (type: DialogType) => void;
+  /** Open this person in "By candidate" to introduce them to a different company. */
+  onOtherCompany: () => void;
 }) {
   return (
     <Card className={cn(d?.status === "rejected" && "opacity-70")}>
@@ -650,6 +663,9 @@ function MatchCard({
             </Button>
             <Button size="sm" variant="outline" onClick={() => onAction("reject")}>
               <XIcon data-icon="inline-start" /> Not now
+            </Button>
+            <Button size="sm" variant="ghost" onClick={onOtherCompany}>
+              <Building2Icon data-icon="inline-start" /> Other company…
             </Button>
             <span className="ml-auto text-xs text-muted-foreground">Suggestion only · you decide</span>
           </>
@@ -963,12 +979,16 @@ function ByCandidate({
   talent,
   decisions,
   optIns,
+  selected,
+  onSelect,
   onAction,
 }: {
   needs: Need[];
   talent: Talent[];
   decisions: Record<string, Decision>;
   optIns: Record<string, OptInRow>;
+  selected: string;
+  onSelect: (talentId: string) => void;
   onAction: (type: DialogType, m: MatchExplanation) => void;
 }) {
   const [query, setQuery] = useState("");
@@ -983,7 +1003,6 @@ function ByCandidate({
         ),
     [needs, talent],
   );
-  const [selected, setSelected] = useState(people[0]?.t.id ?? "");
   const q = query.trim().toLowerCase();
   const shown = q
     ? people.filter(({ t }) => `${displayName(t) ?? ""} ${t.alias} ${t.headline}`.toLowerCase().includes(q))
@@ -1026,7 +1045,7 @@ function ByCandidate({
               <button
                 key={p.id}
                 type="button"
-                onClick={() => setSelected(p.id)}
+                onClick={() => onSelect(p.id)}
                 aria-current={current.t.id === p.id}
                 className={cn(
                   "w-full rounded-xl border bg-card p-3 text-left transition-colors hover:bg-muted/50",
@@ -1086,6 +1105,15 @@ function ByCandidate({
             </div>
           </CardContent>
         </Card>
+
+        <IntroduceTo
+          key={t.id}
+          name={displayName(t) ?? t.alias}
+          companies={current.companies}
+          decisions={decisions}
+          talentId={t.id}
+          onIntroduce={(m) => onAction("approve", m)}
+        />
 
         <div className="space-y-1">
           <h2 className="text-sm font-medium">Companies ranked for this candidate</h2>
@@ -1151,5 +1179,93 @@ function ByCandidate({
         />
       </div>
     </div>
+  );
+}
+
+/**
+ * Pick any company, and which of its roles, to introduce this person to. Companies are
+ * listed in skill-match order with their percentage; roles already decided can't be picked
+ * again here (edit or undo them in the list below). Opens the same reason dialog.
+ */
+function IntroduceTo({
+  name,
+  talentId,
+  companies,
+  decisions,
+  onIntroduce,
+}: {
+  name: string;
+  talentId: string;
+  companies: ReturnType<typeof companiesFor<Need>>;
+  decisions: Record<string, Decision>;
+  onIntroduce: (m: MatchExplanation) => void;
+}) {
+  const open = companies.flatMap((c) => c.roles).filter((r) => !decisions[pairKey(r.need.id, talentId)]);
+  const [needId, setNeedId] = useState(open[0]?.need.id ?? "");
+  const picked = open.find((r) => r.need.id === needId) ?? open[0];
+  const decided = (id: string) => decisions[pairKey(id, talentId)];
+
+  return (
+    <Card className="border-primary/30">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <HandshakeIcon className="size-4 text-primary" /> Introduce {name} to a company
+        </CardTitle>
+        <CardDescription>
+          Choose any company and role, best skill match first. The company and {name} then each say yes or no.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {open.length ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <Label htmlFor={`introduce-${talentId}`} className="sr-only">
+              Company and role
+            </Label>
+            <select
+              id={`introduce-${talentId}`}
+              value={picked?.need.id ?? ""}
+              onChange={(e) => setNeedId(e.target.value)}
+              className="h-9 min-w-0 flex-1 rounded-md border bg-background px-2 text-sm"
+            >
+              {companies.map((c, i) => (
+                <optgroup
+                  key={c.companyId}
+                  label={`${i + 1}. ${c.best.need.company} · ${Math.round(c.best.m.score * 100)}% company match`}
+                >
+                  {c.roles.map(({ need, m }) => {
+                    const d = decided(need.id);
+                    return (
+                      <option key={need.id} value={need.id} disabled={!!d}>
+                        {need.title} · {Math.round(m.score * 100)}%
+                        {d
+                          ? d.status === "approved"
+                            ? " · introduced"
+                            : " · not now"
+                          : m.suggested
+                            ? ""
+                            : " · below the line"}
+                      </option>
+                    );
+                  })}
+                </optgroup>
+              ))}
+            </select>
+            <Button onClick={() => picked && onIntroduce(picked.m)} disabled={!picked}>
+              <CheckIcon data-icon="inline-start" /> Introduce
+            </Button>
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            Every role at this event already has a decision for {name}. Edit or undo one below.
+          </p>
+        )}
+        {picked && (
+          <p className="mt-2 text-xs text-muted-foreground">
+            {picked.need.company} · {picked.need.title}: {Math.round(picked.m.score * 100)}% skill match
+            {picked.m.suggested ? "" : ", below the suggestion line (not rejected, your call)"}.
+          </p>
+        )}
+      </CardContent>
+    </Card>
   );
 }

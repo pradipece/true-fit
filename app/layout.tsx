@@ -6,7 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { VersionUpdate } from "@/components/version-update";
-import { getSeed } from "@/lib/seed-db";
+import { getEsco, getSeed } from "@/lib/seed-db";
 import { DemoProvider } from "@/lib/store";
 import { APP_COMMIT, APP_VERSION } from "@/lib/version";
 import "./globals.css";
@@ -31,8 +31,8 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  // The database (Tiger Data or Supabase) when configured and reachable, else the JSON seeds (cached, see lib/seed-db.ts).
-  const { needs, talent } = await getSeed();
+  // Everything comes from the database (Tiger Data, else Supabase; cached, see lib/seed-db.ts).
+  const [{ companies, needs, talent }, esco] = await Promise.all([getSeed(), getEsco()]);
   return (
     <html
       lang="en"
@@ -42,7 +42,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       <body className="flex min-h-full flex-col">
         <ThemeProvider>
           <TooltipProvider>
-            <DemoProvider seed={{ needs, talent }}>
+            <DemoProvider seed={{ companies, needs, talent }} esco={esco}>
               <SiteHeader />
               <main className="flex-1">{children}</main>
               <footer className="border-t py-6 text-center text-xs text-muted-foreground">

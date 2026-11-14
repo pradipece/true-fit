@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { searchEsco, toSubset } from "@/lib/esco-api";
+import { getEsco } from "@/lib/seed-db";
 
 /**
  * Live ESCO search, e.g. /api/esco/search?q=lagerchef&type=occupation.
@@ -7,6 +8,7 @@ import { searchEsco, toSubset } from "@/lib/esco-api";
  * Only the typed text goes to ESCO. Responses are cached per query for a day.
  */
 export async function GET(request: NextRequest) {
+  await getEsco(); // load the data from the database into the registries (lib/seed-db.ts)
   const q = request.nextUrl.searchParams.get("q")?.trim() ?? "";
   const type = request.nextUrl.searchParams.get("type") === "occupation" ? "occupation" : "skill";
   if (q.length < 2) return Response.json({ error: "Type at least 2 characters" }, { status: 400 });

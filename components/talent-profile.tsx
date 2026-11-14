@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import {
+  ChevronDownIcon,
   ArrowLeftIcon,
   ArrowRightIcon,
   EyeOffIcon,
@@ -30,6 +31,7 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { SkillChip, SkillLegend } from "@/components/skill-chip";
+import { CompaniesForYou } from "@/components/companies-for-you";
 import { CvImport, type CvApply } from "@/components/cv-import";
 import { EscoMatch } from "@/components/esco-match";
 import { VoiceNote } from "@/components/voice-note";
@@ -51,11 +53,11 @@ import {
   type StartersRequest,
   type Translation,
 } from "@/lib/talent-ai";
-import type { Evidence, SkillGroup, Talent, TalentContact } from "@/lib/types";
+import type { Evidence, SkillClaim, SkillGroup, Talent, TalentContact } from "@/lib/types";
 import { cn, isSubmitEnter } from "@/lib/utils";
 
 const GROUPS: SkillGroup[] = ["Digital", "Green transition", "Healthcare", "Business", "Transversal"];
-const STEPS = ["Background", "Skills", "Evidence", "Review card"];
+const STEPS = ["Background", "Skills", "Evidence", "Review profile"];
 const MAX_PICK = 8;
 const MAX_SKILLS = 10;
 
@@ -160,6 +162,7 @@ export function TalentProfile() {
   const contactError = contactProblem(contact);
   const [reviewed, setReviewed] = useState(false);
   const [joined, setJoined] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   const answerList = buildAnswers(answers, sample);
   const labelOf = (id: string) => answerList.find((a) => a.id === id)?.label ?? id;
@@ -297,19 +300,25 @@ export function TalentProfile() {
     touch();
   };
 
+  // The card as it stands: skills (shown or stated) and the quotes behind them.
+  const evidence: Evidence[] = answerList.flatMap((a) => {
+    const ms = accepted.filter((m) => m.answerId === a.id);
+    if (!ms.length) return [];
+    return [
+      {
+        kind: a.kind,
+        prompt: a.prompt,
+        excerpt: [...new Set(ms.map((m) => m.quote))].join(" … ").slice(0, 260),
+        skills: [...new Set(ms.map((m) => m.skill))],
+      },
+    ];
+  });
+  const cardSkills: SkillClaim[] = skills.map((id) => ({
+    id,
+    level: evidenced.has(id) ? "evidenced" : "claimed",
+  }));
+
   const join = () => {
-    const evidence: Evidence[] = answerList.flatMap((a) => {
-      const ms = accepted.filter((m) => m.answerId === a.id);
-      if (!ms.length) return [];
-      return [
-        {
-          kind: a.kind,
-          prompt: a.prompt,
-          excerpt: [...new Set(ms.map((m) => m.quote))].join(" … ").slice(0, 260),
-          skills: [...new Set(ms.map((m) => m.skill))],
-        },
-      ];
-    });
     addTalent({
       id: "T-YOU",
       alias: "Candidate T-YOU",
@@ -317,7 +326,7 @@ export function TalentProfile() {
       contact: cleanContact(contact),
       headline: headline.trim() || "New at this event",
       previousField: translation?.localTitle || title.trim() || "—",
-      skills: skills.map((id) => ({ id, level: evidenced.has(id) ? "evidenced" : "claimed" })),
+      skills: cardSkills,
       evidence,
       languages: languages.map((lang) => ({ lang, level: "Working" })),
       availability: availability.trim() || "Flexible",
@@ -957,7 +966,7 @@ export function TalentProfile() {
           </Button>
           {step < STEPS.length - 1 ? (
             <Button onClick={() => goTo(step + 1)} disabled={step === 1 && skills.length === 0}>
-              {step === 2 ? "Review my card" : "Next"} <ArrowRightIcon data-icon="inline-end" />
+              {step === 2 ? "Review my profile" : "Next"} <ArrowRightIcon data-icon="inline-end" />
             </Button>
           ) : joined ? (
             <Button variant="outline" nativeButton={false} render={<Link href="/meetings/talent" />}>
@@ -974,11 +983,24 @@ export function TalentProfile() {
         </CardFooter>
       </Card>
 
-      {/* Live anonymised card */}
+      {/* Companies that suit this card best, then the anonymised card itself */}
       <div className="space-y-4 lg:sticky lg:top-20 lg:self-start">
+        <CompaniesForYou talent={{ id: "T-YOU", skills: cardSkills, evidence }} />
         <Card>
           <CardHeader>
-            <CardDescription>What companies see first</CardDescription>
+            <CardDescription>
+              <button
+                type="button"
+                onClick={() => setShowPreview((v) => !v)}
+                aria-expanded={showPreview}
+                className="flex items-center gap-1 hover:text-foreground"
+              >
+                <ChevronDownIcon
+                  className={cn("size-3.5 transition-transform", !showPreview && "-rotate-90")}
+                />
+                What companies see
+              </button>
+            </CardDescription>
             <CardTitle className="flex items-center gap-2">
               <span className="grid size-8 place-items-center rounded-full bg-secondary">
                 <EyeOffIcon className="size-4 text-muted-foreground" />
@@ -992,60 +1014,64 @@ export function TalentProfile() {
               {evidenced.size} evidenced
             </Badge>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm">
-              {headline || <span className="text-muted-foreground italic">Your one-line headline</span>}
-            </p>
-            {(translation?.localTitle || title) && (
-              <p className="text-xs text-muted-foreground">
-                Background: <span className="text-foreground">{translation?.localTitle || title}</span>
-              </p>
-            )}
-            <div className="flex flex-wrap gap-1.5">
-              {skills.length ? (
-                skills.map((s) => (
-                  <SkillChip key={s} id={s} kind={evidenced.has(s) ? "evidenced" : "claimed"} />
-                ))
-              ) : (
-                <span className="text-sm text-muted-foreground">No skills picked yet</span>
-              )}
-            </div>
-            {accepted.length > 0 && (
-              <details className="text-xs">
-                <summary className="cursor-pointer text-muted-foreground select-none hover:text-foreground">
-                  Evidence behind these skills ({accepted.length})
-                </summary>
-                <ul className="mt-2 space-y-2">
-                  {accepted.map((m) => (
-                    <li key={mapKey(m)} className="border-l-2 border-evidence/40 pl-2">
-                      <p className="italic">“{m.quote}”</p>
-                      <p className="text-muted-foreground">
-                        {skillLabel(m.skill)} · {labelOf(m.answerId)}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
-              </details>
-            )}
-            <Separator />
-            <dl className="space-y-1.5 text-sm">
-              <Row label="Written answers" value={`${written}/${SCENARIO_PROMPTS.length}`} />
-              <Row
-                label="Extras"
-                value={
-                  [answers.voice?.trim() && "voice note", sample && "work sample"]
-                    .filter(Boolean)
-                    .join(", ") || "—"
-                }
-              />
-              <Row label="Languages" value={languages.join(", ") || "—"} />
-              <Row label="Mode" value={mode} />
-              <Row label="Available" value={availability || "Flexible"} />
-            </dl>
-          </CardContent>
-          <CardFooter>
-            <SkillLegend className="flex-col items-start" />
-          </CardFooter>
+          {showPreview && (
+            <>
+              <CardContent className="space-y-4">
+                <p className="text-sm">
+                  {headline || <span className="text-muted-foreground italic">Your one-line headline</span>}
+                </p>
+                {(translation?.localTitle || title) && (
+                  <p className="text-xs text-muted-foreground">
+                    Background: <span className="text-foreground">{translation?.localTitle || title}</span>
+                  </p>
+                )}
+                <div className="flex flex-wrap gap-1.5">
+                  {skills.length ? (
+                    skills.map((s) => (
+                      <SkillChip key={s} id={s} kind={evidenced.has(s) ? "evidenced" : "claimed"} />
+                    ))
+                  ) : (
+                    <span className="text-sm text-muted-foreground">No skills picked yet</span>
+                  )}
+                </div>
+                {accepted.length > 0 && (
+                  <details className="text-xs">
+                    <summary className="cursor-pointer text-muted-foreground select-none hover:text-foreground">
+                      Evidence behind these skills ({accepted.length})
+                    </summary>
+                    <ul className="mt-2 space-y-2">
+                      {accepted.map((m) => (
+                        <li key={mapKey(m)} className="border-l-2 border-evidence/40 pl-2">
+                          <p className="italic">“{m.quote}”</p>
+                          <p className="text-muted-foreground">
+                            {skillLabel(m.skill)} · {labelOf(m.answerId)}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
+                <Separator />
+                <dl className="space-y-1.5 text-sm">
+                  <Row label="Written answers" value={`${written}/${SCENARIO_PROMPTS.length}`} />
+                  <Row
+                    label="Extras"
+                    value={
+                      [answers.voice?.trim() && "voice note", sample && "work sample"]
+                        .filter(Boolean)
+                        .join(", ") || "—"
+                    }
+                  />
+                  <Row label="Languages" value={languages.join(", ") || "—"} />
+                  <Row label="Mode" value={mode} />
+                  <Row label="Available" value={availability || "Flexible"} />
+                </dl>
+              </CardContent>
+              <CardFooter>
+                <SkillLegend className="flex-col items-start" />
+              </CardFooter>
+            </>
+          )}
         </Card>
         <Card size="sm" className="border-dashed">
           <CardHeader>

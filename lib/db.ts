@@ -3,8 +3,8 @@ import { dbConfig } from "./db-config.mjs";
 
 /**
  * Postgres connection pool, server-only: Tiger Data when TIGER_DATABASE_URL is set, else
- * Supabase (connection settings and TLS: lib/db-config.mjs). Without either the app runs
- * on the JSON seeds in data/. On Supabase the tables have row-level security with no
+ * Supabase (connection settings and TLS: lib/db-config.mjs). One of them is required: the
+ * app keeps no local copy of the data. On Supabase the tables have row-level security with no
  * policies, so this server connection is the only way in: the publishable key gets nothing.
  */
 

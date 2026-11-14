@@ -19,8 +19,8 @@ import type { Evidence, SkillGroup } from "./types";
  * reviews and edits the card before it joins the pool.
  */
 
-const SKILL_IDS = SKILLS.map((s) => s.id);
-const OCCUPATION_IDS = OCCUPATIONS.map((o) => o.id);
+const skillIds = () => SKILLS.map((s) => s.id);
+const occupationIds = () => OCCUPATIONS.map((o) => o.id);
 const str = (description: string) => ({ type: "string", description });
 
 /** Where a keyword hint for a skill appears in free text. */
@@ -73,7 +73,8 @@ export type Translation = {
   source: "ai" | "rules";
 };
 
-export const TRANSLATE_SYSTEM_PROMPT = `You help people who are new to the Finnish job market describe their experience in local terms. They give a past job title (in any language) and/or a short description of their career path, which may be unusual: career changes, informal work, caring, volunteering, running a family business, military service, gaps.
+export const TRANSLATE_SYSTEM_PROMPT =
+  () => `You help people who are new to the Finnish job market describe their experience in local terms. They give a past job title (in any language) and/or a short description of their career path, which may be unusual: career changes, informal work, caring, volunteering, running a family business, military service, gaps.
 
 Return:
 - "local_title": how the role is usually called in Finland, as "Finnish title · English title". If there is no single title, describe the profile briefly in the same format.
@@ -90,34 +91,35 @@ ${SKILLS.map((s) => `${s.id}: ${s.label}`).join("\n")}
 Occupation catalogue (id: ESCO label):
 ${OCCUPATIONS.map((o) => `${o.id}: ${o.label}`).join("\n")}`;
 
-export const TRANSLATE_SCHEMA = {
-  type: "object",
-  additionalProperties: false,
-  required: ["local_title", "occupation", "skills", "vocabulary", "note"],
-  properties: {
-    local_title: str('"Finnish title · English title"'),
-    occupation: { type: "string", enum: ["", ...OCCUPATION_IDS] },
-    skills: {
-      type: "array",
-      items: {
-        type: "object",
-        additionalProperties: false,
-        required: ["skill", "why"],
-        properties: { skill: { type: "string", enum: SKILL_IDS }, why: str("One sentence.") },
+export const TRANSLATE_SCHEMA = () =>
+  ({
+    type: "object",
+    additionalProperties: false,
+    required: ["local_title", "occupation", "skills", "vocabulary", "note"],
+    properties: {
+      local_title: str('"Finnish title · English title"'),
+      occupation: { type: "string", enum: ["", ...occupationIds()] },
+      skills: {
+        type: "array",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: ["skill", "why"],
+          properties: { skill: { type: "string", enum: skillIds() }, why: str("One sentence.") },
+        },
       },
-    },
-    vocabulary: {
-      type: "array",
-      items: {
-        type: "object",
-        additionalProperties: false,
-        required: ["term", "meaning"],
-        properties: { term: str("Finnish or Swedish term"), meaning: str("Short English meaning") },
+      vocabulary: {
+        type: "array",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: ["term", "meaning"],
+          properties: { term: str("Finnish or Swedish term"), meaning: str("Short English meaning") },
+        },
       },
+      note: str("Regulated-profession note or empty."),
     },
-    note: str("Regulated-profession note or empty."),
-  },
-} as const;
+  }) as const;
 
 export type TranslateModelOutput = {
   local_title: string;
@@ -211,7 +213,8 @@ export type EvidenceResult = {
   source: "ai" | "rules";
 };
 
-export const EVIDENCE_SYSTEM_PROMPT = `You map a job seeker's short written answers to ESCO skills for an anonymised skill card used at a recruitment event in Espoo, Finland. Humans make every decision; you only structure the evidence.
+export const EVIDENCE_SYSTEM_PROMPT =
+  () => `You map a job seeker's short written answers to ESCO skills for an anonymised skill card used at a recruitment event in Espoo, Finland. Humans make every decision; you only structure the evidence.
 
 For each answer, find the skills from the catalogue that the answer actually demonstrates:
 - "quote" must be copied verbatim from the answer (one sentence or phrase, at most 25 words). Never paraphrase or invent.
@@ -250,7 +253,7 @@ export function evidenceSchema(answerIds: string[]) {
           required: ["answer_id", "skill", "quote", "strength", "why"],
           properties: {
             answer_id: { type: "string", enum: answerIds },
-            skill: { type: "string", enum: SKILL_IDS },
+            skill: { type: "string", enum: skillIds() },
             quote: str("Verbatim span from the answer, at most 25 words."),
             strength: { type: "string", enum: ["clear", "partial"] },
             why: str("One short sentence, addressed to the person."),

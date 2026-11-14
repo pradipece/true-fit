@@ -33,6 +33,7 @@ async function tailoredStarters() {
 }
 
 export async function GET() {
+  await getSeed(); // load the data from the database into the registries (lib/seed-db.ts)
   if (!aiEnabled()) return Response.json({ starters: DEFAULT_STARTERS, source: "rules" });
   try {
     return Response.json({ starters: await tailoredStarters(), source: "ai" });

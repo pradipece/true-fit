@@ -1,6 +1,6 @@
 export type SkillGroup = "Digital" | "Green transition" | "Healthcare" | "Business" | "Transversal";
 
-/** A skill from the cached ESCO subset (data/esco/skills.json). */
+/** A skill from the cached ESCO subset (esco_skills table, lib/esco.ts). */
 export type Skill = {
   id: string;
   /** Plain-language label shown in the UI. */
@@ -20,7 +20,7 @@ export type Skill = {
   keywords: string[];
 };
 
-/** An occupation from the cached ESCO subset (data/esco/occupations.json). */
+/** An occupation from the cached ESCO subset (esco_occupations table, lib/esco.ts). */
 export type Occupation = {
   id: string;
   uri: string;

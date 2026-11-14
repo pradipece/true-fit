@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { hydrate } from "@/lib/store";
-import { SEED } from "@/lib/seed";
+import { SEED } from "./fixtures";
 import type { Talent } from "@/lib/types";
 
 type State = Parameters<typeof hydrate>[0];
