@@ -21,6 +21,9 @@ let coolingUntil = 0;
 /** False with no key, with AI_MODE=rules, or while cooling down: callers use their fallback. */
 export const aiEnabled = () => process.env.AI_MODE !== "rules" && !!apiKey() && Date.now() >= coolingUntil;
 
+/** True when a key is configured. For routes with no fallback, which always try Gemini. */
+export const aiConfigured = () => !!apiKey();
+
 let client: GoogleGenAI | null = null;
 const getClient = () =>
   (client ??= new GoogleGenAI({

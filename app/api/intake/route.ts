@@ -1,10 +1,9 @@
-import { aiEnabled, generateJson, logFallback } from "@/lib/ai";
+import { aiConfigured, generateJson, logFallback } from "@/lib/ai";
 import { SEED_TALENT } from "@/lib/data";
 import {
   INTAKE_OUTPUT_SCHEMA,
   INTAKE_SYSTEM_PROMPT,
   missingFields,
-  rulesTurn,
   sanitizeDraft,
   poolSummary,
   withCurrentCard,
@@ -18,8 +17,8 @@ import {
  *
  * Only the company's own words, the draft card and aggregate pool counts are sent,
  * never data about any individual.
- * Without GEMINI_API_KEY (or with AI_MODE=rules), or if the call fails, the
- * deterministic rules engine answers instead so the demo always works offline.
+ * The chat requires Gemini and an internet connection: there is no offline fallback.
+ * Errors come back as { error } with a 5xx status so the chat can offer a retry.
  */
 
 const MAX_TURNS = 30;
@@ -79,13 +78,19 @@ export async function POST(request: Request) {
   const req = parseBody(await request.json().catch(() => null));
   if (!req) return Response.json({ error: "Invalid intake request" }, { status: 400 });
 
-  if (aiEnabled()) {
-    try {
-      return Response.json(await aiTurn(req));
-    } catch (error) {
-      logFallback("intake", error);
-    }
-  } else logFallback("intake");
-
-  return Response.json({ ...rulesTurn(req, SEED_TALENT), source: "rules" } satisfies IntakeTurn);
+  // The chat has no offline fallback: it needs Gemini, so it always tries (no cooldown skip).
+  if (!aiConfigured())
+    return Response.json(
+      { error: "The intake assistant isn't set up yet (no GEMINI_API_KEY on the server)." },
+      { status: 503 },
+    );
+  try {
+    return Response.json(await aiTurn(req));
+  } catch (error) {
+    logFallback("intake", error);
+    return Response.json(
+      { error: "The assistant couldn't answer just now. Check your connection and try again." },
+      { status: 502 },
+    );
+  }
 }

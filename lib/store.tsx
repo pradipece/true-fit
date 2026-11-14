@@ -4,9 +4,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { SEED_NEEDS, SEED_TALENT } from "./data";
 import { pairKey } from "./match";
 import { actionFor, auditEntry } from "./oversight";
+import { withOptIn, type OptIn, type OptInAnswer } from "./schedule";
 import type { AuditEntry, Decision, Feedback, Need, Talent } from "./types";
-
-type OptIn = { company?: boolean; talent?: boolean };
 
 type DemoState = {
   needs: Need[];
@@ -59,8 +58,10 @@ type Ctx = DemoState & {
   decide: (key: string, d: Omit<Decision, "at">) => void;
   /** Withdraw a decision (back to undecided). Logged, never erased. */
   undoDecision: (key: string, reason: string) => void;
-  setOptIn: (key: string, side: "company" | "talent", value: boolean) => void;
+  /** true = yes, false = declined, undefined = clear. Anything but a yes frees a booked slot. */
+  setOptIn: (key: string, side: "company" | "talent", value: OptInAnswer) => void;
   bookSlot: (key: string, slot: string) => void;
+  cancelSlot: (key: string) => void;
   giveFeedback: (key: string, f: Feedback) => void;
   reset: () => void;
 };
@@ -133,12 +134,21 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     [],
   );
   const setOptIn = useCallback(
-    (key: string, side: "company" | "talent", value: boolean) =>
-      setState((s) => ({ ...s, optIns: { ...s.optIns, [key]: { ...s.optIns[key], [side]: value } } })),
+    (key: string, side: "company" | "talent", value: OptInAnswer) =>
+      setState((s) => ({ ...s, ...withOptIn(s.optIns, s.slots, key, side, value) })),
     [],
   );
   const bookSlot = useCallback(
     (key: string, slot: string) => setState((s) => ({ ...s, slots: { ...s.slots, [key]: slot } })),
+    [],
+  );
+  const cancelSlot = useCallback(
+    (key: string) =>
+      setState((s) => {
+        const slots = { ...s.slots };
+        delete slots[key];
+        return { ...s, slots };
+      }),
     [],
   );
   const giveFeedback = useCallback(
@@ -148,8 +158,19 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
   const reset = useCallback(() => setState(SEED_STATE), []);
 
   const value = useMemo(
-    () => ({ ...state, addNeed, addTalent, decide, undoDecision, setOptIn, bookSlot, giveFeedback, reset }),
-    [state, addNeed, addTalent, decide, undoDecision, setOptIn, bookSlot, giveFeedback, reset],
+    () => ({
+      ...state,
+      addNeed,
+      addTalent,
+      decide,
+      undoDecision,
+      setOptIn,
+      bookSlot,
+      cancelSlot,
+      giveFeedback,
+      reset,
+    }),
+    [state, addNeed, addTalent, decide, undoDecision, setOptIn, bookSlot, cancelSlot, giveFeedback, reset],
   );
 
   return <DemoContext.Provider value={value}>{children}</DemoContext.Provider>;

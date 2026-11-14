@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import {
   ArrowRightIcon,
@@ -15,6 +15,7 @@ import {
   ShieldCheckIcon,
   SparklesIcon,
   UsersIcon,
+  WifiOffIcon,
   XIcon,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -37,7 +38,6 @@ import {
   missingFields,
   MODES,
   quickReplyHint,
-  rulesTurn,
   type ChatMessage,
   type IntakeTurn,
   type NeedDraft,
@@ -60,13 +60,15 @@ export function CompanyIntake() {
   const [messages, setMessages] = useState<Msg[]>([GREETING]);
   const [input, setInput] = useState("");
   const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const online = useOnline();
   const [draft, setDraft] = useState<NeedDraft>(EMPTY_DRAFT);
   const [asked, setAsked] = useState<Topic[]>([]);
   const [source, setSource] = useState<IntakeTurn["source"] | null>(null);
   const [company, setCompany] = useState("Your company (demo)");
   const [reviewed, setReviewed] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const endRef = useRef<HTMLDivElement>(null);
+  const threadRef = useRef<HTMLDivElement>(null);
 
   const missing = missingFields(draft);
   const need = useMemo(() => draftToNeed(draft, company), [draft, company]);
@@ -79,8 +81,13 @@ export function CompanyIntake() {
     t.languages.some((l) => l.lang === "Finnish" && l.level !== "Learning"),
   ).length;
 
+  // Scroll only the message list. scrollIntoView() would also scroll the page itself,
+  // making the whole layout jump each time a reply arrives.
   const scrollDown = () =>
-    requestAnimationFrame(() => endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }));
+    requestAnimationFrame(() => {
+      const el = threadRef.current;
+      el?.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+    });
 
   // Any edit after approval re-opens the card for review.
   const edit = (patch: Partial<NeedDraft>) => {
@@ -89,31 +96,49 @@ export function CompanyIntake() {
     setSubmitted(false);
   };
 
-  const send = async (text: string) => {
+  const send = async (text: string, retry = false) => {
     const t = text.trim();
     if (!t || pending) return;
-    setInput("");
+    setError(null);
+    if (!retry) {
+      setInput("");
+      setMessages((m) => [...m, { role: "user", content: t }]);
+    }
+    // On retry the user's message is already the last one in the thread.
     const history: ChatMessage[] = [
       ...messages.map(({ role, content }) => ({ role, content })),
-      { role: "user", content: t },
+      ...(retry ? [] : [{ role: "user" as const, content: t }]),
     ];
-    setMessages((m) => [...m, { role: "user", content: t }]);
-    setPending(true);
     scrollDown();
+    if (!navigator.onLine) {
+      setError("You're offline. The assistant needs an internet connection; your message is kept.");
+      return;
+    }
+    setPending(true);
 
-    const body = { messages: history, draft, asked };
     let turn: IntakeTurn;
     try {
       const res = await fetch("/api/intake", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify({ messages: history, draft, asked }),
       });
-      if (!res.ok) throw new Error(`Intake API ${res.status}`);
-      turn = (await res.json()) as IntakeTurn;
-    } catch {
-      // No server (e.g. static preview): run the same rules in the browser.
-      turn = { ...rulesTurn(body, talent), source: "rules" };
+      const data = (await res.json().catch(() => ({}))) as Partial<IntakeTurn> & { error?: string };
+      if (!res.ok || !data.reply || !data.draft)
+        throw new Error(data.error ?? "No answer from the assistant.");
+      turn = data as IntakeTurn;
+    } catch (e) {
+      // No offline fallback by design: keep the user's message and offer a retry.
+      setError(
+        e instanceof TypeError
+          ? "Couldn't reach the assistant. Check your internet connection and try again."
+          : e instanceof Error
+            ? e.message
+            : "Something went wrong. Try again.",
+      );
+      setPending(false);
+      scrollDown();
+      return;
     }
 
     const before = new Set([...draft.must, ...draft.nice]);
@@ -140,6 +165,7 @@ export function CompanyIntake() {
   };
 
   const restart = () => {
+    setError(null);
     setMessages([GREETING]);
     setDraft(EMPTY_DRAFT);
     setAsked([]);
@@ -157,15 +183,17 @@ export function CompanyIntake() {
         <CardHeader className="border-b">
           <CardTitle className="flex items-center gap-2 text-base">
             <BotIcon className="size-4 text-primary" /> Intake assistant
-            {source && (
-              <Badge variant="outline" className="font-normal">
-                {source === "ai" ? "Gemini" : "Offline rules"}
-              </Badge>
-            )}
+            <Badge variant="outline" className={cn("font-normal", !online && "text-destructive")}>
+              <span
+                className={cn("size-1.5 rounded-full", online ? "bg-evidence" : "bg-destructive")}
+                aria-hidden
+              />
+              {online ? `Gemini${source ? "" : " · online"}` : "Offline"}
+            </Badge>
           </CardTitle>
           <CardDescription>
-            Turns your words into ESCO skills. It sees only what you type, never the talent pool, and it
-            doesn&apos;t pick candidates.
+            Turns your words into ESCO skills using Gemini, so it needs an internet connection. It sees what
+            you type and pool totals, never any candidate, and it doesn&apos;t pick candidates.
           </CardDescription>
           {messages.length > 1 && (
             <Button
@@ -178,7 +206,11 @@ export function CompanyIntake() {
             </Button>
           )}
         </CardHeader>
-        <CardContent className="flex-1 space-y-4 overflow-y-auto py-4" aria-live="polite">
+        <CardContent
+          ref={threadRef}
+          className="flex-1 space-y-4 overflow-y-auto overscroll-contain py-4"
+          aria-live="polite"
+        >
           {messages.map((m, i) => (
             <div key={i} className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}>
               <div
@@ -214,11 +246,37 @@ export function CompanyIntake() {
               </div>
             </div>
           )}
-          <div ref={endRef} />
+          {error && !pending && (
+            <div className="flex justify-start" role="alert">
+              <div className="max-w-[85%] space-y-2 rounded-2xl rounded-bl-md border border-destructive/30 bg-destructive/5 px-4 py-2.5 text-sm">
+                <p className="flex items-start gap-1.5 text-destructive">
+                  <WifiOffIcon className="mt-0.5 size-4 shrink-0" /> {error}
+                </p>
+                {lastMsg.role === "user" && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => send(lastMsg.content, true)}
+                    disabled={!online}
+                  >
+                    <RotateCcwIcon data-icon="inline-start" /> Try again
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
         </CardContent>
 
         <CardFooter className="flex-col items-stretch gap-2 border-t">
+          {!online && (
+            <p className="flex items-center gap-1.5 text-xs text-destructive">
+              <WifiOffIcon className="size-3.5" /> You&apos;re offline. The assistant needs an internet
+              connection; you can still edit the need card by hand.
+            </p>
+          )}
           {!pending &&
+            online &&
+            !error &&
             lastMsg.role === "assistant" &&
             lastMsg.quickReplies &&
             lastMsg.quickReplies.length > 0 && (
@@ -255,12 +313,18 @@ export function CompanyIntake() {
                   send(input);
                 }
               }}
-              placeholder="Type your answer…"
+              placeholder={online ? "Type your answer…" : "Reconnect to chat with the assistant"}
+              disabled={!online}
               aria-label="Message"
               className="min-h-10 resize-none"
               rows={2}
             />
-            <Button type="submit" size="icon-lg" aria-label="Send" disabled={!input.trim() || pending}>
+            <Button
+              type="submit"
+              size="icon-lg"
+              aria-label="Send"
+              disabled={!input.trim() || pending || !online}
+            >
               <SendHorizonalIcon />
             </Button>
           </form>
@@ -607,5 +671,23 @@ function SkillEditor({ draft, onChange }: { draft: NeedDraft; onChange: (p: Part
         </div>
       </div>
     </div>
+  );
+}
+
+const subscribeOnline = (cb: () => void) => {
+  window.addEventListener("online", cb);
+  window.addEventListener("offline", cb);
+  return () => {
+    window.removeEventListener("online", cb);
+    window.removeEventListener("offline", cb);
+  };
+};
+
+/** Browser connectivity; assumed online during server rendering. */
+function useOnline() {
+  return useSyncExternalStore(
+    subscribeOnline,
+    () => navigator.onLine,
+    () => true,
   );
 }

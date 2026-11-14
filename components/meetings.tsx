@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
   Building2Icon,
+  CalendarDaysIcon,
   CheckCircle2Icon,
   ClockIcon,
   EyeIcon,
@@ -21,14 +22,24 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { MatchExplanationView } from "@/components/match-explanation";
 import { SkillChip } from "@/components/skill-chip";
-import { EVENT, SLOTS } from "@/lib/data";
+import { EVENT } from "@/lib/data";
 import { explainMatch } from "@/lib/match";
+import {
+  companyOf,
+  earliestFree,
+  pairStatus,
+  roomFor,
+  slotAvailability,
+  type OptInAnswer,
+  type PairStatus,
+} from "@/lib/schedule";
 import { useDemo } from "@/lib/store";
 import type { Feedback } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export function Meetings() {
-  const { needs, talent, decisions, optIns, slots, feedback, setOptIn, bookSlot, giveFeedback } = useDemo();
+  const { needs, talent, decisions, optIns, slots, feedback, setOptIn, bookSlot, cancelSlot, giveFeedback } =
+    useDemo();
 
   const pairs = useMemo(
     () =>
@@ -61,14 +72,27 @@ export function Meetings() {
   }
 
   const o = optIns[current.key] ?? {};
-  const mutual = !!(o.company && o.talent);
+  const status = pairStatus(o, slots[current.key]);
+  const mutual = status === "mutual" || status === "booked";
+  const declined = status === "declined";
   const slot = slots[current.key];
-  const taken = new Set(
-    Object.entries(slots)
-      .filter(([k]) => k !== current.key)
-      .map(([, s]) => s),
-  );
+  const availability = slotAvailability(current.key, slots, needs);
+  const firstFree = earliestFree(availability);
+  const room = roomFor(current.need, needs);
   const fb = feedback[current.key];
+
+  const answer = (side: "company" | "talent", v: OptInAnswer) => {
+    const other = side === "company" ? o.talent : o.company;
+    setOptIn(current.key, side, v);
+    if (v === true && other === true) toast.success("It's mutual! Identities revealed. Pick a slot.");
+    else if (v === false) toast("Declined. Nobody is told who said no, or why.");
+    else if (v === undefined && slot) toast("Withdrawn. The booked slot was released.");
+  };
+
+  const book = (time: string) => {
+    bookSlot(current.key, time);
+    toast.success(`Booked ${time} · ${room.label}`, { description: "Added to both agendas." });
+  };
 
   return (
     <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
@@ -76,13 +100,8 @@ export function Meetings() {
         <p className="px-1 text-xs font-medium text-muted-foreground">Approved matches</p>
         {pairs.map((p) => {
           const po = optIns[p.key] ?? {};
-          const status = feedback[p.key]
-            ? "Feedback in"
-            : slots[p.key]
-              ? `Booked ${slots[p.key]}`
-              : po.company && po.talent
-                ? "Pick a slot"
-                : "Awaiting opt-in";
+          const ps = pairStatus(po, slots[p.key]);
+          const label = feedback[p.key] ? "Feedback in" : STATUS_LABEL[ps](slots[p.key]);
           return (
             <button
               key={p.key}
@@ -95,12 +114,12 @@ export function Meetings() {
             >
               <p className="truncate text-sm font-medium">{p.need.title}</p>
               <p className="truncate text-xs text-muted-foreground">
-                {p.need.company} × {po.company && po.talent ? p.t.revealName : p.t.alias}
+                {p.need.company} × {ps === "mutual" || ps === "booked" ? p.t.revealName : p.t.alias}
               </p>
               <div className="mt-2 flex items-center gap-1.5">
-                <Dot on={!!po.company} label="Company" />
-                <Dot on={!!po.talent} label="Talent" />
-                <span className="ml-auto text-xs text-muted-foreground">{status}</span>
+                <Dot value={po.company} label="Company" />
+                <Dot value={po.talent} label="Talent" />
+                <span className="ml-auto text-xs text-muted-foreground">{label}</span>
               </div>
             </button>
           );
@@ -139,13 +158,7 @@ export function Meetings() {
                 )}
               </CardContent>
               <CardFooter className="gap-2">
-                <OptInButtons
-                  value={o.company}
-                  onChange={(v) => {
-                    setOptIn(current.key, "company", v);
-                    if (v && o.talent) toast.success("It's mutual! Identities revealed.");
-                  }}
-                />
+                <OptInButtons value={o.company} onChange={(v) => answer("company", v)} />
               </CardFooter>
             </Card>
 
@@ -181,22 +194,42 @@ export function Meetings() {
                 </div>
               </CardContent>
               <CardFooter className="gap-2">
-                <OptInButtons
-                  value={o.talent}
-                  onChange={(v) => {
-                    setOptIn(current.key, "talent", v);
-                    if (v && o.company) toast.success("It's mutual! Identities revealed.");
-                  }}
-                />
+                <OptInButtons value={o.talent} onChange={(v) => answer("talent", v)} />
               </CardFooter>
             </Card>
+          </div>
+          {declined && (
+            <p className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
+              No meeting this time. Neither side is told who said no or why, and both stay in the pool for
+              other matches.
+            </p>
+          )}
+          <div className="flex flex-wrap gap-2 text-xs">
+            <span className="self-center text-muted-foreground">Agendas:</span>
+            <Button
+              size="xs"
+              variant="outline"
+              nativeButton={false}
+              render={<Link href={`/meetings/agenda/${companyOf(current.need)}`} />}
+            >
+              <CalendarDaysIcon data-icon="inline-start" /> {current.need.company}
+            </Button>
+            <Button
+              size="xs"
+              variant="outline"
+              nativeButton={false}
+              render={<Link href={`/meetings/agenda/${current.t.id}`} />}
+            >
+              <CalendarDaysIcon data-icon="inline-start" /> {mutual ? current.t.revealName : current.t.alias}
+            </Button>
           </div>
         </section>
 
         {/* Step B: slot */}
         <section className={cn("space-y-3", !mutual && "pointer-events-none opacity-50")}>
           <StepTitle n="B" title={`Book a ${EVENT.slotMinutes}-minute slot`} done={!!slot}>
-            Slots are pre-generated and cached, so the start of the event doesn&apos;t crash the platform.
+            The schedule is generated before the event and served as static files, so the login rush at the
+            start can&apos;t overload it. A time is only blocked if this company or this candidate is busy.
           </StepTitle>
           <Card>
             <CardContent className="space-y-4">
@@ -205,34 +238,69 @@ export function Meetings() {
                   <ClockIcon className="size-4" /> {EVENT.date}, {EVENT.time}
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <MapPinIcon className="size-4" />{" "}
-                  {current.need.mode === "Remote" ? "Online room 3" : "Table 12, Otaniemi"}
+                  <MapPinIcon className="size-4" /> {room.label}
                 </span>
                 {!mutual && (
                   <span className="flex items-center gap-1.5">
-                    <LockIcon className="size-4" /> Unlocks after mutual opt-in
+                    <LockIcon className="size-4" /> Unlocks when both say yes
                   </span>
                 )}
               </div>
-              <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
-                {SLOTS.map((s) => {
-                  const isTaken = taken.has(s);
-                  return (
-                    <Button
-                      key={s}
-                      variant={slot === s ? "default" : "outline"}
-                      disabled={isTaken}
-                      className="tabular-nums"
-                      onClick={() => {
-                        bookSlot(current.key, s);
-                        toast.success(`Booked ${s}`, { description: "Calendar invites sent to both sides." });
-                      }}
-                    >
-                      {isTaken ? <span className="line-through">{s}</span> : s}
+              <div className="flex flex-wrap items-center gap-2">
+                {slot ? (
+                  <>
+                    <Badge className="bg-evidence text-white">
+                      <CheckCircle2Icon data-icon="inline-start" /> Booked {slot} · {room.label}
+                    </Badge>
+                    <Button size="sm" variant="ghost" onClick={() => cancelSlot(current.key)}>
+                      Cancel booking
                     </Button>
-                  );
-                })}
+                  </>
+                ) : (
+                  firstFree && (
+                    <Button size="sm" onClick={() => book(firstFree)}>
+                      Book earliest free time ({firstFree})
+                    </Button>
+                  )
+                )}
               </div>
+              <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+                {availability.map((a) => (
+                  <Button
+                    key={a.time}
+                    variant={a.mine ? "default" : "outline"}
+                    disabled={!a.free}
+                    title={
+                      a.reason === "company"
+                        ? `${current.need.company} already has a meeting at ${a.time}`
+                        : a.reason === "candidate"
+                          ? `The candidate already has a meeting at ${a.time}`
+                          : undefined
+                    }
+                    className="h-auto flex-col gap-0 py-1.5 tabular-nums"
+                    onClick={() => book(a.time)}
+                  >
+                    <span className={cn(!a.free && "line-through")}>{a.time}</span>
+                    {!a.free && (
+                      <span className="text-[10px] font-normal no-underline">
+                        {a.reason === "company" ? "company busy" : "candidate busy"}
+                      </span>
+                    )}
+                  </Button>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Pre-generated schedule:{" "}
+                <a
+                  href="/api/schedule"
+                  className="underline underline-offset-2"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  /api/schedule
+                </a>{" "}
+                (static JSON). Agenda pages are prerendered for every participant.
+              </p>
             </CardContent>
           </Card>
         </section>
@@ -256,16 +324,32 @@ export function Meetings() {
   );
 }
 
-function Dot({ on, label }: { on: boolean; label: string }) {
+function Dot({ value, label }: { value: OptInAnswer; label: string }) {
   return (
     <span
-      className={cn("flex items-center gap-1 text-[11px]", on ? "text-evidence" : "text-muted-foreground")}
+      className={cn(
+        "flex items-center gap-1 text-[11px]",
+        value === true ? "text-evidence" : value === false ? "text-destructive" : "text-muted-foreground",
+      )}
+      title={`${label}: ${value === true ? "yes" : value === false ? "declined" : "no answer yet"}`}
     >
-      <span className={cn("size-1.5 rounded-full", on ? "bg-evidence" : "bg-muted-foreground/40")} />
+      <span
+        className={cn(
+          "size-1.5 rounded-full",
+          value === true ? "bg-evidence" : value === false ? "bg-destructive" : "bg-muted-foreground/40",
+        )}
+      />
       {label}
     </span>
   );
 }
+
+const STATUS_LABEL: Record<PairStatus, (slot?: string) => string> = {
+  waiting: () => "Awaiting answers",
+  declined: () => "Not going ahead",
+  mutual: () => "Pick a slot",
+  booked: (slot) => `Booked ${slot}`,
+};
 
 function StepTitle({
   n,
@@ -296,26 +380,34 @@ function StepTitle({
   );
 }
 
-function OptInButtons({ value, onChange }: { value?: boolean; onChange: (v: boolean) => void }) {
-  if (value) {
+function OptInButtons({ value, onChange }: { value: OptInAnswer; onChange: (v: OptInAnswer) => void }) {
+  if (value === true)
     return (
       <>
         <Badge className="bg-evidence text-white">
           <CheckCircle2Icon data-icon="inline-start" /> Opted in
         </Badge>
-        <Button size="sm" variant="ghost" className="ml-auto" onClick={() => onChange(false)}>
+        <Button size="sm" variant="ghost" className="ml-auto" onClick={() => onChange(undefined)}>
           Withdraw
         </Button>
       </>
     );
-  }
+  if (value === false)
+    return (
+      <>
+        <Badge variant="secondary">Declined</Badge>
+        <Button size="sm" variant="ghost" className="ml-auto" onClick={() => onChange(undefined)}>
+          Change my mind
+        </Button>
+      </>
+    );
   return (
     <>
       <Button size="sm" onClick={() => onChange(true)}>
         Yes, I&apos;d like to meet
       </Button>
-      <Button size="sm" variant="ghost" onClick={() => toast("No problem. Nobody is told why.")}>
-        Not now
+      <Button size="sm" variant="ghost" onClick={() => onChange(false)}>
+        No, thanks
       </Button>
     </>
   );

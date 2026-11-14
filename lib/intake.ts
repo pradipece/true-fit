@@ -103,6 +103,7 @@ export function missingFields(d: NeedDraft): MissingField[] {
 export function draftToNeed(d: NeedDraft, company: string): Need {
   return {
     id: "N-YOU",
+    companyId: "C-YOU",
     company: company.trim() || "Your company",
     companyBlurb: "Submitted through the intake chat",
     title: d.title || "New role",

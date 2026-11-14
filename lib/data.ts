@@ -8,25 +8,12 @@ export const EVENT = {
   date: "Thu 3 Dec 2026",
   isoDate: "2026-12-03",
   time: "10:00–12:00",
+  start: "10:00",
+  end: "12:00",
   place: "Hybrid · Otaniemi + online",
   weeksAway: 3,
   slotMinutes: 10,
 };
-
-export const SLOTS = [
-  "10:00",
-  "10:10",
-  "10:20",
-  "10:30",
-  "10:40",
-  "10:50",
-  "11:00",
-  "11:10",
-  "11:20",
-  "11:30",
-  "11:40",
-  "11:50",
-];
 
 /** Short written scenario prompts for the talent skill card. Plain language, no CV. */
 export const SCENARIO_PROMPTS = [

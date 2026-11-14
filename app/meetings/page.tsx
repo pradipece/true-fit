@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Meetings } from "@/components/meetings";
 import { PageHeader } from "@/components/page-header";
 
@@ -13,6 +14,11 @@ export default function MeetingsPage() {
         title="Opt in, meet for 10 minutes, follow up"
         description="For the demo you play both sides. In production, each side sees only its own view on its own device."
       />
+      <p className="text-sm">
+        <Link href="/meetings/agenda" className="font-medium text-primary underline-offset-4 hover:underline">
+          Open the agenda for any participant →
+        </Link>
+      </p>
       <Meetings />
     </div>
   );
