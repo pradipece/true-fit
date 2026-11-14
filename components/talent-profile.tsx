@@ -31,16 +31,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { SkillChip, SkillLegend } from "@/components/skill-chip";
 import { VoiceNote } from "@/components/voice-note";
 import { sampleToText, WorkSample, type Sample } from "@/components/work-sample";
-import { SCENARIO_PROMPTS } from "@/lib/data";
+import { SCENARIO_PROMPTS, VOICE_PROMPT } from "@/lib/data";
 import { SKILLS, skillLabel } from "@/lib/esco";
 import { useDemo } from "@/lib/store";
 import {
   rulesEvidence,
+  rulesStarters,
   rulesTranslate,
   type EvidenceAnswer,
   type EvidenceMapping,
   type EvidenceResult,
   type PrivacyFlag,
+  type PromptIdeas,
+  type Starters,
+  type StartersRequest,
   type Translation,
 } from "@/lib/talent-ai";
 import type { Evidence, SkillGroup, Talent } from "@/lib/types";
@@ -51,7 +55,6 @@ const STEPS = ["Background", "Skills", "Evidence", "Review card"];
 const MAX_PICK = 8;
 const MAX_SKILLS = 10;
 
-const VOICE_PROMPT = "60-second voice note: explain something from your field to a 12-year-old.";
 const SAMPLE_PROMPT = "Work sample file";
 
 const EXAMPLES: Record<string, string> = {
@@ -132,6 +135,9 @@ export function TalentProfile() {
   const [skills, setSkills] = useState<string[]>([]);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [sample, setSample] = useState<Sample | null>(null);
+  const [starters, setStarters] = useState<Starters | null>(null);
+  const [startersKey, setStartersKey] = useState("");
+  const [loadingStarters, setLoadingStarters] = useState(false);
 
   // 4. Review
   const [result, setResult] = useState<EvidenceResult | null>(null);
@@ -208,8 +214,29 @@ export function TalentProfile() {
     touch();
   };
 
+  /** Writing ideas tailored to the picked skills and background; refreshed when those change. */
+  const loadStarters = async () => {
+    const body: StartersRequest = { picked: skills, background: translation?.localTitle || title, path };
+    const key = JSON.stringify(body);
+    if (key === startersKey) return;
+    setStartersKey(key);
+    setLoadingStarters(true);
+    try {
+      setStarters(await postJson<Starters>("/api/talent/starters", body));
+    } catch {
+      setStarters({ prompts: rulesStarters(body), source: "rules" });
+    }
+    setLoadingStarters(false);
+  };
+
+  const startWith = (id: string, starter: string) => {
+    setAnswers((a) => (a[id]?.trim() ? a : { ...a, [id]: `${starter} ` }));
+    touch();
+  };
+
   const goTo = (i: number) => {
     setStep(i);
+    if (i === 2) loadStarters();
     if (i === 3 && answerList.length && (!result || stale) && !mapping) mapEvidence();
   };
 
@@ -492,11 +519,14 @@ export function TalentProfile() {
 
           {step === 2 && (
             <section className="space-y-5">
-              <p className="text-sm text-muted-foreground">
-                Four short answers about real situations. Plain language and typos are fine: we look for what
-                you did, not polish. In the next step we show which answer supports which skill, and you
-                decide what stays.
-              </p>
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <p className="max-w-prose text-sm text-muted-foreground">
+                  Four short answers about real situations. Plain language and typos are fine: we look for
+                  what you did, not polish. The ideas under each question are based on your skills
+                  {translation?.localTitle || title ? " and background" : ""}; the answer is yours to write.
+                </p>
+                {starters && <SourceBadge source={starters.source} />}
+              </div>
               {SCENARIO_PROMPTS.map((p, i) => {
                 const text = answers[p.id] ?? "";
                 const words = text.trim() ? text.trim().split(/\s+/).length : 0;
@@ -515,6 +545,12 @@ export function TalentProfile() {
                         <p className="text-xs text-muted-foreground">{p.hint}</p>
                       </div>
                     </div>
+                    <IdeasFor
+                      ideas={starters?.prompts[p.id as keyof Starters["prompts"]]}
+                      loading={loadingStarters}
+                      canStart={!text.trim()}
+                      onStart={(st) => startWith(p.id, st)}
+                    />
                     <Textarea
                       id={p.id}
                       value={text}
@@ -532,7 +568,7 @@ export function TalentProfile() {
                         onClick={() => setAnswers((a) => ({ ...a, [p.id]: EXAMPLES[p.id] }))}
                         className="flex items-center gap-1 hover:text-foreground"
                       >
-                        <SparklesIcon className="size-3" /> Example
+                        <SparklesIcon className="size-3" /> Demo answer
                       </button>
                     </div>
                   </div>
@@ -551,10 +587,16 @@ export function TalentProfile() {
                         onClick={() => setAnswers((a) => ({ ...a, voice: EXAMPLES.voice }))}
                         className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
                       >
-                        <SparklesIcon className="size-3" /> Example transcript
+                        <SparklesIcon className="size-3" /> Demo transcript
                       </button>
                     </div>
                   </div>
+                  <IdeasFor
+                    ideas={starters?.prompts.voice}
+                    loading={loadingStarters}
+                    canStart={!(answers.voice ?? "").trim()}
+                    onStart={(st) => startWith("voice", st)}
+                  />
                   <VoiceNote
                     value={answers.voice ?? ""}
                     onChange={(text) => {
@@ -965,6 +1007,48 @@ function PrivacyCheck({
           </li>
         ))}
       </ul>
+    </div>
+  );
+}
+
+/** Memory joggers and a half-sentence starter for one prompt. Never a full answer. */
+function IdeasFor({
+  ideas,
+  loading,
+  canStart,
+  onStart,
+}: {
+  ideas?: PromptIdeas;
+  loading: boolean;
+  canStart: boolean;
+  onStart: (starter: string) => void;
+}) {
+  if (loading && !ideas)
+    return (
+      <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <Loader2Icon className="size-3 animate-spin" /> Tailoring ideas to your skills…
+      </p>
+    );
+  if (!ideas) return null;
+  return (
+    <div className="space-y-1.5 rounded-lg bg-muted/40 px-3 py-2 text-xs">
+      <p className="font-medium text-muted-foreground">Ideas for you</p>
+      <ul className="space-y-0.5">
+        {ideas.ideas.map((idea) => (
+          <li key={idea} className="flex gap-1.5">
+            <span className="text-primary">•</span> {idea}
+          </li>
+        ))}
+      </ul>
+      {canStart && ideas.starter && (
+        <button
+          type="button"
+          onClick={() => onStart(ideas.starter)}
+          className="flex items-center gap-1 text-left text-primary hover:underline"
+        >
+          <SparklesIcon className="size-3 shrink-0" /> Start with “{ideas.starter}…”
+        </button>
+      )}
     </div>
   );
 }

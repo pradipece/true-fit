@@ -1,10 +1,12 @@
 import { aiEnabled, generateJson, logFallback } from "@/lib/ai";
+import { SEED_TALENT } from "@/lib/data";
 import {
   INTAKE_OUTPUT_SCHEMA,
   INTAKE_SYSTEM_PROMPT,
   missingFields,
   rulesTurn,
   sanitizeDraft,
+  poolSummary,
   withCurrentCard,
   type IntakeRequest,
   type IntakeTurn,
@@ -14,7 +16,8 @@ import {
 /**
  * Intake assistant: one Gemini call per chat turn, returning a structured need-card draft.
  *
- * Only the company's own words and the draft card are sent, never talent data.
+ * Only the company's own words, the draft card and aggregate pool counts are sent,
+ * never data about any individual.
  * Without GEMINI_API_KEY (or with AI_MODE=rules), or if the call fails, the
  * deterministic rules engine answers instead so the demo always works offline.
  */
@@ -54,7 +57,10 @@ async function aiTurn(req: IntakeRequest): Promise<IntakeTurn> {
     schema: INTAKE_OUTPUT_SCHEMA,
     messages: history.map((m, i) => ({
       role: m.role,
-      content: i === history.length - 1 ? withCurrentCard(m.content, req.draft) : m.content,
+      content:
+        i === history.length - 1
+          ? withCurrentCard(m.content, req.draft, poolSummary(SEED_TALENT))
+          : m.content,
     })),
   });
   const draft = sanitizeDraft(out.draft);
@@ -81,5 +87,5 @@ export async function POST(request: Request) {
     }
   } else logFallback("intake");
 
-  return Response.json({ ...rulesTurn(req), source: "rules" } satisfies IntakeTurn);
+  return Response.json({ ...rulesTurn(req, SEED_TALENT), source: "rules" } satisfies IntakeTurn);
 }

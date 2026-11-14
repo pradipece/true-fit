@@ -3,12 +3,14 @@ import {
   extractSkills,
   OCCUPATION_BY_ID,
   OCCUPATIONS,
+  relatedSkills,
   searchOccupations,
   SKILL_BY_ID,
   SKILLS,
   skillLabel,
 } from "./esco";
-import type { Engagement, Need } from "./types";
+import { matchesForNeed } from "./match";
+import type { Engagement, Need, Talent } from "./types";
 
 /**
  * Company intake: shared between the API route (Gemini) and the browser (offline rules).
@@ -140,7 +142,8 @@ export const INTAKE_SYSTEM_PROMPT = `You are the intake assistant for a recruitm
 How to run the conversation:
 - Ask one clarifying question per turn, in plain language, at most two sentences plus the question. Aim to finish in 4–6 turns.
 - Cover, in roughly this order: what kind of role and the actual work in the first three months; which skills are truly must-have versus nice-to-have; working language; start date and type of contract; on-site, hybrid or remote.
-- Offer 2–4 short quick replies the user can tap (under 40 characters each). Leave them empty only when the card is ready.
+- Offer 2–4 short quick replies the user can tap (under 40 characters each), tailored to this conversation and to the <pool_summary> (aggregate counts of who is registered). Offer options the pool can actually fill: areas and skills many people have, start dates people are available by, and, when discussing must-haves, moving a rare skill to nice-to-have. Name skills by their labels so the user can tap them. Leave quick replies empty only when the card is ready.
+- You may cite pool numbers from <pool_summary> in your reply ("6 people in the pool work with Python"). They are counts only; never imply you know who those people are.
 - Gently challenge requirements that shrink the pool without serving the work. If Finnish isn't needed from day one, suggest "Finnish or English". Keep must-haves to 2–3 skills. Do not add degree, nationality, age, gender, accent or "native speaker" requirements; if the user asks for one, explain briefly that matching uses skills only and steer back to the skill behind it.
 - Never invent candidates or mention specific people. You do not see the talent pool.
 
@@ -203,8 +206,9 @@ export const INTAKE_OUTPUT_SCHEMA = {
 } as const;
 
 /** The latest user message with the current card attached, so direct edits win. */
-export function withCurrentCard(text: string, draft: NeedDraft) {
-  return `${text}\n\n<current_need_card>\n${JSON.stringify(draft, null, 2)}\n</current_need_card>`;
+export function withCurrentCard(text: string, draft: NeedDraft, pool?: ReturnType<typeof poolSummary>) {
+  const summary = pool ? `\n\n<pool_summary>\n${JSON.stringify(pool)}\n</pool_summary>` : "";
+  return `${text}\n\n<current_need_card>\n${JSON.stringify(draft, null, 2)}\n</current_need_card>${summary}`;
 }
 
 // ── Offline rules: a deterministic stand-in when no model is available ──────
@@ -212,18 +216,215 @@ export function withCurrentCard(text: string, draft: NeedDraft) {
 const DEV_WORDS =
   /\b(dev|devs|developer|developers|coder|programmer|engineer|koodari|kehittaja|ohjelmoija)\b/;
 
-const QUICK = {
-  dev: ["Web front-end (React)", "Back-end & APIs", "Data & pipelines (Python, SQL)", "Embedded / firmware"],
-  area: [
-    "Data analysis & dashboards",
-    "Logistics & warehouse",
-    "Patient or elderly care",
-    "Energy efficiency & HVAC",
-  ],
-  language: ["English is fine", "Finnish or English", "Finnish required from day one"],
-  timing: ["ASAP, permanent", "Spring 2027, permanent", "Fixed-term, 6 months", "Summer trainee 2027"],
-  mode: MODES.map((m) => m as string),
-};
+// ── Pool-aware suggestions ───────────────────────────────────────────────────
+// Quick replies come from the conversation and from aggregate pool data (counts only,
+// never individuals), so the company sees what the pool can actually fill.
+
+const DEV_AREAS = [
+  { text: "Data & pipelines (Python, SQL)", skills: ["pipelines", "python", "sql"] },
+  { text: "Web front-end (React)", skills: ["js", "react"] },
+  { text: "Back-end & APIs", skills: ["backend"] },
+  { text: "Testing & QA", skills: ["testing"] },
+  { text: "Cloud & security", skills: ["cloud", "security"] },
+  { text: "Embedded / firmware", skills: ["embedded"] },
+];
+
+const AREAS = [
+  { text: "Data analysis & dashboards", skills: ["analysis", "sql"] },
+  { text: "Logistics & warehouse", skills: ["logistics", "warehouse", "supply"] },
+  { text: "Patient or elderly care", skills: ["patient-care", "elderly-care"] },
+  { text: "Energy efficiency & HVAC", skills: ["energy", "hvac"] },
+  { text: "Software (back-end, front-end)", skills: ["backend", "js", "python"] },
+  { text: "Customer service & sales", skills: ["customer", "sales"] },
+  { text: "Project coordination", skills: ["pm"] },
+  { text: "Sustainability & ESG", skills: ["esg", "circular"] },
+];
+
+const hasAny = (t: Talent, skills: string[]) => t.skills.some((s) => skills.includes(s.id));
+
+/** People in the pool who list at least one of the skills. */
+export const poolCount = (skills: string[], pool: Talent[]) => pool.filter((t) => hasAny(t, skills)).length;
+
+/** Same rule as the organiser's suggestions: people at or above the overlap guide. */
+export const relevantCount = (d: NeedDraft, pool: Talent[]) =>
+  d.must.length ? matchesForNeed(draftToNeed(d, ""), pool).filter((m) => m.suggested).length : 0;
+
+/** Skills named in free text: intake keyword hints plus plain skill labels. */
+export function mentionedSkills(text: string) {
+  const n = normalize(text);
+  return uniq([
+    ...extractSkills(text),
+    ...SKILLS.filter((s) => n.includes(normalize(s.label))).map((s) => s.id),
+  ]);
+}
+
+const works = (t: Talent, lang: string) => t.languages.some((l) => l.lang === lang && l.level !== "Learning");
+
+export function languageCount(req: Need["language"], pool: Talent[]) {
+  if (req === "Finnish required") return pool.filter((t) => works(t, "Finnish")).length;
+  if (req === "Finnish or English")
+    return pool.filter((t) => works(t, "Finnish") || works(t, "English")).length;
+  return pool.filter((t) => works(t, "English")).length;
+}
+
+const modeCount = (mode: Need["mode"], pool: Talent[]) =>
+  pool.filter((t) => t.mode === mode || t.mode === "Any").length;
+
+const MONTH_INDEX: [string, number][] = [
+  ["asap", 0],
+  ["immediately", 0],
+  ["now", 0],
+  ["january", 1],
+  ["february", 2],
+  ["march", 3],
+  ["april", 4],
+  ["may", 5],
+  ["june", 6],
+  ["july", 7],
+  ["august", 8],
+  ["september", 9],
+  ["october", 10],
+  ["november", 11],
+  ["december", 12],
+  ["spring", 3],
+  ["summer", 6],
+  ["autumn", 9],
+  ["fall", 9],
+  ["winter", 12],
+];
+const monthOf = (s: string) => MONTH_INDEX.find(([k]) => normalize(s).includes(k))?.[1];
+
+/** People whose stated availability is on or before the start (demo: months of the coming year). */
+export function availableBy(start: string, pool: Talent[]) {
+  const by = monthOf(start);
+  if (by === undefined) return undefined;
+  return pool.filter((t) => (monthOf(t.availability) ?? 99) <= by).length;
+}
+
+const MONTH_NAME = ["", "January", "February", "March", "April", "May", "June"];
+
+function areaOptions(dev: boolean, pool: Talent[]) {
+  return (dev ? DEV_AREAS : AREAS)
+    .map((a) => ({ text: a.text, n: poolCount(a.skills, pool) }))
+    .filter((a) => a.n > 0)
+    .sort((a, b) => b.n - a.n)
+    .slice(0, 4)
+    .map((a) => a.text);
+}
+
+/** Related skills the card doesn't have yet, that people in the pool do have. */
+function relatedOptions(d: NeedDraft, pool: Talent[]) {
+  const on = new Set([...d.must, ...d.nice]);
+  const weight = new Map<string, number>();
+  for (const id of on)
+    for (const r of relatedSkills(id, 0.3))
+      if (!on.has(r.skill.id)) weight.set(r.skill.id, (weight.get(r.skill.id) ?? 0) + r.weight);
+  return [...weight]
+    .map(([id, w]) => ({ id, w, n: poolCount([id], pool) }))
+    .filter((x) => x.n > 0)
+    .sort((a, b) => b.w - a.w || b.n - a.n)
+    .slice(0, 3)
+    .map((x) => `Also ${skillLabel(x.id)}`);
+}
+
+function mustOptions(d: NeedDraft, pool: Talent[]) {
+  const base = relevantCount(d, pool);
+  const opts = ["Looks right"];
+  if (d.must.length > 1) {
+    const drop = d.must
+      .map((id) => ({
+        id,
+        n: relevantCount({ ...d, must: d.must.filter((x) => x !== id), nice: [...d.nice, id] }, pool),
+      }))
+      .sort((a, b) => b.n - a.n)[0];
+    if (drop.n > base) opts.push(`Make ${skillLabel(drop.id)} nice-to-have`);
+  }
+  d.nice
+    .map((id) => ({
+      id,
+      n: relevantCount({ ...d, must: [...d.must, id], nice: d.nice.filter((x) => x !== id) }, pool),
+    }))
+    .sort((a, b) => b.n - a.n)
+    .slice(0, 2)
+    .forEach((a) => opts.push(`${skillLabel(a.id)} is also a must`));
+  return opts.slice(0, 4);
+}
+
+function timingOptions(pool: Talent[]) {
+  const months = new Map<number, number>();
+  for (const t of pool) {
+    const m = monthOf(t.availability);
+    if (m !== undefined) months.set(m, (months.get(m) ?? 0) + 1);
+  }
+  const opts: string[] = [];
+  if (months.has(0)) opts.push("ASAP, permanent");
+  [...months]
+    .filter(([m]) => m > 0 && m < MONTH_NAME.length)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 2)
+    .sort((a, b) => a[0] - b[0])
+    .forEach(([m]) => opts.push(`From ${MONTH_NAME[m]} 2027, permanent`));
+  opts.push("Fixed-term, 6 months");
+  return opts.slice(0, 4);
+}
+
+const modeOptions = (pool: Talent[]) => [...MODES].sort((a, b) => modeCount(b, pool) - modeCount(a, pool));
+
+/**
+ * A short data hint for a quick reply, e.g. "6 in the pool" or "4 relevant (now 2)".
+ * Computed in the browser for any reply, from Gemini or the rules.
+ */
+export function quickReplyHint(text: string, d: NeedDraft, pool: Talent[]): string | undefined {
+  const t = normalize(text);
+  if (!pool.length) return undefined;
+  if (/^looks (right|good)/.test(t)) return `${relevantCount(d, pool)} relevant now`;
+
+  const lang = parseLanguage(t);
+  if (lang) return `${languageCount(lang, pool)} of ${pool.length} can work in it`;
+  const mode = parseMode(t);
+  if (mode && t.length <= 20) return `${modeCount(mode, pool)} open to ${mode.toLowerCase()}`;
+  if (START_RE.test(t) || /trainee|fixed|permanent/.test(t)) {
+    const n = availableBy(parseTiming(t).start, pool);
+    if (n !== undefined) return `${n} available by then`;
+  }
+
+  const skills = mentionedSkills(text);
+  if (!skills.length) return undefined;
+  const base = relevantCount(d, pool);
+  if (/also a must/.test(t)) {
+    const n = relevantCount(
+      { ...d, must: uniq([...d.must, ...skills]), nice: d.nice.filter((s) => !skills.includes(s)) },
+      pool,
+    );
+    return `${n} relevant (now ${base})`;
+  }
+  if (/nice-to-have/.test(t)) {
+    const must = d.must.filter((s) => !skills.includes(s));
+    if (!must.length) return undefined;
+    return `${relevantCount({ ...d, must, nice: uniq([...d.nice, ...skills]) }, pool)} relevant (now ${base})`;
+  }
+  return `${poolCount(skills, pool)} in the pool`;
+}
+
+/** Aggregate pool numbers for the model. Counts only; nothing about any individual. */
+export function poolSummary(pool: Talent[]) {
+  const skills = SKILLS.map((s) => ({
+    skill: s.id,
+    people: pool.filter((t) => t.skills.some((x) => x.id === s.id)).length,
+    evidenced: pool.filter((t) => t.skills.some((x) => x.id === s.id && x.level === "evidenced")).length,
+  }))
+    .filter((s) => s.people > 0)
+    .sort((a, b) => b.people - a.people);
+  const availability: Record<string, number> = {};
+  for (const t of pool) availability[t.availability] = (availability[t.availability] ?? 0) + 1;
+  return {
+    people: pool.length,
+    skills,
+    workingLanguage: Object.fromEntries(LANGUAGES.map((l) => [l, languageCount(l, pool)])),
+    openToMode: Object.fromEntries(MODES.map((m) => [m, modeCount(m, pool)])),
+    availability,
+  };
+}
 
 function parseLanguage(t: string): Need["language"] | "" {
   if (/finnish (is )?(required|needed|must)|must speak finnish|fluent finnish|suomi pakollinen/.test(t))
@@ -267,11 +468,10 @@ function parseTiming(t: string): { start: string; engagement: Engagement | "" } 
 /** Prefer job-specific skills over transversal ones when proposing must-haves. */
 const mustPriority = (id: string) => (SKILL_BY_ID[id]?.group === "Transversal" ? 1 : 0);
 
-export function rulesTurn({
-  messages,
-  draft: input,
-  asked: askedIn,
-}: IntakeRequest): Omit<IntakeTurn, "source"> {
+export function rulesTurn(
+  { messages, draft: input, asked: askedIn }: IntakeRequest,
+  pool: Talent[],
+): Omit<IntakeTurn, "source"> {
   const draft = sanitizeDraft(input);
   const asked = new Set(askedIn);
   const raw = [...messages].reverse().find((m) => m.role === "user")?.content ?? "";
@@ -281,17 +481,26 @@ export function rulesTurn({
   // 1. Apply what the user just said.
   // Answers about language, timing or way of working aren't about skills ("fixed-term" ≠ "fix").
   const practical = last === "language" || last === "timing" || last === "mode";
-  const mentioned = practical ? [] : extractSkills(raw);
+  const mentioned = practical ? [] : mentionedSkills(raw);
   const found = mentioned.filter((s) => !draft.must.includes(s) && !draft.nice.includes(s));
   if (last === "must" && mentioned.length) {
-    draft.must = uniq([...draft.must, ...mentioned]);
-    draft.nice = draft.nice.filter((s) => !draft.must.includes(s));
+    if (/nice-to-have|not (a )?must|optional/.test(t)) {
+      // Demote, but never leave the card without a must-have.
+      const must = draft.must.filter((s) => !mentioned.includes(s));
+      if (must.length) {
+        draft.must = must;
+        draft.nice = uniq([...draft.nice, ...mentioned]);
+      }
+    } else {
+      draft.must = uniq([...draft.must, ...mentioned]);
+      draft.nice = draft.nice.filter((s) => !draft.must.includes(s));
+    }
   } else {
     draft.nice = uniq([...draft.nice, ...found]);
   }
   // Summary: the first message, replaced by the concrete tasks once we have them.
   if (!askedIn.length) draft.summary = raw.slice(0, 400);
-  if (last === "tasks") draft.summary = raw.slice(0, 400);
+  if (last === "tasks" && raw.trim().split(/\s+/).length >= 6) draft.summary = raw.slice(0, 400);
 
   const occHit = searchOccupations(raw, 1)[0];
   const occ = occHit && occHit.score >= 60 ? occHit.item : bestOccupation([...draft.must, ...draft.nice]);
@@ -335,20 +544,21 @@ export function rulesTurn({
         "Let's come at it from the work itself: what would this person do on a normal Tuesday?",
         [],
       );
-    return DEV_WORDS.test(t)
+    const dev = DEV_WORDS.test(t);
+    return dev
       ? ask(
           "area",
           "Happy to help. “Dev” covers a lot of ground: what kind of software would they work on?",
-          QUICK.dev,
+          areaOptions(true, pool),
         )
-      : ask("area", "Got it. Which area is the role in? Rough is fine.", QUICK.area);
+      : ask("area", "Got it. Which area is the role in? Rough is fine.", areaOptions(false, pool));
   }
 
   if (!asked.has("tasks"))
     return ask(
       "tasks",
       `${picked}What will this person actually do in their first three months? Concrete tasks help me pick the right skills.`,
-      [],
+      relatedOptions(draft, pool),
     );
 
   if (!asked.has("must")) {
@@ -359,22 +569,26 @@ export function rulesTurn({
     }
     return ask(
       "must",
-      `${picked}I've marked ${draft.must.map(skillLabel).join(", ")} as must-haves and the rest as nice-to-have. Every extra must-have shrinks the pool, so 2–3 is usually right. Does that look right? You can also tap skills on the card.`,
-      ["Looks right", ...draft.nice.slice(0, 2).map((s) => `${skillLabel(s)} is also a must`)],
+      `${picked}I've marked ${draft.must.map(skillLabel).join(", ")} as must-haves and the rest as nice-to-have. With that, ${relevantCount(draft, pool)} of ${pool.length} people in the pool are a relevant fit. Every extra must-have shrinks that, so 2–3 is usually right. Does it look right? You can also tap skills on the card.`,
+      mustOptions(draft, pool),
     );
   }
 
   if (!draft.language)
     return ask(
       "language",
-      "Which working language does the job need? If Finnish can be learned on the job, “Finnish or English” keeps far more people in the pool.",
-      QUICK.language,
+      `Which working language does the job need? ${languageCount("Finnish required", pool)} of ${pool.length} people in the pool work in Finnish today and ${languageCount("Finnish or English", pool)} in Finnish or English, so if Finnish can be learned on the job, “Finnish or English” keeps far more people in.`,
+      ["Finnish or English", "English is fine", "Finnish required from day one"],
     );
 
   if (!draft.timing.start)
-    return ask("timing", "When should they start, and on what kind of contract?", QUICK.timing);
+    return ask(
+      "timing",
+      `When should they start, and on what kind of contract? ${availableBy("asap", pool) ?? 0} people in the pool are available immediately.`,
+      timingOptions(pool),
+    );
 
-  if (!draft.mode) return ask("mode", "Last one: how will they work?", QUICK.mode);
+  if (!draft.mode) return ask("mode", "Last one: how will they work?", modeOptions(pool));
 
   if (!draft.title) draft.title = `${skillLabel(draft.must[0] ?? skills[0])} specialist`;
 

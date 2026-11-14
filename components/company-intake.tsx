@@ -36,6 +36,7 @@ import {
   LANGUAGES,
   missingFields,
   MODES,
+  quickReplyHint,
   rulesTurn,
   type ChatMessage,
   type IntakeTurn,
@@ -112,7 +113,7 @@ export function CompanyIntake() {
       turn = (await res.json()) as IntakeTurn;
     } catch {
       // No server (e.g. static preview): run the same rules in the browser.
-      turn = { ...rulesTurn(body), source: "rules" };
+      turn = { ...rulesTurn(body, talent), source: "rules" };
     }
 
     const before = new Set([...draft.must, ...draft.nice]);
@@ -222,16 +223,20 @@ export function CompanyIntake() {
             lastMsg.quickReplies &&
             lastMsg.quickReplies.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
-                {lastMsg.quickReplies.map((q) => (
-                  <button
-                    key={q}
-                    type="button"
-                    onClick={() => send(q)}
-                    className="flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition-colors hover:bg-muted"
-                  >
-                    <SparklesIcon className="size-3 text-primary" /> {q}
-                  </button>
-                ))}
+                {lastMsg.quickReplies.map((q) => {
+                  const hint = quickReplyHint(q, draft, talent);
+                  return (
+                    <button
+                      key={q}
+                      type="button"
+                      onClick={() => send(q)}
+                      className="flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition-colors hover:bg-muted"
+                    >
+                      <SparklesIcon className="size-3 text-primary" /> {q}
+                      {hint && <span className="text-muted-foreground tabular-nums">· {hint}</span>}
+                    </button>
+                  );
+                })}
               </div>
             )}
           <form

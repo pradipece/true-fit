@@ -56,3 +56,6 @@ export const SCENARIO_PROMPTS = [
     hint: "Something you'd be happy to talk through for five minutes.",
   },
 ];
+
+/** Optional voice-note prompt (talent Evidence step). */
+export const VOICE_PROMPT = "60-second voice note: explain something from your field to a 12-year-old.";
