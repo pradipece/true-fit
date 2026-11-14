@@ -1544,6 +1544,908 @@
         "education": "University",
         "path": "Linear"
       }
+    },
+    {
+      "id": "T-31",
+      "revealName": "Sara Lindqvist",
+      "contact": {
+        "fullName": "Sara Lindqvist",
+        "email": "sara.lindqvist@example.com",
+        "phone": "+358 40 000 0127",
+        "city": "Espoo"
+      },
+      "headline": "Ten years in grocery retail, now moving into warehouse work and logistics.",
+      "previousField": "Retail (store shift supervisor)",
+      "skills": [
+        {
+          "id": "warehouse",
+          "level": "evidenced"
+        },
+        {
+          "id": "customer",
+          "level": "evidenced"
+        },
+        {
+          "id": "team",
+          "level": "evidenced"
+        },
+        {
+          "id": "logistics",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A delivery arrives two hours late and the evening shift is short-staffed. What do you do?",
+          "excerpt": "Unload the chilled goods first, move one person from the tills to receiving, and tell the shift manager which shelves will be late.",
+          "skills": ["warehouse", "team"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: a difficult customer",
+          "excerpt": "A customer was shouting about a missing order. I listened, found the box in the back room and offered to carry it to the car.",
+          "skills": ["customer"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Swedish",
+          "level": "Native"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Fluent"
+        },
+        {
+          "lang": "English",
+          "level": "Working"
+        }
+      ],
+      "availability": "Immediately",
+      "mode": "On-site",
+      "audit": {
+        "origin": "Finland",
+        "education": "Vocational",
+        "path": "Career changer"
+      }
+    },
+    {
+      "id": "T-32",
+      "revealName": "Yusuf Demir",
+      "contact": {
+        "fullName": "Yusuf Demir",
+        "email": "yusuf.demir@example.com",
+        "phone": "+358 40 000 0128",
+        "city": "Espoo"
+      },
+      "headline": "Data engineer from Izmir, five years building batch and streaming pipelines.",
+      "previousField": "Data engineering (telecom)",
+      "skills": [
+        {
+          "id": "pipelines",
+          "level": "evidenced"
+        },
+        {
+          "id": "python",
+          "level": "evidenced"
+        },
+        {
+          "id": "sql",
+          "level": "evidenced"
+        },
+        {
+          "id": "cloud",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A nightly data job silently drops 3% of rows. How do you find out why?",
+          "excerpt": "Compare row counts at each step, log the rejected rows instead of dropping them, and add a test that fails when counts don't match.",
+          "skills": ["pipelines", "sql"]
+        },
+        {
+          "kind": "sample",
+          "prompt": "Short code sample",
+          "excerpt": "A Python job that deduplicates sensor readings by device and timestamp before loading them, with a retry on network errors.",
+          "skills": ["python", "pipelines"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Turkish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        }
+      ],
+      "availability": "From January",
+      "mode": "Hybrid",
+      "audit": {
+        "origin": "Outside EU",
+        "education": "University",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-33",
+      "revealName": "Anna Kowalczyk",
+      "contact": {
+        "fullName": "Anna Kowalczyk",
+        "email": "anna.kowalczyk@example.com",
+        "phone": "+358 40 000 0129",
+        "city": "Helsinki"
+      },
+      "headline": "Former primary school teacher who retrained as a front-end developer at a bootcamp.",
+      "previousField": "Teaching (primary school)",
+      "skills": [
+        {
+          "id": "react",
+          "level": "evidenced"
+        },
+        {
+          "id": "js",
+          "level": "evidenced"
+        },
+        {
+          "id": "mentoring",
+          "level": "evidenced"
+        },
+        {
+          "id": "a11y",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A form works for you but a user says they can't submit it. What do you check?",
+          "excerpt": "Check the console, try it with the keyboard only, check validation messages, and reproduce in their browser before changing any React state logic.",
+          "skills": ["react", "js"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: explaining something hard",
+          "excerpt": "I taught fractions to eight-year-olds. Now I pair with junior devs the same way: one small step, then let them drive.",
+          "skills": ["mentoring"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Polish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Learning"
+        }
+      ],
+      "availability": "Immediately",
+      "mode": "Remote",
+      "audit": {
+        "origin": "EU/EEA",
+        "education": "Self-taught / bootcamp",
+        "path": "Career changer"
+      }
+    },
+    {
+      "id": "T-34",
+      "revealName": "Eero Salminen",
+      "contact": {
+        "fullName": "Eero Salminen",
+        "email": "eero.salminen@example.com",
+        "phone": "+358 40 000 0130",
+        "city": "Espoo"
+      },
+      "headline": "HVAC installer with a vocational degree, eight years on renovation sites.",
+      "previousField": "HVAC installation",
+      "skills": [
+        {
+          "id": "hvac",
+          "level": "evidenced"
+        },
+        {
+          "id": "energy",
+          "level": "evidenced"
+        },
+        {
+          "id": "problem",
+          "level": "evidenced"
+        },
+        {
+          "id": "customer",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A building's heating bill rose 20% after a renovation. Where do you start?",
+          "excerpt": "Check the ventilation heat recovery settings and the radiator balancing first; after renovations they are often left at factory defaults.",
+          "skills": ["hvac", "energy"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: something that went wrong",
+          "excerpt": "A pump kept failing. Instead of replacing it a third time I traced it to a valve installed backwards upstream.",
+          "skills": ["problem"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Finnish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Working"
+        }
+      ],
+      "availability": "From March",
+      "mode": "On-site",
+      "audit": {
+        "origin": "Finland",
+        "education": "Vocational",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-35",
+      "revealName": "Mariam Tesfaye",
+      "contact": {
+        "fullName": "Mariam Tesfaye",
+        "email": "mariam.tesfaye@example.com",
+        "phone": "+358 40 000 0131",
+        "city": "Vantaa"
+      },
+      "headline": "Practical nurse trained in Finland, four years in home care and assisted living.",
+      "previousField": "Home care (practical nurse)",
+      "skills": [
+        {
+          "id": "elderly-care",
+          "level": "evidenced"
+        },
+        {
+          "id": "patient-care",
+          "level": "evidenced"
+        },
+        {
+          "id": "medication",
+          "level": "evidenced"
+        },
+        {
+          "id": "intercultural",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "An elderly client living alone seems more confused than last week. What do you do?",
+          "excerpt": "Check whether medicines were taken as dosed, look for signs of infection or dehydration, write it down and call the nurse on duty the same day.",
+          "skills": ["elderly-care", "medication", "patient-care"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: a good day at work",
+          "excerpt": "A client who never talked started telling me about her garden. I came ten minutes early each visit so we had time for it.",
+          "skills": ["patient-care"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Tigrinya",
+          "level": "Native"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Working"
+        },
+        {
+          "lang": "English",
+          "level": "Working"
+        }
+      ],
+      "availability": "Immediately",
+      "mode": "On-site",
+      "audit": {
+        "origin": "Outside EU",
+        "education": "Vocational",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-36",
+      "revealName": "Lukáš Novák",
+      "contact": {
+        "fullName": "Lukáš Novák",
+        "email": "lukas.novak@example.com",
+        "phone": "+358 40 000 0132",
+        "city": "Espoo"
+      },
+      "headline": "Moved from freight forwarding into supply chain analytics after a master's degree.",
+      "previousField": "Freight forwarding",
+      "skills": [
+        {
+          "id": "supply",
+          "level": "evidenced"
+        },
+        {
+          "id": "analysis",
+          "level": "evidenced"
+        },
+        {
+          "id": "logistics",
+          "level": "evidenced"
+        },
+        {
+          "id": "sql",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "Stock-outs of one product doubled last quarter. How do you investigate?",
+          "excerpt": "Pull weekly demand and lead times per supplier, see whether demand spiked or deliveries slipped, then adjust the reorder point with purchasing.",
+          "skills": ["supply", "analysis"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: your previous job",
+          "excerpt": "I booked trucks and containers across Central Europe, so I know where shipments actually get stuck at borders and ports.",
+          "skills": ["logistics"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Czech",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Learning"
+        }
+      ],
+      "availability": "From February",
+      "mode": "Any",
+      "audit": {
+        "origin": "EU/EEA",
+        "education": "University",
+        "path": "Career changer"
+      }
+    },
+    {
+      "id": "T-37",
+      "revealName": "Chiara Romano",
+      "contact": {
+        "fullName": "Chiara Romano",
+        "email": "chiara.romano@example.com",
+        "phone": "+358 40 000 0133",
+        "city": "Helsinki"
+      },
+      "headline": "Clinical research coordinator with hospital data and GDPR experience.",
+      "previousField": "Clinical research (university hospital)",
+      "skills": [
+        {
+          "id": "ehr",
+          "level": "evidenced"
+        },
+        {
+          "id": "health-regs",
+          "level": "evidenced"
+        },
+        {
+          "id": "analysis",
+          "level": "evidenced"
+        },
+        {
+          "id": "stakeholders",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A study export from the patient record system has missing visit dates. What do you do?",
+          "excerpt": "Flag the records, check the source entries in the patient record system with the ward, and log every correction so the audit trail stays intact.",
+          "skills": ["ehr", "health-regs"]
+        },
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "A one-page summary comparing readmission rates by ward, with the method and its limits stated in plain words.",
+          "skills": ["analysis"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Italian",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Learning"
+        }
+      ],
+      "availability": "From January",
+      "mode": "Hybrid",
+      "audit": {
+        "origin": "EU/EEA",
+        "education": "University",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-38",
+      "revealName": "Juho Rantanen",
+      "contact": {
+        "fullName": "Juho Rantanen",
+        "email": "juho.rantanen@example.com",
+        "phone": "+358 40 000 0134",
+        "city": "Espoo"
+      },
+      "headline": "Session musician turned software tester, self-taught with a testing certificate.",
+      "previousField": "Music (session musician)",
+      "skills": [
+        {
+          "id": "testing",
+          "level": "evidenced"
+        },
+        {
+          "id": "problem",
+          "level": "evidenced"
+        },
+        {
+          "id": "team",
+          "level": "evidenced"
+        },
+        {
+          "id": "js",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A bug only happens sometimes. How do you report it?",
+          "excerpt": "Write exact steps, browser and time, attach a recording, and note what I tried that did not trigger it so developers can narrow it down.",
+          "skills": ["testing", "problem"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: working in a team",
+          "excerpt": "In a band nobody plays louder to win. In testing I try the same thing: raise the issue, then help fix it.",
+          "skills": ["team"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Finnish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        }
+      ],
+      "availability": "Immediately",
+      "mode": "Remote",
+      "audit": {
+        "origin": "Finland",
+        "education": "Self-taught / bootcamp",
+        "path": "Career changer"
+      }
+    },
+    {
+      "id": "T-39",
+      "revealName": "Daryna Melnyk",
+      "contact": {
+        "fullName": "Daryna Melnyk",
+        "email": "daryna.melnyk@example.com",
+        "phone": "+358 40 000 0135",
+        "city": "Espoo"
+      },
+      "headline": "Energy engineer from Kharkiv, did building energy audits and sustainability reports.",
+      "previousField": "Energy auditing",
+      "skills": [
+        {
+          "id": "energy",
+          "level": "evidenced"
+        },
+        {
+          "id": "esg",
+          "level": "evidenced"
+        },
+        {
+          "id": "pm",
+          "level": "evidenced"
+        },
+        {
+          "id": "analysis",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A client wants to cut their office's energy use by 15%. What is your plan?",
+          "excerpt": "Measure a baseline for a month, find the biggest loads, start with no-cost fixes like schedules and setpoints, then price the bigger upgrades.",
+          "skills": ["energy", "pm"]
+        },
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "Section of an annual sustainability report on scope 2 emissions, with the data sources listed.",
+          "skills": ["esg"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Ukrainian",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Learning"
+        }
+      ],
+      "availability": "Immediately",
+      "mode": "Hybrid",
+      "audit": {
+        "origin": "Outside EU",
+        "education": "University",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-40",
+      "revealName": "Samuel Mensah",
+      "contact": {
+        "fullName": "Samuel Mensah",
+        "email": "samuel.mensah@example.com",
+        "phone": "+358 40 000 0136",
+        "city": "Vantaa"
+      },
+      "headline": "Former bank clerk who taught himself SQL and data analysis online.",
+      "previousField": "Banking (branch customer service)",
+      "skills": [
+        {
+          "id": "analysis",
+          "level": "evidenced"
+        },
+        {
+          "id": "sql",
+          "level": "evidenced"
+        },
+        {
+          "id": "customer",
+          "level": "evidenced"
+        },
+        {
+          "id": "python",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "Your manager asks which products customers stop using first. How do you answer?",
+          "excerpt": "Write a SQL query for the last use date per product per customer, group by product, and show the drop-off month by month in a simple chart.",
+          "skills": ["sql", "analysis"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: your previous job",
+          "excerpt": "At the bank I explained loan terms to people who were nervous about money. I learned to check they really understood, not just nodded.",
+          "skills": ["customer"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "English",
+          "level": "Native"
+        },
+        {
+          "lang": "Twi",
+          "level": "Native"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Learning"
+        }
+      ],
+      "availability": "From February",
+      "mode": "Hybrid",
+      "audit": {
+        "origin": "Outside EU",
+        "education": "Self-taught / bootcamp",
+        "path": "Career changer"
+      }
+    },
+    {
+      "id": "T-41",
+      "revealName": "Helmi Koskinen",
+      "contact": {
+        "fullName": "Helmi Koskinen",
+        "email": "helmi.koskinen@example.com",
+        "phone": "+358 40 000 0137",
+        "city": "Espoo"
+      },
+      "headline": "Registered nurse moving into clinical data after training as an EHR super-user.",
+      "previousField": "Hospital nursing (emergency department)",
+      "skills": [
+        {
+          "id": "ehr",
+          "level": "evidenced"
+        },
+        {
+          "id": "patient-care",
+          "level": "evidenced"
+        },
+        {
+          "id": "analysis",
+          "level": "evidenced"
+        },
+        {
+          "id": "health-regs",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "Nurses keep entering the same field in two places in the record system. What do you do?",
+          "excerpt": "Watch a few shifts to see why, then show the system team where the duplicate entry happens and suggest one field with a clear label.",
+          "skills": ["ehr", "analysis"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: a busy shift",
+          "excerpt": "In the emergency department I learned to keep talking to the patient while working, so they know what is happening.",
+          "skills": ["patient-care"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Finnish",
+          "level": "Native"
+        },
+        {
+          "lang": "Swedish",
+          "level": "Working"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        }
+      ],
+      "availability": "From April",
+      "mode": "Hybrid",
+      "audit": {
+        "origin": "Finland",
+        "education": "University",
+        "path": "Career changer"
+      }
+    },
+    {
+      "id": "T-42",
+      "revealName": "Diego Herrera",
+      "contact": {
+        "fullName": "Diego Herrera",
+        "email": "diego.herrera@example.com",
+        "phone": "+358 40 000 0138",
+        "city": "Vantaa"
+      },
+      "headline": "Warehouse team lead from Bogotá, ran night shifts at a distribution centre.",
+      "previousField": "Warehouse operations",
+      "skills": [
+        {
+          "id": "warehouse",
+          "level": "evidenced"
+        },
+        {
+          "id": "lead",
+          "level": "evidenced"
+        },
+        {
+          "id": "adapt",
+          "level": "evidenced"
+        },
+        {
+          "id": "logistics",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "Two of your eight pickers call in sick at the start of a night shift. What do you do?",
+          "excerpt": "Prioritise the orders with the earliest trucks, pick myself on the busiest aisle, and ask the day lead to start one person an hour early.",
+          "skills": ["warehouse", "lead"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: a big change",
+          "excerpt": "When we moved to a new scanner system overnight, I wrote a one-page cheat sheet in Spanish and English for the team.",
+          "skills": ["adapt", "lead"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Spanish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Working"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Learning"
+        }
+      ],
+      "availability": "Immediately",
+      "mode": "On-site",
+      "audit": {
+        "origin": "Outside EU",
+        "education": "Vocational",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-43",
+      "revealName": "Emma Johansson",
+      "contact": {
+        "fullName": "Emma Johansson",
+        "email": "emma.johansson@example.com",
+        "phone": "+358 40 000 0139",
+        "city": "Helsinki"
+      },
+      "headline": "UX designer from Gothenburg focused on accessible public-sector services.",
+      "previousField": "UX design (public sector agency)",
+      "skills": [
+        {
+          "id": "ux",
+          "level": "evidenced"
+        },
+        {
+          "id": "a11y",
+          "level": "evidenced"
+        },
+        {
+          "id": "stakeholders",
+          "level": "evidenced"
+        },
+        {
+          "id": "react",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "Users abandon a sign-up form halfway. How do you find out why?",
+          "excerpt": "Watch five people use it, check it with a screen reader, and look at which field they leave on before redesigning anything.",
+          "skills": ["ux", "a11y"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: disagreeing with a stakeholder",
+          "excerpt": "A manager wanted more fields. I showed a clip of a user giving up and we agreed to ask two questions later instead.",
+          "skills": ["stakeholders"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Swedish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Working"
+        }
+      ],
+      "availability": "From January",
+      "mode": "Remote",
+      "audit": {
+        "origin": "EU/EEA",
+        "education": "University",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-44",
+      "revealName": "Nour Haddad",
+      "contact": {
+        "fullName": "Nour Haddad",
+        "email": "nour.haddad@example.com",
+        "phone": "+358 40 000 0140",
+        "city": "Espoo"
+      },
+      "headline": "Architect from Beirut retraining in building energy efficiency.",
+      "previousField": "Architecture",
+      "skills": [
+        {
+          "id": "energy",
+          "level": "evidenced"
+        },
+        {
+          "id": "pm",
+          "level": "evidenced"
+        },
+        {
+          "id": "problem",
+          "level": "evidenced"
+        },
+        {
+          "id": "hvac",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "An old school building is cold near the windows but too hot in the corridors. What do you suggest?",
+          "excerpt": "Map the temperatures room by room, check window seals and where the heat is actually going, then propose fixes in order of cost.",
+          "skills": ["energy", "problem"]
+        },
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "Schedule and budget for a three-month facade renovation, with the risks and who owns each one.",
+          "skills": ["pm"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Arabic",
+          "level": "Native"
+        },
+        {
+          "lang": "French",
+          "level": "Fluent"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Working"
+        }
+      ],
+      "availability": "From March",
+      "mode": "On-site",
+      "audit": {
+        "origin": "Outside EU",
+        "education": "University",
+        "path": "Career changer"
+      }
     }
   ]
 }
