@@ -10,12 +10,15 @@ import {
   type Translation,
 } from "@/lib/talent-ai";
 import { getEsco } from "@/lib/seed-db";
+import { requireAccess } from "@/lib/auth/server";
 
 /**
  * Skills translator: past job title and/or career path → ESCO occupation, skills and
  * Finnish job-ad vocabulary. Gemini when configured, rules otherwise.
  */
 export async function POST(request: Request) {
+  const guard = await requireAccess({ perm: "talent:profile" });
+  if (guard.error) return guard.error;
   await getEsco(); // load the data from the database into the registries (lib/seed-db.ts)
   const body = (await request.json().catch(() => null)) as { title?: unknown; path?: unknown } | null;
   const title = typeof body?.title === "string" ? body.title.trim().slice(0, 120) : "";

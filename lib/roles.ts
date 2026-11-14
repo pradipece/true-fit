@@ -11,9 +11,9 @@ export const ROLES = [
     label: "Job seeker",
     title: "People looking for work",
     pages: [
-      { href: "/talent", label: "Skill card" },
-      { href: "/talent/explore", label: "Explore roles" },
-      { href: "/meetings/talent", label: "Applications" },
+      { href: "/talent/explore", label: "Find jobs" },
+      { href: "/talent", label: "My profile" },
+      { href: "/meetings/talent", label: "My applications" },
       { href: "/talent/agenda", label: "My agenda" },
     ],
   },

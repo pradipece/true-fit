@@ -2,11 +2,13 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
+import { SessionProvider } from "@/components/session";
 import { SiteHeader } from "@/components/site-header";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { VersionUpdate } from "@/components/version-update";
+import { getSession } from "@/lib/auth/server";
 import { getEsco, getSeed } from "@/lib/seed-db";
 import { DemoProvider } from "@/lib/store";
 import { APP_COMMIT, APP_VERSION } from "@/lib/version";
@@ -36,11 +38,22 @@ export const metadata: Metadata = {
  * read at request time: the build never connects to it, so this streams in under <Suspense>.
  */
 async function DataProvider({ children }: { children: React.ReactNode }) {
-  const [{ companies, needs, talent }, esco] = await Promise.all([getSeed(), getEsco()]);
+  const [{ companies, needs, talent }, esco, session] = await Promise.all([
+    getSeed(),
+    getEsco(),
+    getSession(),
+  ]);
   return (
-    <DemoProvider seed={{ companies, needs, talent }} esco={esco}>
-      {children}
-    </DemoProvider>
+    <SessionProvider session={session}>
+      {/* Keyed by account: switching account starts from the shared copy, not the last one's view. */}
+      <DemoProvider
+        key={session ? `${session.role}:${session.id}` : "guest"}
+        seed={{ companies, needs, talent }}
+        esco={esco}
+      >
+        {children}
+      </DemoProvider>
+    </SessionProvider>
   );
 }
 

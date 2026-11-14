@@ -125,7 +125,7 @@ export async function clearState(): Promise<number> {
   const client = await db().connect();
   try {
     await client.query("BEGIN");
-    await client.query("TRUNCATE pipeline_pairs, pipeline_audit, demo_cards");
+    await client.query("TRUNCATE pipeline_pairs, pipeline_audit, demo_cards, candidate_profiles");
     const { rows } = await client.query(
       `UPDATE demo_state_meta SET version = version + 1 WHERE id = 1 RETURNING version`,
     );

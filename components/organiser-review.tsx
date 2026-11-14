@@ -204,7 +204,7 @@ export function OrganiserReview() {
               ? "The candidate sees it in their Meetings view, accepts and books a time."
               : "The candidate can still be invited for other needs.",
           ...(next === "approved" && {
-            action: { label: "Open as the candidate", onClick: () => viewAs("talent", key) },
+            action: { label: "Sign in as the candidate", onClick: () => viewAs("talent", key) },
           }),
         },
       );
@@ -502,7 +502,7 @@ export function OrganiserReview() {
           if (result === "passed")
             toast.success("Passed: profile sent to the company", {
               description: "The company now sees the candidate and decides on an interview.",
-              action: { label: "Open as the company", onClick: () => viewAs("company", key) },
+              action: { label: "Sign in as the company", onClick: () => viewAs("company", key) },
             });
           else if (result === "not-passed")
             toast("Result logged: not passed", {

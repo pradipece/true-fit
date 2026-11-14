@@ -31,7 +31,8 @@ import { CandidateProfile } from "@/components/candidate-profile";
 import { SkillChip, SkillLegend } from "@/components/skill-chip";
 import { useLiveIntake } from "@/components/use-live-intake";
 import { VoiceInput } from "@/components/voice-input";
-import { EVENT, OWN_COMPANY } from "@/lib/data";
+import { useSession } from "@/components/session";
+import { COMPANIES, EVENT, OWN_COMPANY } from "@/lib/data";
 import {
   DEFAULT_STARTERS,
   draftToNeed,
@@ -151,7 +152,18 @@ export function CompanyIntake() {
     return () => window.removeEventListener("keydown", onKey);
   }, [chatOpen]);
 
-  const need = useMemo(() => draftToNeed(draft, OWN_COMPANY.name), [draft]);
+  // The need card belongs to the signed-in company (lib/auth); the server refuses any other.
+  const { session } = useSession();
+  const owner = useMemo(() => {
+    const id = session?.role === "company" ? session.id : OWN_COMPANY.id;
+    const c = COMPANIES.find((x) => x.id === id);
+    return {
+      id,
+      name: c?.name ?? (id === OWN_COMPANY.id ? OWN_COMPANY.name : (session?.name ?? OWN_COMPANY.name)),
+      blurb: c?.blurb,
+    };
+  }, [session]);
+  const need = useMemo(() => draftToNeed(draft, owner.name, owner), [draft, owner]);
   // Live: who fits the card right now. Ranked by skills only (lib/match.ts).
   const suitable = useMemo(
     () => (need.must.length ? matchesForNeed(need, talent).filter((m) => m.suggested) : []),

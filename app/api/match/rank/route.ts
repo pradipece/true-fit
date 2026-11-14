@@ -11,6 +11,7 @@ import {
   type RankResult,
 } from "@/lib/match-rank";
 import { getEsco } from "@/lib/seed-db";
+import { requireAccess } from "@/lib/auth/server";
 
 /**
  * "AI fit rate" for the candidates matched to one need. The browser sends the need's skills and
@@ -20,6 +21,8 @@ import { getEsco } from "@/lib/seed-db";
  */
 
 export async function POST(request: Request) {
+  const guard = await requireAccess({ perm: "ai:match" });
+  if (guard.error) return guard.error;
   await getEsco(); // load the data from the database into the registries (lib/seed-db.ts)
   const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
   const n = body?.need as Record<string, unknown> | undefined;

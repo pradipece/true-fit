@@ -12,6 +12,7 @@ import {
   type EvidenceResult,
 } from "@/lib/talent-ai";
 import { getEsco } from "@/lib/seed-db";
+import { requireAccess } from "@/lib/auth/server";
 
 /**
  * Evidence mapping: written answers → ESCO skills, each backed by a verbatim quote,
@@ -54,6 +55,8 @@ function parseBody(body: unknown): EvidenceRequest | null {
 }
 
 export async function POST(request: Request) {
+  const guard = await requireAccess({ perm: "talent:profile" });
+  if (guard.error) return guard.error;
   await getEsco(); // load the data from the database into the registries (lib/seed-db.ts)
   const req = parseBody(await request.json().catch(() => null));
   if (!req) return Response.json({ error: "Write at least one answer first" }, { status: 400 });

@@ -1,9 +1,12 @@
 import type { NextRequest } from "next/server";
 import { getOccupation } from "@/lib/esco-api";
 import { getEsco } from "@/lib/seed-db";
+import { requireAccess } from "@/lib/auth/server";
 
 /** One ESCO occupation with its essential and optional skills: /api/esco/occupation?uri=… */
 export async function GET(request: NextRequest) {
+  const guard = await requireAccess();
+  if (guard.error) return guard.error;
   await getEsco(); // load the data from the database into the registries (lib/seed-db.ts)
   const uri = request.nextUrl.searchParams.get("uri") ?? "";
   if (!/^http:\/\/data\.europa\.eu\/esco\/occupation\/[\w-]+$/.test(uri))

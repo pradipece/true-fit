@@ -18,6 +18,8 @@ import {
   SparklesIcon,
   Undo2Icon,
   UserRoundIcon,
+  CloudAlertIcon,
+  CloudCheckIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -53,6 +55,8 @@ import {
 } from "@/lib/talent-ai";
 import type { Evidence, SkillClaim, SkillGroup, Talent, TalentContact } from "@/lib/types";
 import { cn, isSubmitEnter } from "@/lib/utils";
+import { useSession } from "@/components/session";
+import type { ProfileDraft } from "@/lib/candidate-profile";
 
 const GROUPS: SkillGroup[] = ["Digital", "Green transition", "Healthcare", "Business", "Transversal"];
 const STEPS = ["Background", "Skills", "Evidence", "Review profile"];
@@ -129,6 +133,9 @@ const answersKey = (list: EvidenceAnswer[]) => JSON.stringify(list.map((a) => [a
 
 export function TalentProfile() {
   const { addTalent } = useDemo();
+  // The card belongs to the signed-in job seeker (lib/auth); the server refuses any other id.
+  const { session } = useSession();
+  const myId = session?.role === "talent" ? session.id : "T-YOU";
   const [step, setStep] = useState(0);
 
   // 1. Background / translator
@@ -165,6 +172,107 @@ export function TalentProfile() {
   const [reviewed, setReviewed] = useState(false);
   const [joined, setJoined] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+
+  // ── Saved profile (candidate_profiles via /api/talent/profile) ─────────────
+  // Everything typed here is saved to the signed-in job seeker's own row in the database
+  // and restored on return. Until the load finishes nothing is saved, so an empty form
+  // never overwrites a saved profile.
+  const { talent } = useDemo();
+  const [profileLoaded, setProfileLoaded] = useState(false);
+  const [savedAt, setSavedAt] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState(false);
+  const draft: ProfileDraft = {
+    step,
+    title,
+    path,
+    translation,
+    skills,
+    answers,
+    sample,
+    result,
+    mappedKey,
+    readFor,
+    rejected: [...rejected],
+    resolved: [...resolved],
+    headline,
+    languages,
+    mode,
+    availability,
+    contact,
+    reviewed,
+  };
+  const draftJson = JSON.stringify(draft);
+  useEffect(() => {
+    let live = true;
+    fetch("/api/talent/profile", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+      .then((data: { draft: ProfileDraft | null; joined?: boolean; updatedAt?: string }) => {
+        if (!live) return;
+        const d = data.draft;
+        if (d) {
+          setStep(d.step);
+          setTitle(d.title);
+          setPath(d.path);
+          setTranslation(d.translation);
+          setSkills(d.skills);
+          setAnswers(d.answers);
+          setSample(d.sample);
+          setResult(d.result);
+          setMappedKey(d.mappedKey);
+          setReadFor(d.readFor);
+          setRejected(new Set(d.rejected));
+          setResolved(new Set(d.resolved));
+          setHeadline(d.headline);
+          setLanguages(d.languages.length ? d.languages : ["English"]);
+          setMode(d.mode);
+          setAvailability(d.availability);
+          setContact(d.contact);
+          setReviewed(d.reviewed);
+          setJoined(!!data.joined && d.reviewed);
+          setSavedAt(data.updatedAt ?? null);
+        } else {
+          // First visit: start from the card this account already has (a registered candidate).
+          const card = talent.find((t) => t.id === myId);
+          if (card) {
+            setTitle(card.previousField === "—" ? "" : card.previousField);
+            setSkills(card.skills.map((x) => x.id));
+            setHeadline(card.headline);
+            setLanguages(card.languages.map((l) => l.lang));
+            setMode(card.mode);
+            setAvailability(card.availability);
+            if (card.contact) setContact(card.contact);
+          }
+        }
+        setProfileLoaded(true);
+      })
+      .catch(() => {
+        if (!live) return;
+        setSaveError(true);
+        setProfileLoaded(true);
+      });
+    return () => {
+      live = false;
+    };
+    // Load once per account; the card list only seeds a first visit.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [myId]);
+  useEffect(() => {
+    if (!profileLoaded) return;
+    const timer = setTimeout(() => {
+      fetch("/api/talent/profile", {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ draft: JSON.parse(draftJson), joined }),
+      })
+        .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+        .then((d: { updatedAt: string }) => {
+          setSavedAt(d.updatedAt);
+          setSaveError(false);
+        })
+        .catch(() => setSaveError(true));
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [draftJson, joined, profileLoaded]);
 
   const answerList = buildAnswers(answers, sample);
   const evidenceInputKey = JSON.stringify([answersKey(answerList), [...skills].sort()]);
@@ -344,8 +452,8 @@ export function TalentProfile() {
 
   const join = () => {
     addTalent({
-      id: "T-YOU",
-      alias: "Candidate T-YOU",
+      id: myId,
+      alias: `Candidate ${myId}`,
       revealName: cleanContact(contact).fullName || "You (demo)",
       contact: cleanContact(contact),
       headline: headline.trim() || "New at this event",
@@ -356,7 +464,11 @@ export function TalentProfile() {
       availability: availability.trim() || "Flexible",
       mode,
       // Demo placeholder: real audit attributes would come from an optional, separate equality survey.
-      audit: { origin: "EU/EEA", education: "University", path: "Career changer" },
+      audit: talent.find((t) => t.id === myId)?.audit ?? {
+        origin: "EU/EEA",
+        education: "University",
+        path: "Career changer",
+      },
       createdByUser: true,
     });
     setJoined(true);
@@ -407,7 +519,30 @@ export function TalentProfile() {
                 </button>
               ))}
             </div>
-            <Progress value={((step + 1) / STEPS.length) * 100} className="w-24" />
+            <div className="flex items-center gap-3">
+              <span
+                role="status"
+                className={cn(
+                  "hidden items-center gap-1 text-xs text-muted-foreground sm:flex",
+                  saveError && "text-destructive",
+                )}
+                title="Your profile is saved to your account in the database"
+              >
+                {saveError ? (
+                  <CloudAlertIcon className="size-3.5" />
+                ) : (
+                  <CloudCheckIcon className="size-3.5" />
+                )}
+                {!profileLoaded
+                  ? "Loading your profile…"
+                  : saveError
+                    ? "Not saved"
+                    : savedAt
+                      ? `Saved ${new Date(savedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
+                      : "Saved automatically"}
+              </span>
+              <Progress value={((step + 1) / STEPS.length) * 100} className="w-24" />
+            </div>
           </div>
         </CardHeader>
 
@@ -964,7 +1099,7 @@ export function TalentProfile() {
 
       {/* Companies that suit this card best, then the anonymised card itself */}
       <div className="space-y-4 lg:sticky lg:top-20 lg:self-start">
-        <CompaniesForYou talent={{ id: "T-YOU", skills: cardSkills, evidence }} updating={reading} />
+        <CompaniesForYou talent={{ id: myId, skills: cardSkills, evidence }} updating={reading} />
         <Card>
           <CardHeader>
             <CardDescription>
@@ -984,7 +1119,7 @@ export function TalentProfile() {
               <span className="grid size-8 place-items-center rounded-full bg-secondary">
                 <EyeOffIcon className="size-4 text-muted-foreground" />
               </span>
-              Candidate T-YOU
+              Candidate {myId}
             </CardTitle>
             <Badge
               variant="outline"

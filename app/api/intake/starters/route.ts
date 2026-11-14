@@ -8,6 +8,7 @@ import {
   STARTERS_SYSTEM_PROMPT,
 } from "@/lib/intake";
 import { cachedSeed, getSeed } from "@/lib/seed-db";
+import { requireAccess } from "@/lib/auth/server";
 
 /**
  * Opening suggestions for the intake chat, written by Gemini from aggregate pool counts
@@ -33,6 +34,8 @@ async function tailoredStarters() {
 }
 
 export async function GET() {
+  const guard = await requireAccess({ perm: "company:need" });
+  if (guard.error) return guard.error;
   await getSeed(); // load the data from the database into the registries (lib/seed-db.ts)
   if (!aiEnabled()) return Response.json({ starters: DEFAULT_STARTERS, source: "rules" });
   try {

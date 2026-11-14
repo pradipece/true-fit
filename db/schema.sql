@@ -216,6 +216,16 @@ CREATE TABLE IF NOT EXISTS demo_cards (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
+-- Each job seeker's own profile as they build it (background, answers, CV import,
+-- contact details), autosaved per signed-in account by app/api/talent/profile so it is
+-- there when they come back. The finished card is published to demo_cards when they join.
+CREATE TABLE IF NOT EXISTS candidate_profiles (
+  talent_id  text PRIMARY KEY,
+  draft      jsonb NOT NULL,
+  joined     boolean NOT NULL DEFAULT false,
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
 CREATE TABLE IF NOT EXISTS demo_state_meta (
   id      int PRIMARY KEY CHECK (id = 1),
   version bigint NOT NULL DEFAULT 0
@@ -244,4 +254,5 @@ ALTER TABLE scraped_items          ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pipeline_pairs         ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pipeline_audit         ENABLE ROW LEVEL SECURITY;
 ALTER TABLE demo_cards             ENABLE ROW LEVEL SECURITY;
+ALTER TABLE candidate_profiles     ENABLE ROW LEVEL SECURITY;
 ALTER TABLE demo_state_meta        ENABLE ROW LEVEL SECURITY;

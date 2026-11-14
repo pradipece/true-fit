@@ -10,6 +10,7 @@ import {
   type RoleRankResult,
 } from "@/lib/role-rank";
 import { getEsco } from "@/lib/seed-db";
+import { requireAccess } from "@/lib/auth/server";
 
 /**
  * "Companies that suit you best" for a job seeker. The browser sends the person's own skills
@@ -37,6 +38,8 @@ function parseRole(r: unknown, i: number): RoleIn | null {
 }
 
 export async function POST(request: Request) {
+  const guard = await requireAccess({ perm: "talent:profile" });
+  if (guard.error) return guard.error;
   await getEsco(); // load the data from the database into the registries (lib/seed-db.ts)
   const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
   const talent = parseTalent({ ...(body?.talent as object), id: "me" });

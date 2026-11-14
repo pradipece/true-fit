@@ -28,6 +28,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { IdentitySwitch, useIdentity, useViewAs } from "@/components/identity";
+import { useSwitchAccount } from "@/components/session";
 import { MatchExplanationView, ScoreMeter } from "@/components/match-explanation";
 import { MiniSteps, Stepper } from "@/components/pipeline-steps";
 import { SkillChip } from "@/components/skill-chip";
@@ -73,7 +74,8 @@ export function Meetings({ side }: { side: MeetingSide }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const viewAs = useViewAs();
-  const { id: myId, set: switchTo } = useIdentity(side);
+  const { id: myId } = useIdentity(side);
+  const { switchTo } = useSwitchAccount();
 
   const state = useMemo(
     () => ({ decisions, optIns, slots, screening, offers }),
@@ -131,8 +133,11 @@ export function Meetings({ side }: { side: MeetingSide }) {
     <p className="flex flex-wrap items-center gap-2 rounded-lg border border-primary/30 bg-accent px-3 py-2 text-sm text-accent-foreground">
       This link is for {participantById(foreign)?.name ?? foreign}, not the participant you&apos;re signed in
       as.
-      <Button size="xs" onClick={() => switchTo(foreign)}>
-        Switch to them (demo)
+      <Button
+        size="xs"
+        onClick={() => switchTo(side, foreign, `/meetings/${side}?pair=${encodeURIComponent(selected!)}`)}
+      >
+        Sign in as them (demo)
       </Button>
     </p>
   );
@@ -330,7 +335,7 @@ export function Meetings({ side }: { side: MeetingSide }) {
             </Button>
             {(otherSide === "talent" || passed) && (
               <Button size="xs" variant="ghost" onClick={() => viewAs(otherSide, key)}>
-                <ArrowLeftRightIcon data-icon="inline-start" /> Demo: switch to the{" "}
+                <ArrowLeftRightIcon data-icon="inline-start" /> Demo: sign in as the{" "}
                 {otherSide === "company" ? "company" : "candidate"}&apos;s view
               </Button>
             )}

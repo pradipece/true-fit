@@ -111,12 +111,17 @@ export function missingFields(d: NeedDraft): MissingField[] {
 }
 
 /** The draft as a Need, for live pool counts and for submitting once approved. */
-export function draftToNeed(d: NeedDraft, company: string): Need {
+export function draftToNeed(
+  d: NeedDraft,
+  company: string,
+  owner: { id: string; blurb?: string } = { id: OWN_COMPANY.id, blurb: OWN_COMPANY.blurb },
+): Need {
   return {
-    id: "N-YOU",
-    companyId: "C-YOU",
+    // The new demo company's card is N-YOU; a seed company signed in adds its own new role.
+    id: owner.id === OWN_COMPANY.id ? "N-YOU" : `N-${owner.id}-NEW`,
+    companyId: owner.id,
     company: company.trim() || OWN_COMPANY.name,
-    companyBlurb: OWN_COMPANY.blurb,
+    companyBlurb: owner.blurb ?? OWN_COMPANY.blurb,
     title: d.title || "New role",
     occupation: d.occupation || undefined,
     summary: d.summary,

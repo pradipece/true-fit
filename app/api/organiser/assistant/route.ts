@@ -8,6 +8,7 @@ import {
   type AssistantReply,
 } from "@/lib/organiser-assistant";
 import { getSeed } from "@/lib/seed-db";
+import { requireAccess } from "@/lib/auth/server";
 
 /**
  * Espoo Esbo assistant: answers the organiser's questions about the event. The browser
@@ -34,6 +35,8 @@ function parseMessages(raw: unknown): AiMessage[] {
 }
 
 export async function POST(request: Request) {
+  const guard = await requireAccess({ perm: "organiser:review" });
+  if (guard.error) return guard.error;
   await getSeed(); // load the data from the database into the registries (lib/seed-db.ts)
   const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
   const snapshot = sanitizeSnapshot(body?.snapshot);

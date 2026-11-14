@@ -14,6 +14,7 @@ import {
   type CvScan,
 } from "@/lib/cv-import";
 import { getEsco } from "@/lib/seed-db";
+import { requireAccess } from "@/lib/auth/server";
 
 /**
  * CV import: a LinkedIn "Save to PDF" export or any ATS-style CV (text-based PDF, Word .docx,
@@ -67,6 +68,8 @@ async function readCv(request: Request): Promise<string | { error: string; statu
 }
 
 export async function POST(request: Request) {
+  const guard = await requireAccess({ perm: "talent:profile" });
+  if (guard.error) return guard.error;
   await getEsco(); // load the data from the database into the registries (lib/seed-db.ts)
   const raw = await readCv(request);
   if (typeof raw !== "string") return Response.json({ error: raw.error }, { status: raw.status });

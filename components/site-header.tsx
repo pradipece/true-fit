@@ -2,10 +2,20 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDaysIcon, CloudAlertIcon, CloudCheckIcon, CloudIcon, RotateCcwIcon } from "lucide-react";
+import {
+  CalendarDaysIcon,
+  CloudAlertIcon,
+  CloudCheckIcon,
+  CloudIcon,
+  LogInIcon,
+  LogOutIcon,
+  RotateCcwIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { useSession } from "@/components/session";
 import { ThemeToggle } from "@/components/theme-provider";
+import { signOut } from "@/lib/auth/actions";
 import { EVENT } from "@/lib/data";
 import { ROLE_ICON } from "@/components/role-icons";
 import { activePage, ROLES, roleOf } from "@/lib/roles";
@@ -15,7 +25,10 @@ import { cn } from "@/lib/utils";
 export function SiteHeader() {
   const pathname = usePathname();
   const { reset, sync } = useDemo();
+  const { session, can } = useSession();
   const role = roleOf(pathname);
+  // RBAC: a signed-in account only gets its own role's tab; signed out, the tabs lead to sign-in.
+  const tabs = session ? ROLES.filter((r) => r.id === session.role) : ROLES;
   const page = role && activePage(role, pathname);
 
   return (
@@ -32,13 +45,13 @@ export function SiteHeader() {
           aria-label="Views"
           className="-mx-1 flex min-w-0 flex-1 [scrollbar-width:none] items-center gap-0.5 overflow-x-auto px-1"
         >
-          {ROLES.map((r) => {
+          {tabs.map((r) => {
             const Icon = ROLE_ICON[r.id];
             const active = role?.id === r.id;
             return (
               <Link
                 key={r.id}
-                href={r.pages[0].href}
+                href={session ? r.pages[0].href : `/login?role=${r.id}`}
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   "flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
@@ -56,21 +69,51 @@ export function SiteHeader() {
           <CalendarDaysIcon className="size-3.5" />
           {EVENT.date} · {EVENT.place}
         </div>
-        <SyncBadge status={sync} />
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label="Reset demo data"
-          onClick={() => {
-            reset();
-            toast("Demo data reset to the synthetic seed.", {
-              description: "The shared database copy is reset too.",
-            });
-          }}
-        >
-          <RotateCcwIcon />
-        </Button>
+        {session && <SyncBadge status={sync} />}
+        {can("organiser:reset") && (
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Reset demo data"
+            title="Reset demo data (Espoo only)"
+            onClick={() => {
+              reset();
+              toast("Demo data reset to the synthetic seed.", {
+                description: "The shared database copy is reset too.",
+              });
+            }}
+          >
+            <RotateCcwIcon />
+          </Button>
+        )}
         <ThemeToggle />
+        {session ? (
+          <div className="flex items-center gap-1">
+            <Link
+              href="/login"
+              title="Switch account"
+              className="hidden max-w-40 items-center gap-2 rounded-full border py-0.5 pr-2.5 pl-0.5 text-xs hover:bg-muted md:flex"
+            >
+              <span className="grid size-6 shrink-0 place-items-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground">
+                {session.name
+                  .replace(/\(.*?\)/g, "")
+                  .trim()
+                  .slice(0, 1)
+                  .toUpperCase()}
+              </span>
+              <span className="truncate">{session.name}</span>
+            </Link>
+            <form action={signOut}>
+              <Button type="submit" variant="ghost" size="icon" aria-label="Sign out" title="Sign out">
+                <LogOutIcon />
+              </Button>
+            </form>
+          </div>
+        ) : (
+          <Button size="sm" nativeButton={false} render={<Link href="/login" />}>
+            <LogInIcon data-icon="inline-start" /> Sign in
+          </Button>
+        )}
       </div>
 
       {role && (

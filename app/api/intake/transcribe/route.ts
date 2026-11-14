@@ -1,4 +1,5 @@
 import { aiConfigured, logFallback, MAX_AUDIO_BYTES, transcribeAudio } from "@/lib/ai";
+import { requireAccess } from "@/lib/auth/server";
 
 /**
  * Speech input for the company intake chat: a short recording in, Gemini's transcript out.
@@ -11,6 +12,8 @@ import { aiConfigured, logFallback, MAX_AUDIO_BYTES, transcribeAudio } from "@/l
 const AUDIO_TYPE = /^audio\/(webm|ogg|mp4|mpeg|wav|x-wav|aac|flac|x-m4a)\b/;
 
 export async function POST(request: Request) {
+  const guard = await requireAccess({ perm: "company:need" });
+  if (guard.error) return guard.error;
   if (!aiConfigured())
     return Response.json({ error: "Voice input needs the AI, which isn't configured." }, { status: 503 });
 

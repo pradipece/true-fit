@@ -33,8 +33,6 @@ type DemoState = {
   /** The company's job offer (or no offer) and the candidate's answer. */
   offers: Record<string, Offer>;
   feedback: Record<string, Feedback>;
-  /** Demo stand-in for signing in: who is using each side's pages. Unset = default (lib/identity.ts). */
-  actingAs: Partial<Record<FeedbackSide, string>>;
 };
 
 const SEED_DECISIONS: Record<string, Decision> = {
@@ -93,7 +91,6 @@ const seedState = ({ needs, talent }: Pick<Seed, "needs" | "talent">): DemoState
   // Both seeded candidates already passed their Espoo interview, so the company sees them.
   screening: SEED_SCREENING,
   offers: {},
-  actingAs: {},
   // Demo data: the one meeting already booked, as if both sides answered after the event.
   feedback: {
     [pairKey("N-02", "T-12")]: {
@@ -118,7 +115,7 @@ const seedState = ({ needs, talent }: Pick<Seed, "needs" | "talent">): DemoState
 });
 
 // Bump when the state's shape changes so stale persisted state is dropped.
-const STORAGE_KEY = "truefit-demo-v5";
+const STORAGE_KEY = "truefit-demo-v6";
 
 /**
  * Restore persisted demo state over the fresh seed. Seed needs and talent always come from
@@ -186,8 +183,6 @@ type Ctx = DemoState & {
   /** The company's offer decision (undefined withdraws it), or the candidate's answer to an offer. */
   setOffer: (key: string, offer: Offer | undefined) => void;
   answerOffer: (key: string, value: OptInAnswer) => void;
-  /** Demo only: switch who is using a side's pages. */
-  setActingAs: (side: FeedbackSide, id: string) => void;
   reset: () => void;
 };
 
@@ -358,10 +353,6 @@ export function DemoProvider({
       }),
     [],
   );
-  const setActingAs = useCallback(
-    (side: FeedbackSide, id: string) => setState((s) => ({ ...s, actingAs: { ...s.actingAs, [side]: id } })),
-    [],
-  );
   // ── Database sync (app/api/demo-state) ──────────────────────────────────────
   // The database is the shared copy: every browser loads it, saves its own changes per pair,
   // and polls for other people's. localStorage only gives a fast first paint.
@@ -372,26 +363,29 @@ export function DemoProvider({
   const versionRef = useRef(0);
   const busyRef = useRef(false);
   const againRef = useRef(false);
+  const discardRef = useRef(false);
   useEffect(() => {
     stateRef.current = state;
   }, [state]);
 
   const applyRemote = useCallback(
     (snap: Snapshot) =>
-      setState((s) => ({
-        ...hydrate(initial, {
+      setState(
+        hydrate(initial, {
           ...fromSnapshot(snap),
           audit: snap.audit,
           needs: snap.needs,
           talent: snap.talent,
         }),
-        actingAs: s.actingAs,
-      })),
+      ),
     [initial],
   );
 
   const pull = useCallback(
     async (force = false) => {
+      // After a refused save: take the shared copy even over unsaved local changes.
+      const discardLocal = discardRef.current;
+      discardRef.current = false;
       const res = await fetch(`/api/demo-state${force ? "" : `?since=${versionRef.current}`}`, {
         cache: "no-store",
       });
@@ -399,10 +393,10 @@ export function DemoProvider({
       if (!res.ok) throw new Error(data.error ?? "Database error");
       if (data.unchanged) return;
       // Never drop unsaved local changes: they are saved first, then the next poll catches up.
-      if (busyRef.current) return;
+      if (busyRef.current && !discardLocal) return;
       const pending =
         syncedRef.current && !patchIsEmpty(diffSnapshot(syncedRef.current, toSnapshot(stateRef.current)));
-      if (pending && !data.empty) return;
+      if (pending && !data.empty && !discardLocal) return;
       versionRef.current = data.version;
       if (data.empty) {
         // First run against an empty database: write the starting state (seed + this browser's).
@@ -434,6 +428,14 @@ export function DemoProvider({
         body: JSON.stringify(patch),
       });
       const data = await res.json();
+      // Not this account's to change (e.g. local edits left from another account): drop them
+      // and take the shared copy below, rather than retrying forever.
+      if (res.status === 403) {
+        // Not this account's to change (e.g. local edits left from another account): drop
+        // the local copy for the shared one below, rather than retrying forever.
+        discardRef.current = true;
+        throw new Error(data.error ?? "Not allowed");
+      }
       if (!res.ok) throw new Error(data.error ?? "Save failed");
       syncedRef.current = applyPatch(syncedRef.current, patch);
       // Someone else saved in between: reload after this, so their changes aren't skipped.
@@ -442,10 +444,11 @@ export function DemoProvider({
       setSync("saved");
       if (missed) againRef.current = true;
     } catch {
-      setSync("error");
+      setSync(discardRef.current ? "saving" : "error");
     } finally {
       busyRef.current = false;
-      if (againRef.current) {
+      if (discardRef.current) void pull(true).catch(() => setSync("error"));
+      else if (againRef.current) {
         againRef.current = false;
         void save().then(() => pull().catch(() => setSync("error")));
       }
@@ -515,7 +518,6 @@ export function DemoProvider({
       recordScreening,
       setOffer,
       answerOffer,
-      setActingAs,
       reset,
     }),
     [
@@ -534,7 +536,6 @@ export function DemoProvider({
       bookSlot,
       cancelSlot,
       giveFeedback,
-      setActingAs,
       reset,
     ],
   );

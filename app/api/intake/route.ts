@@ -17,6 +17,7 @@ import {
   type IntakeTurn,
   type Topic,
 } from "@/lib/intake";
+import { requireAccess } from "@/lib/auth/server";
 
 /**
  * Intake assistant: one Gemini call per chat turn, returning a structured need-card draft.
@@ -98,6 +99,8 @@ async function aiTurn(req: IntakeRequest): Promise<IntakeTurn> {
 }
 
 export async function POST(request: Request) {
+  const guard = await requireAccess({ perm: "company:need" });
+  if (guard.error) return guard.error;
   await getSeed(); // load the data from the database into the registries (lib/seed-db.ts)
   const req = parseBody(await request.json().catch(() => null));
   if (!req) return Response.json({ error: "Invalid intake request" }, { status: 400 });

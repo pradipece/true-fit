@@ -1,11 +1,11 @@
 "use client";
 
 import { useMemo } from "react";
-import { useRouter } from "next/navigation";
-import { BellDotIcon, UserRoundCogIcon } from "lucide-react";
-import { currentIdentity, OWN_ID, pairOwner } from "@/lib/identity";
+import Link from "next/link";
+import { BellDotIcon, UserRoundCheckIcon } from "lucide-react";
+import { useSession, useSwitchAccount } from "@/components/session";
+import { OWN_ID, pairOwner } from "@/lib/identity";
 import { activeKeys, myTurn, stageOf, visibleTo } from "@/lib/pipeline";
-import { companyOf } from "@/lib/schedule";
 import { participants } from "@/lib/participants";
 import { useDemo } from "@/lib/store";
 import type { FeedbackSide } from "@/lib/types";
@@ -29,91 +29,84 @@ function useSideCounts(side: FeedbackSide) {
   }, [side, decisions, optIns, slots, screening, offers, needs]);
 }
 
-/** Who is using this side's pages, and the participants they could switch to (demo). */
+/**
+ * Who is using this side's pages: the signed-in account (lib/auth). proxy.ts only lets the
+ * matching role open a side's pages, so the fallback to the side's new account only matters
+ * before the session has loaded.
+ */
 export function useIdentity(side: FeedbackSide) {
-  const { actingAs, needs, talent, setActingAs } = useDemo();
-  const { keys, counts } = useSideCounts(side);
+  const { session } = useSession();
+  const { counts } = useSideCounts(side);
   // participants() reads the seed registry, which DemoProvider fills before this renders.
   const options = useMemo(() => participants().filter((p) => p.kind === side), [side]);
-  const id = currentIdentity(
-    side,
-    actingAs?.[side],
-    options.map((p) => p.id),
-    keys,
-    needs,
-    side === "company"
-      ? needs.some((n) => companyOf(n) === OWN_ID.company)
-      : talent.some((t) => t.id === OWN_ID.talent),
-  );
+  const id = session?.role === side ? session.id : OWN_ID[side];
   const me = options.find((p) => p.id === id) ?? options[0];
-  return { id, me, options, counts, set: (next: string) => setActingAs(side, next) };
+  return { id, me, options, counts };
 }
 
 /**
- * Demo only: open a side's pipeline page as the participant a pair belongs to, so an
- * invitation made in the organiser view can be followed straight into the candidate's or
- * company's own view.
+ * Demo only: sign in as the participant a pair belongs to and open their pipeline page, so
+ * an invitation made in the organiser view can be followed into the candidate's or the
+ * company's own view. It is a real account switch: the organiser view closes.
  */
 export function useViewAs() {
-  const { setActingAs, needs } = useDemo();
-  const router = useRouter();
+  const { needs } = useDemo();
+  const { switchTo } = useSwitchAccount();
   return (side: FeedbackSide, key: string) => {
     const owner = pairOwner(side, key, needs);
-    if (owner) setActingAs(side, owner);
-    router.push(`/meetings/${side}?pair=${encodeURIComponent(key)}`);
+    if (owner) switchTo(side, owner, `/meetings/${side}?pair=${encodeURIComponent(key)}`);
   };
 }
 
 /**
- * Demo stand-in for signing in. In production each company or candidate signs in and
- * this control doesn't exist: they only ever see their own pairs and agenda.
+ * Who you are signed in as on this side, with a link to switch account, and (demo) other
+ * accounts that have something to answer, since that's the usual reason "nothing shows up".
  */
 export function IdentitySwitch({ side }: { side: FeedbackSide }) {
-  const { id, options, counts, set } = useIdentity(side);
+  const { id, me, options, counts } = useIdentity(side);
+  const { switchTo, pending } = useSwitchAccount();
+  const { session } = useSession();
   const { talent } = useDemo();
-  const label = (pid: string, seedName: string) => {
-    // The candidate's own card made in the demo shows its name once it has one.
-    const own = pid === OWN_ID.talent ? talent.find((t) => t.id === pid) : undefined;
-    const name = own?.contact?.fullName ? `${own.contact.fullName} (${pid})` : seedName;
-    const c = counts.get(pid);
-    if (!c) return name;
-    return c.todo ? `${name} · ${c.todo} to answer` : `${name} · ${c.total} in progress`;
-  };
-  // Make updates for other demo participants easy to find: the usual reason "nothing shows up".
+  const own = talent.find((t) => t.id === id && t.createdByUser);
+  const name = own?.contact?.fullName || session?.name || me?.name || id;
+  const mine = counts.get(id);
   const elsewhere = options
     .filter((p) => p.id !== id && counts.get(p.id)?.todo)
     .sort((a, b) => counts.get(b.id)!.todo - counts.get(a.id)!.todo)
     .slice(0, 3);
   return (
     <div className="space-y-2 print:hidden">
-      <label className="flex flex-wrap items-center gap-2 rounded-lg border border-dashed px-3 py-2 text-sm">
-        <UserRoundCogIcon className="size-4 text-muted-foreground" />
-        <span className="text-muted-foreground">Signed in as (demo):</span>
-        <select
-          value={id}
-          onChange={(e) => set(e.target.value)}
-          className="max-w-full rounded-md border bg-background px-2 py-1 text-sm"
-        >
-          {options.map((p) => (
-            <option key={p.id} value={p.id}>
-              {label(p.id, p.name)}
-            </option>
-          ))}
-        </select>
+      <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-card px-3 py-2 text-sm">
+        <UserRoundCheckIcon className="size-4 text-primary" />
+        <span className="text-muted-foreground">Signed in as</span>
+        <span className="font-medium">{name}</span>
+        <span className="font-mono text-xs text-muted-foreground">{id}</span>
+        {mine && (
+          <span className="rounded-full bg-accent px-2 py-0.5 text-xs text-accent-foreground">
+            {mine.todo ? `${mine.todo} to answer` : `${mine.total} in progress`}
+          </span>
+        )}
         <span className="text-xs text-muted-foreground">
-          You only see this {side === "company" ? "company" : "candidate"}&apos;s own pipeline.
+          · You only see this {side === "company" ? "company" : "candidate"}&apos;s own pipeline.
         </span>
-      </label>
+        <Link
+          href={`/login?role=${side}`}
+          className="ml-auto text-xs font-medium text-primary underline-offset-4 hover:underline"
+        >
+          Switch account
+        </Link>
+      </div>
       {elsewhere.length > 0 && (
         <p className="flex flex-wrap items-center gap-x-2 gap-y-1 px-1 text-xs text-muted-foreground">
           <BellDotIcon className="size-3.5 text-primary" />
-          Demo: other {side === "company" ? "companies" : "candidates"} have something to answer:
+          Demo: other {side === "company" ? "companies" : "candidates"} have something to answer. Sign in as:
           {elsewhere.map((p) => (
             <button
               key={p.id}
               type="button"
-              onClick={() => set(p.id)}
-              className="rounded-full border px-2 py-0.5 font-medium text-foreground hover:bg-muted"
+              disabled={pending}
+              onClick={() => switchTo(side, p.id, window.location.pathname)}
+              className="rounded-full border px-2 py-0.5 font-medium text-foreground hover:bg-muted disabled:opacity-50"
             >
               {p.name} ({counts.get(p.id)!.todo})
             </button>

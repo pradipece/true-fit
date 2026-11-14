@@ -2,6 +2,7 @@ import { GoogleGenAI, Modality } from "@google/genai";
 import { sanitizeDraft, type NeedDraft } from "@/lib/intake";
 import { LIVE_MODEL, LIVE_SESSION_MINUTES, LIVE_TOOLS, liveSystemPrompt } from "@/lib/intake-live";
 import { getSeed } from "@/lib/seed-db";
+import { requireAccess } from "@/lib/auth/server";
 
 /**
  * Starts a live voice session with Gemini: returns a single-use ephemeral token, never the API key.
@@ -15,6 +16,8 @@ import { getSeed } from "@/lib/seed-db";
 const apiKey = () => process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
 
 export async function POST(request: Request) {
+  const guard = await requireAccess({ perm: "company:need" });
+  if (guard.error) return guard.error;
   await getSeed(); // load the data from the database into the registries (lib/seed-db.ts)
   const key = apiKey();
   if (!key)
