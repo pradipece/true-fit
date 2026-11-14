@@ -34,6 +34,7 @@ import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { MatchExplanationView, ScoreMeter } from "@/components/match-explanation";
+import { WhyThisMatch } from "@/components/why-this-match";
 import { SkillChip, SkillLegend } from "@/components/skill-chip";
 import { matchesForNeed, pairKey, SUGGEST_THRESHOLD } from "@/lib/match";
 import { useDemo } from "@/lib/store";
@@ -238,6 +239,7 @@ export function OrganiserDashboard() {
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <MatchExplanationView m={m} />
+                    <WhyThisMatch need={need} talent={t} />
                     <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                       <span>Background: {t.previousField}</span>
                       <span>

@@ -1,7 +1,8 @@
 import { FileTextIcon, MicIcon, QuoteIcon } from "lucide-react";
 import { SkillChip } from "@/components/skill-chip";
 import { skillLabel } from "@/lib/esco";
-import type { MatchExplanation } from "@/lib/types";
+import { SCORING } from "@/lib/match";
+import type { MatchExplanation, ScoreLine } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 /** Plain-language summary of why a pair was suggested. Written from rules, not a black box. */
@@ -68,6 +69,7 @@ export function MatchExplanationView({
           <SkillChip key={g.skill} id={g.skill} kind="gap" must={g.must} />
         ))}
       </div>
+      <ScoreBreakdown m={m} />
       {showQuotes && m.quotes.length > 0 && (
         <div className="space-y-2">
           {m.quotes.slice(0, 2).map((q) => (
@@ -88,5 +90,78 @@ export function MatchExplanationView({
         </div>
       )}
     </div>
+  );
+}
+
+const pts = (n: number) => (Math.round(n * 100) / 100).toString();
+
+function lineResult(l: ScoreLine) {
+  const lvl = l.level === "evidenced" ? "evidenced" : "self-reported";
+  if (l.kind === "direct") return `Has it (${lvl})`;
+  if (l.kind === "gap") return "Not shown";
+  const occ = l.occupations?.length ? `; both in ESCO ${l.occupations[0]}` : "";
+  return `Via ${skillLabel(l.from!)} (${lvl}, relation ${l.relation}${occ})`;
+}
+
+/** Every point of the score, line by line, with the rules underneath. */
+export function ScoreBreakdown({ m }: { m: MatchExplanation }) {
+  return (
+    <details className="group text-xs">
+      <summary className="cursor-pointer text-muted-foreground select-none hover:text-foreground">
+        How this {Math.round(m.score * 100)}% is calculated
+      </summary>
+      <div className="mt-2 overflow-x-auto rounded-lg border">
+        <table className="w-full text-left">
+          <thead className="bg-muted/50 text-muted-foreground">
+            <tr>
+              <th className="px-2 py-1.5 font-medium">Required skill</th>
+              <th className="px-2 py-1.5 font-medium">Result</th>
+              <th className="px-2 py-1.5 text-right font-medium">Points</th>
+            </tr>
+          </thead>
+          <tbody>
+            {m.breakdown.map((l) => (
+              <tr key={l.skill} className="border-t">
+                <td className="px-2 py-1.5">
+                  {skillLabel(l.skill)}
+                  {l.must && (
+                    <span className="ml-1 text-[10px] font-semibold uppercase opacity-60">must</span>
+                  )}
+                </td>
+                <td
+                  className={cn(
+                    "px-2 py-1.5",
+                    l.kind === "direct" && "text-evidence",
+                    l.kind === "transfer" && "text-transfer",
+                    l.kind === "gap" && "text-muted-foreground",
+                  )}
+                >
+                  {lineResult(l)}
+                </td>
+                <td className="px-2 py-1.5 text-right tabular-nums">
+                  {pts(l.points)} / {l.max}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot className="border-t bg-muted/30 font-medium">
+            <tr>
+              <td className="px-2 py-1.5" colSpan={2}>
+                Total ({Math.round(m.score * 100)}%, suggestions start at {SCORING.suggestThreshold * 100}%)
+              </td>
+              <td className="px-2 py-1.5 text-right tabular-nums">
+                {pts(m.points)} / {m.maxPoints}
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <p className="mt-1.5 leading-snug text-muted-foreground">
+        Must-have {SCORING.mustWeight} points, nice-to-have {SCORING.niceWeight}. Evidenced skills earn full
+        points, self-reported {SCORING.claimed * 100}%. A related skill earns relation × level ×{" "}
+        {SCORING.transferFactor}. Only skills are scored: never name, origin, language, education, career path
+        or age.
+      </p>
+    </details>
   );
 }

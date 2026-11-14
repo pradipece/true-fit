@@ -103,10 +103,31 @@ export type Talent = {
   createdByUser?: boolean;
 };
 
+/** One line of the score: how many points one required skill earned, and why. */
+export type ScoreLine = {
+  skill: string;
+  must: boolean;
+  kind: "direct" | "transfer" | "gap";
+  /** Points available for this skill (must-have 3, nice-to-have 1). */
+  max: number;
+  points: number;
+  /** The talent's own level for the skill used (direct or transfer source). */
+  level?: "evidenced" | "claimed";
+  /** Transfer only: the talent's skill that relates to the required one. */
+  from?: string;
+  /** Transfer only: strength of the skill relation (0..1). */
+  relation?: number;
+  /** Transfer only: cached ESCO occupations whose profile lists both skills. */
+  occupations?: string[];
+};
+
 export type MatchExplanation = {
   needId: string;
   talentId: string;
-  score: number; // 0..1, shown transparently with breakdown
+  score: number; // 0..1, = points / maxPoints
+  points: number;
+  maxPoints: number;
+  breakdown: ScoreLine[];
   shared: { skill: string; level: "evidenced" | "claimed"; must: boolean }[];
   transferable: { from: string; to: string; must: boolean }[];
   gaps: { skill: string; must: boolean }[];

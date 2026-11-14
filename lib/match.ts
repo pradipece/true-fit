@@ -1,76 +1,114 @@
-import { adjacency } from "./esco";
-import type { MatchExplanation, Need, Talent } from "./types";
+import { adjacency, OCCUPATIONS } from "./esco";
+import type { MatchExplanation, Need, ScoreLine, Talent } from "./types";
 
 export const SUGGEST_THRESHOLD = 0.4;
 
-const MUST_WEIGHT = 3;
-const NICE_WEIGHT = 1;
-const EVIDENCED = 1;
-const CLAIMED = 0.5;
-const TRANSFER_FACTOR = 0.8;
+/** Every constant the score uses. Shown in the UI so the rules are inspectable. */
+export const SCORING = {
+  mustWeight: 3,
+  niceWeight: 1,
+  evidenced: 1,
+  claimed: 0.5,
+  transferFactor: 0.8,
+  /** A related skill counts only if relation × level reaches this. */
+  minTransfer: 0.3,
+  suggestThreshold: SUGGEST_THRESHOLD,
+} as const;
 
 /**
- * Transparent, rule-based matching. Inputs are skills only.
- * Deliberately NOT used: name, origin, education, career path, languages, photo, age.
- * Output is a suggestion with a full breakdown. A human decides.
+ * The ONLY talent fields matching may read. Name, alias, headline, background, languages,
+ * availability, way of working and the audit attributes (origin, education, career path)
+ * are excluded at the type level, and tests check they are never read at runtime.
  */
-export function explainMatch(need: Need, talent: Talent): MatchExplanation {
+export type MatchTalent = Pick<Talent, "id" | "skills" | "evidence">;
+/** The only need fields matching may read. Language and way of working are not scored. */
+export type MatchNeed = Pick<Need, "id" | "must" | "nice">;
+
+/** Cached ESCO occupations whose skill profile contains both skills. */
+export function sharedOccupations(a: string, b: string) {
+  return OCCUPATIONS.filter((o) => o.skills.includes(a) && o.skills.includes(b)).map((o) => o.label);
+}
+
+/**
+ * Transparent, rule-based matching on skills only. For each required skill:
+ * - direct: the talent lists it → weight × level (evidenced 1, self-reported 0.5)
+ * - transfer: a related skill → weight × relation × level × 0.8, if relation × level ≥ 0.3
+ * - gap: neither → 0
+ * score = points / max points. It is a suggestion with a full breakdown; a human decides.
+ */
+export function explainMatch(need: MatchNeed, talent: MatchTalent): MatchExplanation {
   const byId = new Map(talent.skills.map((s) => [s.id, s]));
-  const shared: MatchExplanation["shared"] = [];
-  const transferable: MatchExplanation["transferable"] = [];
-  const gaps: MatchExplanation["gaps"] = [];
-  let got = 0;
-  let max = 0;
+  const breakdown: ScoreLine[] = [];
+  const level = (l: "evidenced" | "claimed") => (l === "evidenced" ? SCORING.evidenced : SCORING.claimed);
 
   const consider = (skill: string, must: boolean) => {
-    const w = must ? MUST_WEIGHT : NICE_WEIGHT;
-    max += w;
+    const max = must ? SCORING.mustWeight : SCORING.niceWeight;
     const own = byId.get(skill);
     if (own) {
-      shared.push({ skill, level: own.level, must });
-      got += w * (own.level === "evidenced" ? EVIDENCED : CLAIMED);
+      breakdown.push({ skill, must, kind: "direct", max, points: max * level(own.level), level: own.level });
       return;
     }
-    let best = { from: "", v: 0 };
+    let best = { from: "", relation: 0, v: 0, level: "claimed" as "evidenced" | "claimed" };
     for (const s of talent.skills) {
-      const v = adjacency(s.id, skill) * (s.level === "evidenced" ? EVIDENCED : CLAIMED);
-      if (v > best.v) best = { from: s.id, v };
+      const relation = adjacency(s.id, skill);
+      const v = relation * level(s.level);
+      if (v > best.v) best = { from: s.id, relation, v, level: s.level };
     }
-    if (best.v >= 0.3) {
-      transferable.push({ from: best.from, to: skill, must });
-      got += w * best.v * TRANSFER_FACTOR;
+    if (best.v >= SCORING.minTransfer) {
+      breakdown.push({
+        skill,
+        must,
+        kind: "transfer",
+        max,
+        points: max * best.v * SCORING.transferFactor,
+        level: best.level,
+        from: best.from,
+        relation: best.relation,
+        occupations: sharedOccupations(best.from, skill),
+      });
     } else {
-      gaps.push({ skill, must });
+      breakdown.push({ skill, must, kind: "gap", max, points: 0 });
     }
   };
 
   need.must.forEach((s) => consider(s, true));
   need.nice.forEach((s) => consider(s, false));
 
+  const points = breakdown.reduce((sum, l) => sum + l.points, 0);
+  const maxPoints = breakdown.reduce((sum, l) => sum + l.max, 0);
+  const score = maxPoints ? points / maxPoints : 0;
+
+  const transferable = breakdown
+    .filter((l) => l.kind === "transfer")
+    .map((l) => ({ from: l.from!, to: l.skill, must: l.must }));
   const relevant = new Set([...need.must, ...need.nice, ...transferable.map((t) => t.from)]);
-  const quotes = talent.evidence.filter((e) => e.skills.some((s) => relevant.has(s)));
-  const score = max ? got / max : 0;
 
   return {
     needId: need.id,
     talentId: talent.id,
     score,
-    shared,
+    points,
+    maxPoints,
+    breakdown,
+    shared: breakdown
+      .filter((l) => l.kind === "direct")
+      .map((l) => ({ skill: l.skill, level: l.level!, must: l.must })),
     transferable,
-    gaps,
-    quotes,
+    gaps: breakdown.filter((l) => l.kind === "gap").map((l) => ({ skill: l.skill, must: l.must })),
+    // Evidence is shown to humans as context; it never changes the score.
+    quotes: talent.evidence.filter((e) => e.skills.some((s) => relevant.has(s))),
     suggested: score >= SUGGEST_THRESHOLD,
   };
 }
 
-export function matchesForNeed(need: Need, pool: Talent[]) {
+export function matchesForNeed(need: MatchNeed, pool: MatchTalent[]) {
   return pool.map((t) => explainMatch(need, t)).sort((a, b) => b.score - a.score);
 }
 
 export const pairKey = (needId: string, talentId: string) => `${needId}::${talentId}`;
 
 /** How many in the pool show evidence for at least `min` of the must-haves. */
-export function poolCoverage(must: string[], pool: Talent[], min = Math.min(2, must.length)) {
+export function poolCoverage(must: string[], pool: Pick<Talent, "skills">[], min = Math.min(2, must.length)) {
   if (!must.length) return 0;
   return pool.filter(
     (t) => t.skills.filter((s) => s.level === "evidenced" && must.includes(s.id)).length >= min,
