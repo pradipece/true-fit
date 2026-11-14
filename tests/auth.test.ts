@@ -161,3 +161,18 @@ describe("saved candidate profile", async () => {
     expect(cleanDraft({ path: "x".repeat(200_000) })).toBeNull();
   });
 });
+
+describe("no database keys in the UI", async () => {
+  const { anonAlias, SEED_TALENT } = await import("@/lib/seed");
+  const { participants } = await import("@/lib/participants");
+  it("anonymised names don't contain the id and stay unique", () => {
+    const ids = [...SEED_TALENT.map((t) => t.id), "T-YOU"];
+    const aliases = ids.map(anonAlias);
+    expect(new Set(aliases).size).toBe(ids.length);
+    ids.forEach((id, i) => expect(aliases[i]).not.toContain(id));
+    expect(anonAlias("T-30")).toBe(anonAlias("T-30"));
+  });
+  it("account names don't show ids", () => {
+    for (const p of participants()) expect(p.name).not.toContain(p.id);
+  });
+});

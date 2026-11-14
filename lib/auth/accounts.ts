@@ -20,7 +20,7 @@ export function accounts(): Account[] {
   const people = participants().map((p) => ({
     role: p.kind as RoleId,
     id: p.id,
-    name: p.id === "T-YOU" ? "New job seeker" : p.name,
+    name: p.name,
     sub: p.sub,
   }));
   // New accounts first: they're the main demo path.

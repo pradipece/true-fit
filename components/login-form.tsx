@@ -59,9 +59,7 @@ export function LoginForm({
       session?.role === "company" ? session.id : (accounts.find((a) => a.role === "company")?.id ?? ""),
     organiser: "ESPOO",
   }));
-  const shown = list.filter((a) =>
-    `${a.name} ${a.id} ${a.sub}`.toLowerCase().includes(q.trim().toLowerCase()),
-  );
+  const shown = list.filter((a) => `${a.name} ${a.sub}`.toLowerCase().includes(q.trim().toLowerCase()));
   const deniedRole = denied && initialRole ? ROLES.find((r) => r.id === initialRole) : undefined;
 
   return (
@@ -177,7 +175,7 @@ export function LoginForm({
                 <Input
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
-                  placeholder="Search by name or id"
+                  placeholder="Search by name"
                   className="pl-8"
                   aria-label="Search accounts"
                 />
@@ -215,7 +213,6 @@ export function LoginForm({
                           New
                         </span>
                       )}
-                      <span className="font-mono text-[11px] text-muted-foreground">{a.id}</span>
                     </button>
                   </li>
                 );

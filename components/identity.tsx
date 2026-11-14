@@ -80,7 +80,6 @@ export function IdentitySwitch({ side }: { side: FeedbackSide }) {
         <UserRoundCheckIcon className="size-4 text-primary" />
         <span className="text-muted-foreground">Signed in as</span>
         <span className="font-medium">{name}</span>
-        <span className="font-mono text-xs text-muted-foreground">{id}</span>
         {mine && (
           <span className="rounded-full bg-accent px-2 py-0.5 text-xs text-accent-foreground">
             {mine.todo ? `${mine.todo} to answer` : `${mine.total} in progress`}

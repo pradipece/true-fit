@@ -21,13 +21,13 @@ export function participants(): ParticipantEntry[] {
       name: OWN_COMPANY.name,
       sub: "Need card created in the company view",
     },
-    { kind: "talent", id: "T-YOU", name: "You (T-YOU)", sub: "Skill card created in the talent view" },
+    { kind: "talent", id: "T-YOU", name: "New job seeker", sub: "Profile created in the job seeker view" },
   ];
-  // The demo "signed in as" list: each candidate is shown to themselves, so by name and id.
+  // The demo "signed in as" list: each candidate is shown to themselves, so by name.
   const candidates: ParticipantEntry[] = SEED_TALENT.map((t) => ({
     kind: "talent",
     id: t.id,
-    name: `${t.contact?.fullName ?? t.revealName} (${t.id})`,
+    name: t.contact?.fullName ?? t.revealName,
     sub: t.headline,
   }));
   return [...companies, ...candidates, ...own];

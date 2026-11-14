@@ -57,6 +57,7 @@ import type { Evidence, SkillClaim, SkillGroup, Talent, TalentContact } from "@/
 import { cn, isSubmitEnter } from "@/lib/utils";
 import { useSession } from "@/components/session";
 import type { ProfileDraft } from "@/lib/candidate-profile";
+import { anonAlias } from "@/lib/seed";
 
 const GROUPS: SkillGroup[] = ["Digital", "Green transition", "Healthcare", "Business", "Transversal"];
 const STEPS = ["Background", "Skills", "Evidence", "Review profile"];
@@ -453,7 +454,7 @@ export function TalentProfile() {
   const join = () => {
     addTalent({
       id: myId,
-      alias: `Candidate ${myId}`,
+      alias: anonAlias(myId),
       revealName: cleanContact(contact).fullName || "You (demo)",
       contact: cleanContact(contact),
       headline: headline.trim() || "New at this event",
@@ -1119,7 +1120,7 @@ export function TalentProfile() {
               <span className="grid size-8 place-items-center rounded-full bg-secondary">
                 <EyeOffIcon className="size-4 text-muted-foreground" />
               </span>
-              Candidate {myId}
+              {anonAlias(myId)}
             </CardTitle>
             <Badge
               variant="outline"

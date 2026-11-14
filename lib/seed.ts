@@ -117,7 +117,7 @@ export function loadSeed(raw: RawSeed): Seed {
       oneOf(t.audit[k], AUDIT[k], `${at} audit.${k}`),
     );
 
-    return { alias: `Candidate ${t.id}`, ...t } as Talent;
+    return { alias: anonAlias(t.id), ...t } as Talent;
   });
 
   if (problems.length) throw new SeedError(problems);
@@ -139,4 +139,17 @@ export function setSeed(seed: Seed) {
   COMPANIES.splice(0, COMPANIES.length, ...seed.companies);
   SEED_NEEDS.splice(0, SEED_NEEDS.length, ...seed.needs);
   SEED_TALENT.splice(0, SEED_TALENT.length, ...seed.talent);
+}
+
+/**
+ * The name an anonymised card shows ("Candidate K7Q"): a short stable code derived from the
+ * id, so the UI never shows the database key itself.
+ */
+export function anonAlias(id: string) {
+  let h = 2166136261;
+  for (const c of id) h = Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0;
+  const abc = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  for (let i = 0; i < 3; i++, h = Math.floor(h / 32)) code += abc[h % 32];
+  return `Candidate ${code}`;
 }
