@@ -105,17 +105,22 @@ describe("protected attributes are not used in scoring", () => {
   const EDUCATION: AuditAttributes["education"][] = ["University", "Vocational", "Self-taught / bootcamp"];
   const PATHS: AuditAttributes["path"][] = ["Linear", "Career changer"];
 
+  // Every need × every candidate × every variant (~90k scorings): compare serialised results
+  // and assert once, so the check stays complete without a deep toEqual per pair.
   it("gives identical results for every combination of origin, education and career path", () => {
+    const diffs: string[] = [];
     for (const n of SEED_NEEDS)
       for (const t of SEED_TALENT) {
-        const base = explainMatch(n, t);
+        const base = JSON.stringify(explainMatch(n, t));
         for (const origin of ORIGINS)
           for (const education of EDUCATION)
             for (const path of PATHS) {
               const variant: Talent = { ...t, audit: { origin, education, path } };
-              expect(explainMatch(n, variant)).toEqual(base);
+              if (JSON.stringify(explainMatch(n, variant)) !== base)
+                diffs.push(`${n.id}::${t.id} ${origin}/${education}/${path}`);
             }
       }
+    expect(diffs).toEqual([]);
   });
 
   it("gives identical results whatever languages, name or background a person has", () => {
@@ -134,11 +139,16 @@ describe("protected attributes are not used in scoring", () => {
       { headline: "Refugee from Syria, 52 years old", previousField: "Self-taught" },
       { availability: "In 6 months", mode: "Remote" },
     ];
+    const diffs: string[] = [];
     for (const n of SEED_NEEDS)
       for (const t of SEED_TALENT) {
-        const base = explainMatch(n, t);
-        for (const v of variants) expect(explainMatch(n, { ...t, ...v })).toEqual(base);
+        const base = JSON.stringify(explainMatch(n, t));
+        variants.forEach((v, i) => {
+          if (JSON.stringify(explainMatch(n, { ...t, ...v })) !== base)
+            diffs.push(`${n.id}::${t.id} variant ${i}`);
+        });
       }
+    expect(diffs).toEqual([]);
   });
 
   it("scores counterfactual twins with the same skills identically", () => {
