@@ -123,7 +123,7 @@ export function OrganiserReview() {
   } = useDemo();
   const viewAs = useViewAs();
   const [resultFor, setResultFor] = useState<{ key: string; name: string } | null>(null);
-  const [selected, setSelected] = useState<string>(needs[0]?.id ?? "");
+  const [selected, setSelected] = useState<string>("");
   const [showOthers, setShowOthers] = useState(false);
   const [dialog, setDialog] = useState<DialogState | null>(null);
   const [view, setView] = useState<"need" | "candidate">("need");
@@ -135,7 +135,25 @@ export function OrganiserReview() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const need = needs.find((n) => n.id === selected) ?? needs[0];
+  // Needs with an open request (candidate asked to meet / company asked for an introduction)
+  // come first, most requests first; otherwise the original order is kept.
+  const needRows = useMemo(() => {
+    const rows = needs.map((n, i) => {
+      const { suggested } = reviewList(n, talent);
+      const open = suggested.filter((m) => !decisions[pairKey(m.needId, m.talentId)]).length;
+      let asks = 0;
+      let companyAsks = 0;
+      for (const t of talent) {
+        const k = pairKey(n.id, t.id);
+        if (decisions[k]) continue;
+        if (optIns[k]?.talent === true) asks++;
+        if (optIns[k]?.company === true) companyAsks++;
+      }
+      return { n, i, suggested, open, asks, companyAsks };
+    });
+    return rows.sort((a, b) => b.asks + b.companyAsks - (a.asks + a.companyAsks) || a.i - b.i);
+  }, [needs, talent, decisions, optIns]);
+  const need = needs.find((n) => n.id === selected) ?? needRows[0]?.n;
   const list = useMemo(() => (need ? reviewList(need, talent) : null), [need, talent]);
   const talentById = useMemo(() => new Map(talent.map((t) => [t.id, t])), [talent]);
   const ranking = useAiRanking(need, list?.suggested ?? [], talentById);
@@ -348,17 +366,7 @@ export function OrganiserReview() {
             <p className="px-1 text-xs font-medium text-muted-foreground">
               Needs from {new Set(needs.map((n) => n.company)).size} companies
             </p>
-            {needs.map((n) => {
-              const { suggested } = reviewList(n, talent);
-              const open = suggested.filter((m) => !decisions[pairKey(m.needId, m.talentId)]).length;
-              const asks = talent.filter((t) => {
-                const k = pairKey(n.id, t.id);
-                return optIns[k]?.talent === true && !decisions[k];
-              }).length;
-              const companyAsks = talent.filter((t) => {
-                const k = pairKey(n.id, t.id);
-                return optIns[k]?.company === true && !decisions[k];
-              }).length;
+            {needRows.map(({ n, suggested, open, asks, companyAsks }) => {
               return (
                 <button
                   key={n.id}
