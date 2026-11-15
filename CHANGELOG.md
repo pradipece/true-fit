@@ -2,6 +2,10 @@
 
 Versions follow [Semantic Versioning](https://semver.org/). While the project is pre-1.0, every `feat:` commit bumps the minor version and `docs:` / `fix:` / `chore:` commits bump the patch version. The version lives in `package.json` and is shown in the site footer.
 
+## [0.30.2] - 2026-11-15
+
+- Reject digitless phone numbers, impossible times and out-of-range ratings
+
 ## [0.30.1] - 2026-11-15 · `4134dbd`
 
 - Add the TODO list of bugs, features and improvements
