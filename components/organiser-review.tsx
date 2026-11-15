@@ -1028,6 +1028,9 @@ const WAITING_LABEL: Record<NonNullable<PairStage["waiting"]>, string> = {
   either: "Either side",
 };
 
+const PIN_RIGHT =
+  "sticky right-0 z-10 bg-card shadow-[-8px_0_8px_-8px_rgb(0_0_0/0.15)] group-hover:bg-[color-mix(in_oklab,var(--muted)_50%,var(--card))]";
+
 /** Every pair from request to offer: the whole workflow and all its data in one table. */
 function PipelineTable({
   rows,
@@ -1105,7 +1108,9 @@ function PipelineTable({
               <TableHead>Interview</TableHead>
               <TableHead>Offer</TableHead>
               <TableHead>Waiting for</TableHead>
-              <TableHead />
+              <TableHead className={PIN_RIGHT}>
+                <span className="sr-only">Actions</span>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -1117,7 +1122,7 @@ function PipelineTable({
               </TableRow>
             )}
             {shown.map((r) => (
-              <TableRow key={r.key}>
+              <TableRow key={r.key} className="group">
                 <TableCell className="font-medium whitespace-nowrap">{r.name}</TableCell>
                 <TableCell className="max-w-48 truncate" title={`${r.need.title} · ${r.need.company}`}>
                   {r.need.title} <span className="text-muted-foreground">· {r.need.company}</span>
@@ -1153,7 +1158,7 @@ function PipelineTable({
                 </TableCell>
                 <TableCell className="text-xs">{r.offer ?? "—"}</TableCell>
                 <TableCell className="text-xs">{r.p.waiting ? WAITING_LABEL[r.p.waiting] : "—"}</TableCell>
-                <TableCell className="text-right whitespace-nowrap">
+                <TableCell className={cn("text-right whitespace-nowrap", PIN_RIGHT)}>
                   {r.p.stage === "screen-booked" && (
                     <Button size="xs" onClick={() => onRecord(r.key, r.name)}>
                       Record result
