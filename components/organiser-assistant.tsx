@@ -30,7 +30,7 @@ type Msg = { role: "user" | "assistant"; content: string; links?: LinkId[]; sour
 const GREETING: Msg = {
   role: "assistant",
   content:
-    "Hei! I can tell you how the event is going and where to look next: what to review, which needs are short of people, open requests, fairness and the schedule. I only see totals, never individual candidates, and I never decide for you.",
+    "Hei! I'm the Espoo Esbo assistant. I can tell you how the event is going and where to look next: what to review, which needs are short of people, open requests, fairness and the schedule. I only see totals, never individual candidates, and I never decide for you. What can I do for you?",
 };
 
 /**

@@ -66,7 +66,7 @@ type Msg = ChatMessage & {
 
 const GREETING: Msg = {
   role: "assistant",
-  content: `Hi, I'm TrueFit Assistant! Who would you like to hire? Describe it in your own words. “We need a dev” is a perfectly good start.`,
+  content: `Hi, I'm TrueFit Assistant! I help you describe the person you want to hire and show who at the event suits the role. What can I do for you? “We need a dev” is a perfectly good start.`,
   quickReplies: DEFAULT_STARTERS,
 };
 
@@ -86,7 +86,7 @@ export function needToDraft(n: Need): NeedDraft {
 
 const roleGreeting = (n: Need): Msg => ({
   role: "assistant",
-  content: `Hi, I'm TrueFit Assistant! I've loaded your ${n.title} role. Tell me what to change, such as skills to add, drop or make optional, and the suitable candidates update as we go.`,
+  content: `Hi, I'm TrueFit Assistant! I've loaded your ${n.title} role and can add, drop or soften skills; the suitable candidates update as we go. What can I do for you?`,
   quickReplies: [
     "Which must-have skill is hardest to find?",
     "Make one must-have a nice-to-have",

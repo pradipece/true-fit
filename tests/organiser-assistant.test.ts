@@ -3,6 +3,7 @@ import { SEED_NEEDS, SEED_TALENT } from "@/lib/data";
 import { pairKey } from "@/lib/match";
 import {
   eventSnapshot,
+  isGreeting,
   rulesReply,
   sanitizeReply,
   sanitizeSnapshot,
@@ -95,5 +96,17 @@ describe("rulesReply", () => {
 
   it("lists open requests by company need", () => {
     expect(rulesReply("Any open requests?", snap).reply).toContain(SEED_NEEDS[1].title);
+  });
+
+  it("introduces itself and asks what it can do when greeted", () => {
+    for (const q of ["hi", "Hello!", "moi", "Hej", "who are you?"]) {
+      expect(isGreeting(q)).toBe(true);
+      const r = rulesReply(q, snap);
+      expect(r.reply).toContain("Espoo Esbo assistant");
+      expect(r.reply).toContain("What can I do for you?");
+    }
+    for (const q of ["hi, what needs my attention?", "Which needs are short of people?"]) {
+      expect(isGreeting(q)).toBe(false);
+    }
   });
 });

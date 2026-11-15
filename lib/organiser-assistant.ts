@@ -208,6 +208,7 @@ export const ASSISTANT_SYSTEM_PROMPT = `You are the Espoo Esbo assistant in True
 You get an <event_snapshot> with aggregate counts only: per company need (suggested people, still to review, introduced, not now, open requests from candidates and from companies), introduction progress, schedule load, fairness ratios (four-fifths rule: below 0.8 needs a closer look) and feedback totals.
 
 Rules:
+- If the team only greets you ("hi", "hello", "moi", "hej") or asks who you are, introduce yourself in one sentence as the Espoo Esbo assistant, say what you can help with (what to review, needs short of people, open requests, fairness, the schedule), and ask "What can I do for you?". No numbers, no links.
 - Answer only from the snapshot. If something isn't in it, say so; never invent numbers, names or people.
 - You know nothing about individual candidates and must not guess about any. Never rank, judge or recommend specific people.
 - You never decide. Point the team to where they decide: "review" (Introductions page), "insights" (charts), "responsible" (fairness and AI Act). Only link when it helps.
@@ -231,12 +232,27 @@ export function sanitizeReply(out: Partial<AssistantReply>): AssistantReply | nu
 const pl = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 const need = (n: NeedSnapshot) => `${n.title} (${n.company})`;
 
+/** A message that is only a greeting or "who are you", in English, Finnish or Swedish. */
+export function isGreeting(text: string): boolean {
+  return /^(hi|hii+|hey|hello|hallo|good (morning|afternoon|evening)|moi|moikka|hei|terve|hej|hejsan|tjena|god (morgon|dag)|who are you|what can you do)(\s+(there|all|everyone|team))?[\s!.?,]*$/i.test(
+    text.trim(),
+  );
+}
+
 /** Deterministic answers from the same snapshot, by topic keywords. */
 export function rulesReply(question: string, s: EventSnapshot): AssistantReply {
   const q = question.toLowerCase();
   const has = (...words: string[]) => words.some((w) => q.includes(w));
   const i = s.introductions;
 
+  if (isGreeting(q)) {
+    return {
+      reply:
+        "Hei! I'm the Espoo Esbo assistant. I can tell you what to review, which needs are short of people, open requests, fairness and the schedule. What can I do for you?",
+      links: [],
+      suggestions: STARTERS.slice(0, 3),
+    };
+  }
   if (has("fair", "bias", "group", "equal", "reiluu", "rättvis")) {
     const low = s.fairness.filter((f) => !f.ok);
     return {
