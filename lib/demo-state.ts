@@ -170,10 +170,17 @@ const MAX_PAIRS = 2_000;
 const obj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
 const str = (v: unknown, max = 2000) => (typeof v === "string" && v.length <= max ? v : undefined);
 const bool = (v: unknown) => (typeof v === "boolean" ? v : undefined);
-const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : undefined);
 // "YYYY-MM-DD HH:MM" in the interview week; bare "HH:MM" from before it is still read.
-const TIME = /^(\d{4}-\d{2}-\d{2} )?\d{2}:\d{2}$/;
-const time = (v: unknown) => (typeof v === "string" && TIME.test(v) ? v : undefined);
+// Real clock times (00:00–23:59) on real calendar dates only, never "99:99" or "2026-13-45".
+const TIME = /^(?:(\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])) )?(?:[01]\d|2[0-3]):[0-5]\d$/;
+const realDate = (d: string) => new Date(`${d}T00:00:00Z`).toISOString().startsWith(d);
+const time = (v: unknown) => {
+  const m = typeof v === "string" ? TIME.exec(v) : null;
+  return m && (!m[1] || realDate(m[1])) ? (v as string) : undefined;
+};
+// Feedback ratings are whole numbers from 1 to 5, as in the form.
+const rating = (v: unknown) =>
+  Number.isInteger(v) && (v as number) >= 1 && (v as number) <= 5 ? (v as number) : undefined;
 const prune = <T extends object>(o: T): T | undefined => {
   const out = Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined)) as T;
   return Object.keys(out).length ? out : undefined;
@@ -183,8 +190,8 @@ function cleanSide(v: unknown) {
   if (!obj(v)) return undefined;
   return prune({
     held: bool(v.held) ?? false,
-    usefulness: num(v.usefulness),
-    accuracy: num(v.accuracy),
+    usefulness: rating(v.usefulness),
+    accuracy: rating(v.accuracy),
     nextStep: ["continue", "keep-in-touch", "stop"].includes(v.nextStep as string)
       ? (v.nextStep as "continue")
       : undefined,

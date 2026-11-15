@@ -9,7 +9,10 @@ export const EMPTY_CONTACT: TalentContact = { fullName: "", email: "", phone: ""
 export function contactProblem(c: TalentContact) {
   if (!c.fullName.trim()) return "Add your full name.";
   if (!EMAIL_RE.test(c.email.trim())) return "Add a valid email address.";
-  if (c.phone.trim() && !PHONE_RE.test(c.phone.trim())) return "Check your phone number.";
+  const phone = c.phone.trim();
+  // At least 5 digits, so "------" or "( ) ( )" isn't taken for a number.
+  if (phone && (!PHONE_RE.test(phone) || (phone.match(/\d/g)?.length ?? 0) < 5))
+    return "Check your phone number.";
   return "";
 }
 
