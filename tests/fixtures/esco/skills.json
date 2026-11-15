@@ -1,8 +1,7 @@
 {
-  "$comment": "Cached ESCO skill subset for the demo personas. Curated fields: id, label, group, uri, match, keywords, related. ESCO fields (escoLabel, labels, altLabels) are filled by `node scripts/refresh-esco.mjs`. match = how closely our demo skill corresponds to the ESCO concept.",
   "source": "ESCO (European Skills, Competences, Qualifications and Occupations), https://esco.ec.europa.eu",
   "licence": "ESCO is published by the European Commission and reusable under the Commission's reuse policy (CC BY 4.0).",
-  "retrieved": "2026-11-14",
+  "retrieved": "2026-11-15",
   "skills": [
     {
       "id": "python",
@@ -676,6 +675,320 @@
         "evidence multi cultural awareness",
         "demonstrate multi cultural awareness"
       ]
+    },
+    {
+      "id": "plc",
+      "label": "PLC programming",
+      "group": "Digital",
+      "uri": "http://data.europa.eu/esco/skill/6468e5fb-f3be-4025-87be-4b6556755c61",
+      "match": "exact",
+      "keywords": ["plc", "siemens", "tia portal", "codesys", "ladder logic", "programmable logic"],
+      "escoLabel": "programmable logic controller",
+      "labels": {
+        "fi": "ohjelmoitavat logiikat",
+        "sv": "programmerbart styrsystem"
+      },
+      "altLabels": [
+        "computer control system",
+        "PLC technology",
+        "PLC",
+        "technology of PLCs",
+        "logic controller that is programmable"
+      ]
+    },
+    {
+      "id": "automation",
+      "label": "Automation technology",
+      "group": "Digital",
+      "uri": "http://data.europa.eu/esco/skill/f4a6e9f7-5cff-46c0-894c-59c20bb78694",
+      "match": "exact",
+      "keywords": ["automation", "automaatio", "commissioning", "production line", "industrial automation"],
+      "escoLabel": "automation technology",
+      "labels": {
+        "fi": "automaatiotekniikka",
+        "sv": "automatiseringsteknik"
+      },
+      "altLabels": [
+        "technology of control systems",
+        "technology for control systems",
+        "technologies of automation",
+        "control systems technology",
+        "control systems"
+      ]
+    },
+    {
+      "id": "robotics",
+      "label": "Robotics",
+      "group": "Digital",
+      "uri": "http://data.europa.eu/esco/skill/e87ec79a-c9ff-46f5-84fa-7a0f394cdf40",
+      "match": "exact",
+      "keywords": ["robot", "robotics", "cobot", "abb", "kuka"],
+      "escoLabel": "robotics",
+      "labels": {
+        "fi": "robotiikka",
+        "sv": "robotteknik"
+      },
+      "altLabels": [
+        "robotic engineering",
+        "mechatronics",
+        "industrial automation",
+        "field of robotics",
+        "application of mechatronics"
+      ]
+    },
+    {
+      "id": "control-systems",
+      "label": "Control systems",
+      "group": "Digital",
+      "uri": "http://data.europa.eu/esco/skill/4ff549c3-daa5-4def-9916-301c7bdf13b8",
+      "match": "exact",
+      "keywords": ["control system", "scada", "hmi", "dcs", "process control"],
+      "escoLabel": "control systems",
+      "labels": {
+        "fi": "valvontajärjestelmät",
+        "sv": "styrsystem"
+      },
+      "altLabels": [
+        "control devices",
+        "industrial control systems",
+        "industrial control devices",
+        "regulatory systems",
+        "industrial regulatory systems"
+      ]
+    },
+    {
+      "id": "wiring",
+      "label": "Electrical wiring diagrams",
+      "group": "Digital",
+      "uri": "http://data.europa.eu/esco/skill/ed291aa0-8b2f-4179-b2f7-540ea6f63bf3",
+      "match": "exact",
+      "keywords": ["wiring", "schematic", "electrical drawing", "eplan", "circuit diagram"],
+      "escoLabel": "electrical wiring diagrams",
+      "labels": {
+        "fi": "sähköasennusten kytkentäkaaviot",
+        "sv": "kopplingsschema"
+      },
+      "altLabels": [
+        "diagrams of electric wiring",
+        "diagrams for electric circuits",
+        "circuit schematic",
+        "schematic diagram of circuit",
+        "wiring schematic"
+      ]
+    },
+    {
+      "id": "sysadmin",
+      "label": "IT system administration",
+      "group": "Digital",
+      "uri": "http://data.europa.eu/esco/skill/0868eef3-2213-4572-9343-74931345a7d3",
+      "match": "exact",
+      "keywords": [
+        "sysadmin",
+        "linux",
+        "windows server",
+        "system administration",
+        "active directory",
+        "server"
+      ],
+      "escoLabel": "administer ICT system",
+      "labels": {
+        "fi": "hallinnoida ICT-järjestelmää",
+        "sv": "administrera IT-system"
+      },
+      "altLabels": ["operate system", "administer system", "administer network and system"]
+    },
+    {
+      "id": "integration",
+      "label": "System integration",
+      "group": "Digital",
+      "uri": "http://data.europa.eu/esco/skill/6fa1c2c0-a012-4ca0-9642-e01569ba322c",
+      "match": "exact",
+      "keywords": ["integration", "integrate", "middleware", "interface", "hl7", "message queue"],
+      "escoLabel": "ICT system integration",
+      "labels": {
+        "fi": "ICT-järjestelmän integrointi",
+        "sv": "it-systemintegration"
+      },
+      "altLabels": ["system integration"]
+    },
+    {
+      "id": "networking",
+      "label": "Computer networks",
+      "group": "Digital",
+      "uri": "http://data.europa.eu/esco/skill/f9e788df-d68a-4f92-92c7-80e135fc35ff",
+      "match": "close",
+      "keywords": ["network", "networking", "tcp/ip", "vlan", "firewall", "router", "switch"],
+      "escoLabel": "ICT networking hardware",
+      "labels": {
+        "fi": "ICT-verkkolaitteet",
+        "sv": "nätverksmaskinvara"
+      },
+      "altLabels": ["ICT networking hardware"]
+    },
+    {
+      "id": "virtualisation",
+      "label": "Virtualisation",
+      "group": "Digital",
+      "uri": "http://data.europa.eu/esco/skill/ae4f0cc6-e0b9-47f5-bdca-2fc2e6316dce",
+      "match": "exact",
+      "keywords": ["virtualisation", "virtualization", "vmware", "hyper-v", "kvm", "virtual machine"],
+      "escoLabel": "manage ICT virtualisation machines",
+      "labels": {
+        "fi": "hallita ICT-virtualisointikoneita",
+        "sv": "hantera virtuella datorer"
+      },
+      "altLabels": ["manage ICT virtualization machines", "manage virtualisation of servers and workstations"]
+    },
+    {
+      "id": "monitoring",
+      "label": "System performance monitoring",
+      "group": "Digital",
+      "uri": "http://data.europa.eu/esco/skill/9190d87f-9792-42e0-bb7f-64294a656bcd",
+      "match": "exact",
+      "keywords": ["monitoring", "grafana", "prometheus", "uptime", "alerting", "observability"],
+      "escoLabel": "monitor system performance",
+      "labels": {
+        "fi": "valvoa järjestelmän suorituskykyä",
+        "sv": "övervaka systemprestanda"
+      },
+      "altLabels": ["system logging"]
+    },
+    {
+      "id": "sdlc",
+      "label": "Systems development life-cycle",
+      "group": "Digital",
+      "uri": "http://data.europa.eu/esco/skill/09f2f811-a3fb-4de3-a70f-6420a6935575",
+      "match": "exact",
+      "keywords": [
+        "requirements",
+        "life-cycle",
+        "lifecycle",
+        "systems engineering",
+        "v-model",
+        "verification"
+      ],
+      "escoLabel": "systems development life-cycle",
+      "labels": {
+        "fi": "järjestelmän kehityksen elinkaari",
+        "sv": "systemutveckling"
+      },
+      "altLabels": ["application development life-cycle"]
+    },
+    {
+      "id": "recruiting",
+      "label": "Recruiting employees",
+      "group": "Business",
+      "uri": "http://data.europa.eu/esco/skill/496932f1-0b6b-4f73-9432-d95c7ddcd43b",
+      "match": "exact",
+      "keywords": [
+        "recruit",
+        "recruiting",
+        "recruitment",
+        "rekrytointi",
+        "hiring",
+        "sourcing",
+        "talent acquisition"
+      ],
+      "escoLabel": "recruit employees",
+      "labels": {
+        "fi": "rekrytoida työntekijöitä",
+        "sv": "rekrytera medarbetare"
+      },
+      "altLabels": [
+        "recruit staff",
+        "recruit, select and employ kitchen staff",
+        "manage recruitment of employees",
+        "recruiting employees"
+      ]
+    },
+    {
+      "id": "hrm",
+      "label": "Human resource management",
+      "group": "Business",
+      "uri": "http://data.europa.eu/esco/skill/e437eba1-3e22-41f2-8703-741e94785cba",
+      "match": "exact",
+      "keywords": ["hr", "human resources", "henkilöstöhallinto", "people operations", "hr generalist"],
+      "escoLabel": "human resource management",
+      "labels": {
+        "fi": "henkilöresurssien hallinta",
+        "sv": "personalhantering"
+      },
+      "altLabels": ["human resources management", "HRM", "HR management", "HR", "human resource supervision"]
+    },
+    {
+      "id": "labour-law",
+      "label": "Labour legislation",
+      "group": "Business",
+      "uri": "http://data.europa.eu/esco/skill/08fe5910-8c4c-4679-a988-eb2ded3c4909",
+      "match": "exact",
+      "keywords": [
+        "labour law",
+        "employment law",
+        "collective agreement",
+        "työehtosopimus",
+        "työlainsäädäntö",
+        "working time"
+      ],
+      "escoLabel": "labour legislation",
+      "labels": {
+        "fi": "työlainsäädäntö",
+        "sv": "arbetslagstiftning"
+      },
+      "altLabels": ["employment law", "employment legislation", "legislation on labour"]
+    },
+    {
+      "id": "payroll",
+      "label": "Payroll management",
+      "group": "Business",
+      "uri": "http://data.europa.eu/esco/skill/9d916d7c-89b3-4084-a6d9-e2b0b3091404",
+      "match": "exact",
+      "keywords": ["payroll", "palkanlaskenta", "salary", "wages"],
+      "escoLabel": "manage payroll",
+      "labels": {
+        "fi": "hoitaa palkkalistoja",
+        "sv": "hantera löner"
+      },
+      "altLabels": ["oversee payroll", "handle payroll", "managing payroll", "administer payroll"]
+    },
+    {
+      "id": "interviewing",
+      "label": "Interviewing",
+      "group": "Business",
+      "uri": "http://data.europa.eu/esco/skill/4d313147-b39d-413f-a5e2-b12d5f0dc9e6",
+      "match": "exact",
+      "keywords": ["interview", "interviewing", "haastattelu", "structured interview"],
+      "escoLabel": "perform interviews",
+      "labels": {
+        "fi": "tehdä haastatteluja",
+        "sv": "utföra intervjuer"
+      },
+      "altLabels": [
+        "conduct interviews",
+        "perform interview",
+        "give interviews",
+        "performing interviews",
+        "do interviews"
+      ]
+    },
+    {
+      "id": "staff-dev",
+      "label": "Staff development & onboarding",
+      "group": "Business",
+      "uri": "http://data.europa.eu/esco/skill/714eebcb-569a-4f1b-b592-28f70b59a9ba",
+      "match": "close",
+      "keywords": [
+        "onboarding",
+        "perehdytys",
+        "training plan",
+        "staff development",
+        "learning and development"
+      ],
+      "escoLabel": "develop staff",
+      "labels": {
+        "fi": "kehittää henkilökuntaa",
+        "sv": "utveckla personal"
+      },
+      "altLabels": ["build up staff", "help strengthen staff", "developing staff"]
     }
   ],
   "related": [
@@ -713,6 +1026,30 @@
     ["lead", "mentoring", 0.4],
     ["customer", "stakeholders", 0.5],
     ["customer", "sales", 0.4],
-    ["cloud", "pipelines", 0.4]
+    ["cloud", "pipelines", 0.4],
+    ["plc", "automation", 0.7],
+    ["plc", "control-systems", 0.7],
+    ["automation", "robotics", 0.7],
+    ["automation", "control-systems", 0.7],
+    ["wiring", "plc", 0.35],
+    ["embedded", "plc", 0.35],
+    ["robotics", "embedded", 0.35],
+    ["sysadmin", "networking", 0.7],
+    ["sysadmin", "virtualisation", 0.7],
+    ["sysadmin", "monitoring", 0.7],
+    ["cloud", "virtualisation", 0.7],
+    ["security", "networking", 0.35],
+    ["integration", "sdlc", 0.35],
+    ["integration", "backend", 0.35],
+    ["sdlc", "testing", 0.35],
+    ["monitoring", "pipelines", 0.35],
+    ["recruiting", "interviewing", 0.7],
+    ["recruiting", "hrm", 0.7],
+    ["hrm", "labour-law", 0.7],
+    ["hrm", "payroll", 0.35],
+    ["hrm", "staff-dev", 0.7],
+    ["staff-dev", "mentoring", 0.7],
+    ["interviewing", "intercultural", 0.35],
+    ["recruiting", "stakeholders", 0.35]
   ]
 }

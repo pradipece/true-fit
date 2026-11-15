@@ -33,7 +33,13 @@ describe("role ranking for a job seeker", () => {
   it("falls back to rules and fills roles the model skipped", () => {
     const ranked = finishRoleRanking(input, needIds, [{ label: "R2", fit: 99, reason: "Strong" }]);
     expect(ranked).toHaveLength(needIds.length);
-    expect(ranked[0]).toEqual({ needId: needIds[1], fit: 99, reason: "Strong" });
+    expect(ranked.find((r) => r.needId === needIds[1])).toEqual({
+      needId: needIds[1],
+      fit: 99,
+      reason: "Strong",
+    });
+    const fits = ranked.map((r) => r.fit);
+    expect(fits).toEqual([...fits].sort((a, b) => b - a));
   });
 
   it("groups by company, best role first, highest fit first", () => {

@@ -1,5 +1,4 @@
 {
-  "$comment": "Synthetic talent profiles. All people are fictional. `revealName` is the full name and `contact` mock personal info (example.com e-mail, placeholder phone number), revealed only after mutual opt-in. `audit` is self-declared group data used ONLY for the aggregate fairness check; it is never scored or shown in matching. The pool is deliberately varied by origin, language, education and career path. Skill ids refer to data/esco/skills.json. `alias` defaults to 'Candidate <id>'.",
   "talent": [
     {
       "id": "T-01",
@@ -2445,6 +2444,4492 @@
         "origin": "Outside EU",
         "education": "University",
         "path": "Career changer"
+      }
+    },
+    {
+      "id": "T-45",
+      "revealName": "Mikko Lahtinen",
+      "contact": {
+        "fullName": "Mikko Lahtinen",
+        "email": "mikko.lahtinen@example.com",
+        "phone": "+358 40 000 0141",
+        "city": "Espoo"
+      },
+      "headline": "Automation engineer with seven years commissioning paper-mill and packaging lines.",
+      "previousField": "Process industry automation",
+      "skills": [
+        {
+          "id": "plc",
+          "level": "evidenced"
+        },
+        {
+          "id": "control-systems",
+          "level": "evidenced"
+        },
+        {
+          "id": "automation",
+          "level": "evidenced"
+        },
+        {
+          "id": "wiring",
+          "level": "claimed"
+        },
+        {
+          "id": "stakeholders",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A packaging line stops every few hours with no clear alarm. Where do you start?",
+          "excerpt": "Pull the PLC event log and the HMI alarm history side by side, find what changes just before each stop, then test that one condition on the line with the operators.",
+          "skills": ["plc", "control-systems"]
+        },
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "Commissioning checklist for a 14-station conveyor line: I/O tests, interlocks, safety stops and the sign-off order with the customer.",
+          "skills": ["automation"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Finnish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Swedish",
+          "level": "Working"
+        }
+      ],
+      "availability": "From January",
+      "mode": "On-site",
+      "audit": {
+        "origin": "Finland",
+        "education": "University",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-46",
+      "revealName": "Ananya Iyer",
+      "contact": {
+        "fullName": "Ananya Iyer",
+        "email": "ananya.iyer@example.com",
+        "phone": "+358 40 000 0142",
+        "city": "Espoo"
+      },
+      "headline": "Robotics engineer from Pune, programmed robot welding cells for an automotive supplier.",
+      "previousField": "Automotive manufacturing",
+      "skills": [
+        {
+          "id": "robotics",
+          "level": "evidenced"
+        },
+        {
+          "id": "automation",
+          "level": "evidenced"
+        },
+        {
+          "id": "plc",
+          "level": "evidenced"
+        },
+        {
+          "id": "problem",
+          "level": "claimed"
+        },
+        {
+          "id": "embedded",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A robot cell keeps missing its pick position after a product change. What do you do?",
+          "excerpt": "Check if the fixture or the product drawing changed, re-teach the reference points, and add a vision check so the PLC stops the cell before a bad pick instead of after.",
+          "skills": ["robotics", "plc"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: a line you improved",
+          "excerpt": "We cut the changeover time from forty minutes to twelve by moving the recipe selection into the line controller instead of retyping it at each station.",
+          "skills": ["automation"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Hindi",
+          "level": "Native"
+        },
+        {
+          "lang": "Tamil",
+          "level": "Native"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Learning"
+        }
+      ],
+      "availability": "Now",
+      "mode": "On-site",
+      "audit": {
+        "origin": "Outside EU",
+        "education": "University",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-47",
+      "revealName": "Jari Mäkelä",
+      "contact": {
+        "fullName": "Jari Mäkelä",
+        "email": "jari.makela@example.com",
+        "phone": "+358 40 000 0143",
+        "city": "Vantaa"
+      },
+      "headline": "Industrial electrician moving into automation; wires and fault-finds control cabinets every day.",
+      "previousField": "Industrial electrical installation",
+      "skills": [
+        {
+          "id": "wiring",
+          "level": "evidenced"
+        },
+        {
+          "id": "control-systems",
+          "level": "evidenced"
+        },
+        {
+          "id": "plc",
+          "level": "claimed"
+        },
+        {
+          "id": "automation",
+          "level": "claimed"
+        },
+        {
+          "id": "team",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A sensor on the line reads fine on the bench but fails once installed. What do you check?",
+          "excerpt": "Measure at the cabinet terminal, not just the sensor, check the earthing and cable routing next to the motor drives, then compare with the wiring diagram revision.",
+          "skills": ["wiring", "control-systems"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Finnish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Working"
+        }
+      ],
+      "availability": "From February",
+      "mode": "On-site",
+      "audit": {
+        "origin": "Finland",
+        "education": "Vocational",
+        "path": "Career changer"
+      }
+    },
+    {
+      "id": "T-48",
+      "revealName": "Paula Wiśniewska",
+      "contact": {
+        "fullName": "Paula Wiśniewska",
+        "email": "paula.wisniewska@example.com",
+        "phone": "+358 40 000 0144",
+        "city": "Espoo"
+      },
+      "headline": "Mechatronics graduate from Gdańsk; built a PLC-controlled sorting cell as a thesis project.",
+      "previousField": "Mechatronics studies",
+      "skills": [
+        {
+          "id": "plc",
+          "level": "evidenced"
+        },
+        {
+          "id": "automation",
+          "level": "evidenced"
+        },
+        {
+          "id": "robotics",
+          "level": "claimed"
+        },
+        {
+          "id": "wiring",
+          "level": "claimed"
+        },
+        {
+          "id": "adapt",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "Thesis project: a colour-sorting conveyor with a Siemens PLC, two sensors and a small pneumatic gate, including the ladder logic and test results.",
+          "skills": ["plc", "automation"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Polish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Learning"
+        }
+      ],
+      "availability": "Now",
+      "mode": "Any",
+      "audit": {
+        "origin": "EU/EEA",
+        "education": "University",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-49",
+      "revealName": "Oskari Nieminen",
+      "contact": {
+        "fullName": "Oskari Nieminen",
+        "email": "oskari.nieminen@example.com",
+        "phone": "+358 40 000 0145",
+        "city": "Espoo"
+      },
+      "headline": "System engineer who keeps Linux and VMware clusters boring, patched and recoverable.",
+      "previousField": "IT operations",
+      "skills": [
+        {
+          "id": "sysadmin",
+          "level": "evidenced"
+        },
+        {
+          "id": "virtualisation",
+          "level": "evidenced"
+        },
+        {
+          "id": "monitoring",
+          "level": "evidenced"
+        },
+        {
+          "id": "networking",
+          "level": "claimed"
+        },
+        {
+          "id": "python",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A customer's VM is slow every night at 02:00. How do you find out why?",
+          "excerpt": "Look at the monitoring graphs for that host at 02:00, see what else runs then, usually backups or a batch job, and move or throttle it before touching the VM.",
+          "skills": ["monitoring", "virtualisation"]
+        },
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "Runbook for monthly patching of 40 Linux servers: order of hosts, snapshot first, health checks after and how to roll back.",
+          "skills": ["sysadmin"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Finnish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        }
+      ],
+      "availability": "From January",
+      "mode": "Hybrid",
+      "audit": {
+        "origin": "Finland",
+        "education": "University",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-50",
+      "revealName": "Chukwuemeka Obi",
+      "contact": {
+        "fullName": "Chukwuemeka Obi",
+        "email": "chukwuemeka.obi@example.com",
+        "phone": "+358 40 000 0146",
+        "city": "Espoo"
+      },
+      "headline": "Network engineer from Abuja, ran the campus network and firewalls for a university.",
+      "previousField": "University IT networks",
+      "skills": [
+        {
+          "id": "networking",
+          "level": "evidenced"
+        },
+        {
+          "id": "security",
+          "level": "evidenced"
+        },
+        {
+          "id": "monitoring",
+          "level": "evidenced"
+        },
+        {
+          "id": "sysadmin",
+          "level": "claimed"
+        },
+        {
+          "id": "customer",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "Half of an office suddenly can't reach the internet. What do you do first?",
+          "excerpt": "Check if it's one switch or VLAN by comparing who works and who doesn't, look at the switch logs and uplink, and tell the office what we know every fifteen minutes.",
+          "skills": ["networking", "monitoring"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: keeping systems safe",
+          "excerpt": "I closed old firewall rules nobody could explain, one by one, with a note to the owner and a way back if something broke.",
+          "skills": ["security"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "English",
+          "level": "Native"
+        },
+        {
+          "lang": "Igbo",
+          "level": "Native"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Learning"
+        }
+      ],
+      "availability": "Now",
+      "mode": "On-site",
+      "audit": {
+        "origin": "Outside EU",
+        "education": "University",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-51",
+      "revealName": "Elina Grönholm",
+      "contact": {
+        "fullName": "Elina Grönholm",
+        "email": "elina.gronholm@example.com",
+        "phone": "+358 40 000 0147",
+        "city": "Kauniainen"
+      },
+      "headline": "Former lab technician self-taught in Linux and integrations; built the lab's instrument data link.",
+      "previousField": "Laboratory technician",
+      "skills": [
+        {
+          "id": "integration",
+          "level": "evidenced"
+        },
+        {
+          "id": "sysadmin",
+          "level": "evidenced"
+        },
+        {
+          "id": "python",
+          "level": "claimed"
+        },
+        {
+          "id": "health-regs",
+          "level": "claimed"
+        },
+        {
+          "id": "problem",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "Lab results stop arriving in the hospital system but the instrument says it sent them. What do you do?",
+          "excerpt": "Follow one result through every hop, instrument, interface server, queue, hospital side, check the logs at each step, and fix the step where it disappears before resending the backlog.",
+          "skills": ["integration", "sysadmin"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Swedish",
+          "level": "Native"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        }
+      ],
+      "availability": "From March",
+      "mode": "Hybrid",
+      "audit": {
+        "origin": "Finland",
+        "education": "Self-taught / bootcamp",
+        "path": "Career changer"
+      }
+    },
+    {
+      "id": "T-52",
+      "revealName": "Rui Carvalho",
+      "contact": {
+        "fullName": "Rui Carvalho",
+        "email": "rui.carvalho@example.com",
+        "phone": "+358 40 000 0148",
+        "city": "Espoo"
+      },
+      "headline": "Systems integration engineer from Porto; connected ERP, warehouse and e-commerce systems.",
+      "previousField": "Retail IT",
+      "skills": [
+        {
+          "id": "integration",
+          "level": "evidenced"
+        },
+        {
+          "id": "sdlc",
+          "level": "evidenced"
+        },
+        {
+          "id": "backend",
+          "level": "evidenced"
+        },
+        {
+          "id": "testing",
+          "level": "claimed"
+        },
+        {
+          "id": "stakeholders",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "Interface specification between an ERP and a warehouse system: message types, error handling, retries and the test cases both teams signed off.",
+          "skills": ["integration", "sdlc"]
+        },
+        {
+          "kind": "scenario",
+          "prompt": "Two teams blame each other for duplicate orders. How do you settle it?",
+          "excerpt": "Trace a few duplicates with their message ids, show both teams the same timeline, and agree an idempotency rule in the API rather than a fix on one side only.",
+          "skills": ["integration", "backend"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Portuguese",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Spanish",
+          "level": "Working"
+        }
+      ],
+      "availability": "From February",
+      "mode": "Remote",
+      "audit": {
+        "origin": "EU/EEA",
+        "education": "University",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-53",
+      "revealName": "Sanna Virtanen",
+      "contact": {
+        "fullName": "Sanna Virtanen",
+        "email": "sanna.virtanen@example.com",
+        "phone": "+358 40 000 0149",
+        "city": "Espoo"
+      },
+      "headline": "HR specialist with eight years in healthcare staffing; knows the collective agreements inside out.",
+      "previousField": "Healthcare HR",
+      "skills": [
+        {
+          "id": "hrm",
+          "level": "evidenced"
+        },
+        {
+          "id": "labour-law",
+          "level": "evidenced"
+        },
+        {
+          "id": "payroll",
+          "level": "evidenced"
+        },
+        {
+          "id": "recruiting",
+          "level": "claimed"
+        },
+        {
+          "id": "stakeholders",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A nurse says her overtime was paid wrong last month. What do you do?",
+          "excerpt": "Check her shift list against the collective agreement rules for evening and weekend work, show her the calculation, and if payroll made a mistake fix it in the next run and tell her when.",
+          "skills": ["labour-law", "payroll"]
+        },
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "One-page guide for managers on fixed-term contracts: when they are allowed, how to renew and what to write down.",
+          "skills": ["hrm"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Finnish",
+          "level": "Native"
+        },
+        {
+          "lang": "Swedish",
+          "level": "Working"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        }
+      ],
+      "availability": "From January",
+      "mode": "On-site",
+      "audit": {
+        "origin": "Finland",
+        "education": "University",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-54",
+      "revealName": "Daniela Moreno",
+      "contact": {
+        "fullName": "Daniela Moreno",
+        "email": "daniela.moreno@example.com",
+        "phone": "+358 40 000 0150",
+        "city": "Espoo"
+      },
+      "headline": "Recruiter from Bogotá who hired 200 warehouse and driver roles a year for a delivery company.",
+      "previousField": "High-volume recruitment",
+      "skills": [
+        {
+          "id": "recruiting",
+          "level": "evidenced"
+        },
+        {
+          "id": "interviewing",
+          "level": "evidenced"
+        },
+        {
+          "id": "intercultural",
+          "level": "evidenced"
+        },
+        {
+          "id": "staff-dev",
+          "level": "claimed"
+        },
+        {
+          "id": "hrm",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "You need ten warehouse workers in three weeks. How do you plan it?",
+          "excerpt": "Write a short ad in plain language in two languages, hold one open hiring day with a structured interview and a short floor tour, and book first days in groups so onboarding is shared.",
+          "skills": ["recruiting", "interviewing"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: hiring people from many backgrounds",
+          "excerpt": "I ask every candidate the same questions in the same order and score them right after, so the person with the best story doesn't win over the person with the best answers.",
+          "skills": ["interviewing", "intercultural"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Spanish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Working"
+        }
+      ],
+      "availability": "Now",
+      "mode": "Hybrid",
+      "audit": {
+        "origin": "Outside EU",
+        "education": "University",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-55",
+      "revealName": "Tuomas Heikkinen",
+      "contact": {
+        "fullName": "Tuomas Heikkinen",
+        "email": "tuomas.heikkinen@example.com",
+        "phone": "+358 40 000 0151",
+        "city": "Espoo"
+      },
+      "headline": "Ex-hotel shift manager moving into HR; ran rotas, onboarding and training for 40 staff.",
+      "previousField": "Hotel operations",
+      "skills": [
+        {
+          "id": "staff-dev",
+          "level": "evidenced"
+        },
+        {
+          "id": "lead",
+          "level": "evidenced"
+        },
+        {
+          "id": "recruiting",
+          "level": "evidenced"
+        },
+        {
+          "id": "hrm",
+          "level": "claimed"
+        },
+        {
+          "id": "labour-law",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A new hire is struggling after two weeks and wants to quit. What do you do?",
+          "excerpt": "Sit down with them and their buddy, find out what's hardest, adjust the training plan for the next two weeks and check in every few days instead of waiting for the trial period to end.",
+          "skills": ["staff-dev", "lead"]
+        },
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "Onboarding plan for summer staff: what to show on day one, week one and month one, and who does each part.",
+          "skills": ["staff-dev"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Finnish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        }
+      ],
+      "availability": "From February",
+      "mode": "Any",
+      "audit": {
+        "origin": "Finland",
+        "education": "Vocational",
+        "path": "Career changer"
+      }
+    },
+    {
+      "id": "T-56",
+      "revealName": "Katrin Lepp",
+      "contact": {
+        "fullName": "Katrin Lepp",
+        "email": "katrin.lepp@example.com",
+        "phone": "+358 40 000 0152",
+        "city": "Espoo"
+      },
+      "headline": "HR generalist from Tartu, first HR hire at a 90-person software company.",
+      "previousField": "Tech start-up HR",
+      "skills": [
+        {
+          "id": "hrm",
+          "level": "evidenced"
+        },
+        {
+          "id": "recruiting",
+          "level": "evidenced"
+        },
+        {
+          "id": "interviewing",
+          "level": "evidenced"
+        },
+        {
+          "id": "labour-law",
+          "level": "claimed"
+        },
+        {
+          "id": "staff-dev",
+          "level": "claimed"
+        },
+        {
+          "id": "payroll",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "The CEO wants to hire five engineers fast but has no HR process. Where do you start?",
+          "excerpt": "Agree one scorecard per role with the CEO, set up a simple pipeline and a structured interview, and write the contract template and onboarding checklist before the first offer goes out.",
+          "skills": ["recruiting", "interviewing", "hrm"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Estonian",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Working"
+        },
+        {
+          "lang": "Russian",
+          "level": "Working"
+        }
+      ],
+      "availability": "From March",
+      "mode": "Hybrid",
+      "audit": {
+        "origin": "EU/EEA",
+        "education": "University",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-57",
+      "revealName": "Ville Hämäläinen",
+      "contact": {
+        "fullName": "Ville Hämäläinen",
+        "email": "ville.hamalainen@example.com",
+        "phone": "+358 40 000 0153",
+        "city": "Espoo"
+      },
+      "headline": "Data engineer who builds pipelines for factory and sensor data.",
+      "previousField": "Industrial data engineering",
+      "skills": [
+        {
+          "id": "python",
+          "level": "evidenced"
+        },
+        {
+          "id": "sql",
+          "level": "evidenced"
+        },
+        {
+          "id": "pipelines",
+          "level": "evidenced"
+        },
+        {
+          "id": "cloud",
+          "level": "evidenced"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A nightly data load silently drops some rows. What do you do?",
+          "excerpt": "Count rows at every step, find where they disappear, add a check that fails loudly next time, then backfill the missing days.",
+          "skills": ["pipelines", "sql"]
+        },
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "A Python job that pulls sensor files from cloud storage, cleans them and loads them into Postgres, with tests and a retry on failure.",
+          "skills": ["python", "cloud"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Finnish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        }
+      ],
+      "availability": "From January",
+      "mode": "Hybrid",
+      "audit": {
+        "origin": "Finland",
+        "education": "University",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-58",
+      "revealName": "Kemal Yılmaz",
+      "contact": {
+        "fullName": "Kemal Yılmaz",
+        "email": "kemal.yilmaz@example.com",
+        "phone": "+358 40 000 0154",
+        "city": "Espoo"
+      },
+      "headline": "Cloud data engineer from Ankara, five years on telecom data platforms.",
+      "previousField": "Telecom data platforms",
+      "skills": [
+        {
+          "id": "python",
+          "level": "evidenced"
+        },
+        {
+          "id": "pipelines",
+          "level": "evidenced"
+        },
+        {
+          "id": "cloud",
+          "level": "evidenced"
+        },
+        {
+          "id": "sql",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "A Python job that pulls sensor files from cloud storage, cleans them and loads them into Postgres, with tests and a retry on failure.",
+          "skills": ["python", "cloud"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: a pipeline you are proud of",
+          "excerpt": "I replaced a fragile set of cron scripts with one scheduled pipeline, and the on-call phone stopped ringing at night.",
+          "skills": ["pipelines"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Turkish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Learning"
+        }
+      ],
+      "availability": "Now",
+      "mode": "Remote",
+      "audit": {
+        "origin": "Outside EU",
+        "education": "University",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-59",
+      "revealName": "Laura Salonen",
+      "contact": {
+        "fullName": "Laura Salonen",
+        "email": "laura.salonen@example.com",
+        "phone": "+358 40 000 0155",
+        "city": "Helsinki"
+      },
+      "headline": "Former journalist turned data analyst; finds the story in the numbers and checks it twice.",
+      "previousField": "Journalism",
+      "skills": [
+        {
+          "id": "analysis",
+          "level": "evidenced"
+        },
+        {
+          "id": "sql",
+          "level": "evidenced"
+        },
+        {
+          "id": "stakeholders",
+          "level": "evidenced"
+        },
+        {
+          "id": "python",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A manager says sales dropped last month. How do you check?",
+          "excerpt": "First check if the data is complete, then compare with the same month last year and split by region and product before saying anything.",
+          "skills": ["analysis", "sql"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: explaining numbers to non-experts",
+          "excerpt": "I show one chart and one sentence about what it means for their decision, and keep the details for whoever asks.",
+          "skills": ["stakeholders"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Finnish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Swedish",
+          "level": "Working"
+        }
+      ],
+      "availability": "From February",
+      "mode": "Hybrid",
+      "audit": {
+        "origin": "Finland",
+        "education": "Self-taught / bootcamp",
+        "path": "Career changer"
+      }
+    },
+    {
+      "id": "T-60",
+      "revealName": "Arjun Mehta",
+      "contact": {
+        "fullName": "Arjun Mehta",
+        "email": "arjun.mehta@example.com",
+        "phone": "+358 40 000 0156",
+        "city": "Espoo"
+      },
+      "headline": "Business analyst from Bengaluru, built reporting for an e-commerce marketplace.",
+      "previousField": "E-commerce analytics",
+      "skills": [
+        {
+          "id": "analysis",
+          "level": "evidenced"
+        },
+        {
+          "id": "sql",
+          "level": "evidenced"
+        },
+        {
+          "id": "python",
+          "level": "evidenced"
+        },
+        {
+          "id": "stakeholders",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A manager says sales dropped last month. How do you check?",
+          "excerpt": "First check if the data is complete, then compare with the same month last year and split by region and product before saying anything.",
+          "skills": ["analysis", "sql"]
+        },
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "Notebook that cleans a messy export of customer orders in pandas and answers which products are returned most.",
+          "skills": ["python", "analysis"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Hindi",
+          "level": "Native"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Learning"
+        }
+      ],
+      "availability": "Now",
+      "mode": "Any",
+      "audit": {
+        "origin": "Outside EU",
+        "education": "University",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-61",
+      "revealName": "Ingrid Holm",
+      "contact": {
+        "fullName": "Ingrid Holm",
+        "email": "ingrid.holm@example.com",
+        "phone": "+358 40 000 0157",
+        "city": "Espoo"
+      },
+      "headline": "Analyst from Aarhus who turns finance data into dashboards people actually open.",
+      "previousField": "Banking analytics",
+      "skills": [
+        {
+          "id": "analysis",
+          "level": "evidenced"
+        },
+        {
+          "id": "stakeholders",
+          "level": "evidenced"
+        },
+        {
+          "id": "python",
+          "level": "evidenced"
+        },
+        {
+          "id": "sql",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: explaining numbers to non-experts",
+          "excerpt": "I show one chart and one sentence about what it means for their decision, and keep the details for whoever asks.",
+          "skills": ["stakeholders"]
+        },
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "Notebook that cleans a messy export of customer orders in pandas and answers which products are returned most.",
+          "skills": ["python", "analysis"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Danish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Swedish",
+          "level": "Fluent"
+        }
+      ],
+      "availability": "From March",
+      "mode": "Hybrid",
+      "audit": {
+        "origin": "EU/EEA",
+        "education": "University",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-62",
+      "revealName": "Leila Ahmadi",
+      "contact": {
+        "fullName": "Leila Ahmadi",
+        "email": "leila.ahmadi@example.com",
+        "phone": "+358 40 000 0158",
+        "city": "Espoo"
+      },
+      "headline": "Machine learning engineer from Tehran with a PhD in signal processing.",
+      "previousField": "Academic research",
+      "skills": [
+        {
+          "id": "ml",
+          "level": "evidenced"
+        },
+        {
+          "id": "python",
+          "level": "evidenced"
+        },
+        {
+          "id": "analysis",
+          "level": "evidenced"
+        },
+        {
+          "id": "cloud",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "Your forecast model looks great in testing but is wrong in production. Why might that be?",
+          "excerpt": "Check if the training data leaked future information, compare production inputs with training inputs, and keep a simple baseline to compare against.",
+          "skills": ["ml", "analysis"]
+        },
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "Demand forecasting model in Python with a plain moving-average baseline, cross-validation over time and a short write-up of its errors.",
+          "skills": ["ml", "python"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Persian",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Working"
+        }
+      ],
+      "availability": "From January",
+      "mode": "Hybrid",
+      "audit": {
+        "origin": "Outside EU",
+        "education": "University",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-63",
+      "revealName": "Petteri Koivisto",
+      "contact": {
+        "fullName": "Petteri Koivisto",
+        "email": "petteri.koivisto@example.com",
+        "phone": "+358 40 000 0159",
+        "city": "Vantaa"
+      },
+      "headline": "Physics teacher who moved into machine learning through an evening programme.",
+      "previousField": "Upper secondary teaching",
+      "skills": [
+        {
+          "id": "ml",
+          "level": "evidenced"
+        },
+        {
+          "id": "python",
+          "level": "evidenced"
+        },
+        {
+          "id": "cloud",
+          "level": "evidenced"
+        },
+        {
+          "id": "analysis",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "Demand forecasting model in Python with a plain moving-average baseline, cross-validation over time and a short write-up of its errors.",
+          "skills": ["ml", "python"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: putting a model into use",
+          "excerpt": "The model was the easy part. Most of the work was scheduling it in the cloud and alerting when its inputs went strange.",
+          "skills": ["cloud"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Finnish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        }
+      ],
+      "availability": "From February",
+      "mode": "Remote",
+      "audit": {
+        "origin": "Finland",
+        "education": "University",
+        "path": "Career changer"
+      }
+    },
+    {
+      "id": "T-64",
+      "revealName": "Camille Dubois",
+      "contact": {
+        "fullName": "Camille Dubois",
+        "email": "camille.dubois@example.com",
+        "phone": "+358 40 000 0160",
+        "city": "Espoo"
+      },
+      "headline": "Front-end developer from Lyon who cares about accessible public services.",
+      "previousField": "Web agency development",
+      "skills": [
+        {
+          "id": "js",
+          "level": "evidenced"
+        },
+        {
+          "id": "react",
+          "level": "evidenced"
+        },
+        {
+          "id": "a11y",
+          "level": "evidenced"
+        },
+        {
+          "id": "ux",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A form works with a mouse but a keyboard user can't submit it. What do you do?",
+          "excerpt": "Check the focus order and that the button is a real button, test with a screen reader, then add the case to our tests.",
+          "skills": ["a11y", "js"]
+        },
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "React component library for a booking flow with typed props, keyboard support and Storybook examples.",
+          "skills": ["react", "js"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "French",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Learning"
+        }
+      ],
+      "availability": "Now",
+      "mode": "Hybrid",
+      "audit": {
+        "origin": "EU/EEA",
+        "education": "University",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-65",
+      "revealName": "Bilal Siddiqui",
+      "contact": {
+        "fullName": "Bilal Siddiqui",
+        "email": "bilal.siddiqui@example.com",
+        "phone": "+358 40 000 0161",
+        "city": "Espoo"
+      },
+      "headline": "Former bank teller who learned React through a bootcamp and two volunteer projects.",
+      "previousField": "Retail banking",
+      "skills": [
+        {
+          "id": "js",
+          "level": "evidenced"
+        },
+        {
+          "id": "react",
+          "level": "evidenced"
+        },
+        {
+          "id": "ux",
+          "level": "evidenced"
+        },
+        {
+          "id": "a11y",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "React component library for a booking flow with typed props, keyboard support and Storybook examples.",
+          "skills": ["react", "js"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: working with designers",
+          "excerpt": "I sit in on user tests when I can, so I build what people actually struggle with, not just what the mock-up shows.",
+          "skills": ["ux"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Urdu",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Learning"
+        }
+      ],
+      "availability": "Now",
+      "mode": "Any",
+      "audit": {
+        "origin": "Outside EU",
+        "education": "Self-taught / bootcamp",
+        "path": "Career changer"
+      }
+    },
+    {
+      "id": "T-66",
+      "revealName": "Noora Lindroos",
+      "contact": {
+        "fullName": "Noora Lindroos",
+        "email": "noora.lindroos@example.com",
+        "phone": "+358 40 000 0162",
+        "city": "Espoo"
+      },
+      "headline": "Web developer with a vocational ICT degree, three years at a design studio.",
+      "previousField": "Web design studio",
+      "skills": [
+        {
+          "id": "js",
+          "level": "evidenced"
+        },
+        {
+          "id": "a11y",
+          "level": "evidenced"
+        },
+        {
+          "id": "ux",
+          "level": "evidenced"
+        },
+        {
+          "id": "react",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A form works with a mouse but a keyboard user can't submit it. What do you do?",
+          "excerpt": "Check the focus order and that the button is a real button, test with a screen reader, then add the case to our tests.",
+          "skills": ["a11y", "js"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: working with designers",
+          "excerpt": "I sit in on user tests when I can, so I build what people actually struggle with, not just what the mock-up shows.",
+          "skills": ["ux"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Finnish",
+          "level": "Native"
+        },
+        {
+          "lang": "Swedish",
+          "level": "Fluent"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        }
+      ],
+      "availability": "From January",
+      "mode": "On-site",
+      "audit": {
+        "origin": "Finland",
+        "education": "Vocational",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-67",
+      "revealName": "Tomasz Zieliński",
+      "contact": {
+        "fullName": "Tomasz Zieliński",
+        "email": "tomasz.zielinski@example.com",
+        "phone": "+358 40 000 0163",
+        "city": "Espoo"
+      },
+      "headline": "Back-end developer from Wrocław, builds APIs for logistics software.",
+      "previousField": "Logistics software",
+      "skills": [
+        {
+          "id": "backend",
+          "level": "evidenced"
+        },
+        {
+          "id": "js",
+          "level": "evidenced"
+        },
+        {
+          "id": "sql",
+          "level": "evidenced"
+        },
+        {
+          "id": "cloud",
+          "level": "evidenced"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "An API endpoint gets slow when traffic grows. Where do you start?",
+          "excerpt": "Measure where the time goes, usually the database, check the query plan and indexes, then add caching only where it is safe.",
+          "skills": ["backend", "sql"]
+        },
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "Node.js API with TypeScript for order handling: validation, Postgres, integration tests and a deploy script for the cloud.",
+          "skills": ["js", "cloud"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Polish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        }
+      ],
+      "availability": "From February",
+      "mode": "Remote",
+      "audit": {
+        "origin": "EU/EEA",
+        "education": "University",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-68",
+      "revealName": "Hiroshi Tanaka",
+      "contact": {
+        "fullName": "Hiroshi Tanaka",
+        "email": "hiroshi.tanaka@example.com",
+        "phone": "+358 40 000 0164",
+        "city": "Espoo"
+      },
+      "headline": "Software engineer from Osaka who moved to Espoo with family; payments background.",
+      "previousField": "Payments systems",
+      "skills": [
+        {
+          "id": "backend",
+          "level": "evidenced"
+        },
+        {
+          "id": "js",
+          "level": "evidenced"
+        },
+        {
+          "id": "cloud",
+          "level": "evidenced"
+        },
+        {
+          "id": "sql",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "Node.js API with TypeScript for order handling: validation, Postgres, integration tests and a deploy script for the cloud.",
+          "skills": ["js", "cloud"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: a bug you fixed",
+          "excerpt": "Orders were charged twice when the network blipped, so I made the payment call idempotent and wrote the test that proved it.",
+          "skills": ["backend"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Japanese",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Learning"
+        }
+      ],
+      "availability": "Now",
+      "mode": "Hybrid",
+      "audit": {
+        "origin": "Outside EU",
+        "education": "University",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-69",
+      "revealName": "Riikka Aaltonen",
+      "contact": {
+        "fullName": "Riikka Aaltonen",
+        "email": "riikka.aaltonen@example.com",
+        "phone": "+358 40 000 0165",
+        "city": "Espoo"
+      },
+      "headline": "Ex-accountant who writes back-end code for finance tools.",
+      "previousField": "Accounting",
+      "skills": [
+        {
+          "id": "backend",
+          "level": "evidenced"
+        },
+        {
+          "id": "sql",
+          "level": "evidenced"
+        },
+        {
+          "id": "js",
+          "level": "claimed"
+        },
+        {
+          "id": "cloud",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "An API endpoint gets slow when traffic grows. Where do you start?",
+          "excerpt": "Measure where the time goes, usually the database, check the query plan and indexes, then add caching only where it is safe.",
+          "skills": ["backend", "sql"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: a bug you fixed",
+          "excerpt": "Orders were charged twice when the network blipped, so I made the payment call idempotent and wrote the test that proved it.",
+          "skills": ["backend"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Finnish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        }
+      ],
+      "availability": "From March",
+      "mode": "Hybrid",
+      "audit": {
+        "origin": "Finland",
+        "education": "Self-taught / bootcamp",
+        "path": "Career changer"
+      }
+    },
+    {
+      "id": "T-70",
+      "revealName": "Gabriel Santos",
+      "contact": {
+        "fullName": "Gabriel Santos",
+        "email": "gabriel.santos@example.com",
+        "phone": "+358 40 000 0166",
+        "city": "Espoo"
+      },
+      "headline": "Former call-centre supervisor from São Paulo, now a test automation engineer.",
+      "previousField": "Customer support",
+      "skills": [
+        {
+          "id": "testing",
+          "level": "evidenced"
+        },
+        {
+          "id": "sdlc",
+          "level": "evidenced"
+        },
+        {
+          "id": "problem",
+          "level": "evidenced"
+        },
+        {
+          "id": "js",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A release is tomorrow and a flaky test keeps failing. What do you do?",
+          "excerpt": "Run it in a loop to see the pattern, find whether the test or the product is wrong, and tell the team the risk plainly instead of just re-running it.",
+          "skills": ["testing", "problem"]
+        },
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "Test plan for a mobile banking feature: risks, what is automated, what is tested by hand and when each test runs in the release cycle.",
+          "skills": ["testing", "sdlc"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Portuguese",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Spanish",
+          "level": "Working"
+        }
+      ],
+      "availability": "Now",
+      "mode": "Any",
+      "audit": {
+        "origin": "Outside EU",
+        "education": "Self-taught / bootcamp",
+        "path": "Career changer"
+      }
+    },
+    {
+      "id": "T-71",
+      "revealName": "Johanna Kallio",
+      "contact": {
+        "fullName": "Johanna Kallio",
+        "email": "johanna.kallio@example.com",
+        "phone": "+358 40 000 0167",
+        "city": "Espoo"
+      },
+      "headline": "QA engineer with six years testing medical device software.",
+      "previousField": "Medical software testing",
+      "skills": [
+        {
+          "id": "testing",
+          "level": "evidenced"
+        },
+        {
+          "id": "sdlc",
+          "level": "evidenced"
+        },
+        {
+          "id": "js",
+          "level": "evidenced"
+        },
+        {
+          "id": "problem",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "Test plan for a mobile banking feature: risks, what is automated, what is tested by hand and when each test runs in the release cycle.",
+          "skills": ["testing", "sdlc"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: automating tests",
+          "excerpt": "I wrote end-to-end tests in TypeScript for the login and payment flows, so manual testers could focus on the strange cases.",
+          "skills": ["js"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Finnish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        }
+      ],
+      "availability": "From January",
+      "mode": "On-site",
+      "audit": {
+        "origin": "Finland",
+        "education": "Vocational",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-72",
+      "revealName": "Elif Kaya",
+      "contact": {
+        "fullName": "Elif Kaya",
+        "email": "elif.kaya@example.com",
+        "phone": "+358 40 000 0168",
+        "city": "Espoo"
+      },
+      "headline": "Graphic designer from Istanbul moving into UX research and design.",
+      "previousField": "Graphic design",
+      "skills": [
+        {
+          "id": "ux",
+          "level": "evidenced"
+        },
+        {
+          "id": "a11y",
+          "level": "evidenced"
+        },
+        {
+          "id": "stakeholders",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "Users abandon the sign-up halfway. How do you find out why?",
+          "excerpt": "Watch five people try it, note where they hesitate, check the analytics for the same step, then test one change at a time.",
+          "skills": ["ux"]
+        },
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "Redesign of a parking app's payment screen with larger touch targets, readable contrast and a short usability test report.",
+          "skills": ["ux", "a11y"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Turkish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "German",
+          "level": "Working"
+        }
+      ],
+      "availability": "Now",
+      "mode": "Remote",
+      "audit": {
+        "origin": "Outside EU",
+        "education": "University",
+        "path": "Career changer"
+      }
+    },
+    {
+      "id": "T-73",
+      "revealName": "Henrik Berg",
+      "contact": {
+        "fullName": "Henrik Berg",
+        "email": "henrik.berg@example.com",
+        "phone": "+358 40 000 0169",
+        "city": "Espoo"
+      },
+      "headline": "Service designer from Uppsala, worked on municipal e-services.",
+      "previousField": "Public sector design",
+      "skills": [
+        {
+          "id": "ux",
+          "level": "evidenced"
+        },
+        {
+          "id": "a11y",
+          "level": "evidenced"
+        },
+        {
+          "id": "stakeholders",
+          "level": "evidenced"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "Redesign of a parking app's payment screen with larger touch targets, readable contrast and a short usability test report.",
+          "skills": ["ux", "a11y"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: disagreeing with a product owner",
+          "excerpt": "I brought two recordings of users failing the step. We didn't argue after that, we just fixed it.",
+          "skills": ["stakeholders"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Swedish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Working"
+        }
+      ],
+      "availability": "From February",
+      "mode": "Hybrid",
+      "audit": {
+        "origin": "EU/EEA",
+        "education": "University",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-74",
+      "revealName": "Viktor Horváth",
+      "contact": {
+        "fullName": "Viktor Horváth",
+        "email": "viktor.horvath@example.com",
+        "phone": "+358 40 000 0170",
+        "city": "Espoo"
+      },
+      "headline": "Security analyst from Budapest, three years in a 24/7 security operations centre.",
+      "previousField": "Security operations",
+      "skills": [
+        {
+          "id": "security",
+          "level": "evidenced"
+        },
+        {
+          "id": "cloud",
+          "level": "evidenced"
+        },
+        {
+          "id": "problem",
+          "level": "evidenced"
+        },
+        {
+          "id": "networking",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "You see logins to an admin account from an unusual country at night. What do you do?",
+          "excerpt": "Lock the account, check what it touched, confirm with the owner by phone, and write down each step for the incident report.",
+          "skills": ["security", "problem"]
+        },
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "Review of a small company's cloud setup: public storage buckets, unused keys and firewall rules, with fixes ordered by risk.",
+          "skills": ["security", "cloud"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Hungarian",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        }
+      ],
+      "availability": "Now",
+      "mode": "Hybrid",
+      "audit": {
+        "origin": "EU/EEA",
+        "education": "University",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-75",
+      "revealName": "Aisha Bello",
+      "contact": {
+        "fullName": "Aisha Bello",
+        "email": "aisha.bello@example.com",
+        "phone": "+358 40 000 0171",
+        "city": "Espoo"
+      },
+      "headline": "IT support technician from Kano who earned security certifications independently.",
+      "previousField": "IT support",
+      "skills": [
+        {
+          "id": "security",
+          "level": "evidenced"
+        },
+        {
+          "id": "networking",
+          "level": "evidenced"
+        },
+        {
+          "id": "problem",
+          "level": "evidenced"
+        },
+        {
+          "id": "cloud",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "You see logins to an admin account from an unusual country at night. What do you do?",
+          "excerpt": "Lock the account, check what it touched, confirm with the owner by phone, and write down each step for the incident report.",
+          "skills": ["security", "problem"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: explaining networks",
+          "excerpt": "I draw the network as roads and gates. Most people get firewalls straight away when they see which gates are open.",
+          "skills": ["networking"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "English",
+          "level": "Native"
+        },
+        {
+          "lang": "Hausa",
+          "level": "Native"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Learning"
+        }
+      ],
+      "availability": "From January",
+      "mode": "On-site",
+      "audit": {
+        "origin": "Outside EU",
+        "education": "Self-taught / bootcamp",
+        "path": "Career changer"
+      }
+    },
+    {
+      "id": "T-76",
+      "revealName": "Antti Väisänen",
+      "contact": {
+        "fullName": "Antti Väisänen",
+        "email": "antti.vaisanen@example.com",
+        "phone": "+358 40 000 0172",
+        "city": "Espoo"
+      },
+      "headline": "Embedded developer who has shipped firmware for wearables and smart meters.",
+      "previousField": "Consumer electronics",
+      "skills": [
+        {
+          "id": "embedded",
+          "level": "evidenced"
+        },
+        {
+          "id": "testing",
+          "level": "evidenced"
+        },
+        {
+          "id": "problem",
+          "level": "evidenced"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A device resets randomly in the field but never on your desk. How do you find it?",
+          "excerpt": "Log the reset reason to flash, check power and temperature in the field, and try to reproduce it with a weak power supply on the bench.",
+          "skills": ["embedded", "problem"]
+        },
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "Firmware in C for a battery-powered sensor: sleep modes, a watchdog and unit tests that run on the build server.",
+          "skills": ["embedded", "testing"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Finnish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        }
+      ],
+      "availability": "From February",
+      "mode": "On-site",
+      "audit": {
+        "origin": "Finland",
+        "education": "University",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-77",
+      "revealName": "Minh Tran",
+      "contact": {
+        "fullName": "Minh Tran",
+        "email": "minh.tran@example.com",
+        "phone": "+358 40 000 0173",
+        "city": "Espoo"
+      },
+      "headline": "Electronics engineer from Hanoi; designs and codes low-power sensor boards.",
+      "previousField": "Electronics manufacturing",
+      "skills": [
+        {
+          "id": "embedded",
+          "level": "evidenced"
+        },
+        {
+          "id": "testing",
+          "level": "evidenced"
+        },
+        {
+          "id": "problem",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "Firmware in C for a battery-powered sensor: sleep modes, a watchdog and unit tests that run on the build server.",
+          "skills": ["embedded", "testing"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: hardware and software together",
+          "excerpt": "I like being the person who can read the schematic and the code, so the hardware team and the app team stop blaming each other.",
+          "skills": ["embedded"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Vietnamese",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Learning"
+        }
+      ],
+      "availability": "Now",
+      "mode": "On-site",
+      "audit": {
+        "origin": "Outside EU",
+        "education": "University",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-78",
+      "revealName": "Sami Kettunen",
+      "contact": {
+        "fullName": "Sami Kettunen",
+        "email": "sami.kettunen@example.com",
+        "phone": "+358 40 000 0174",
+        "city": "Espoo"
+      },
+      "headline": "Automation technician with ten years maintaining food factory lines.",
+      "previousField": "Food industry maintenance",
+      "skills": [
+        {
+          "id": "plc",
+          "level": "evidenced"
+        },
+        {
+          "id": "automation",
+          "level": "evidenced"
+        },
+        {
+          "id": "control-systems",
+          "level": "evidenced"
+        },
+        {
+          "id": "wiring",
+          "level": "evidenced"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A conveyor stops at random and the operators restart it by hand. What do you do?",
+          "excerpt": "Read the PLC alarms and the I/O status at the moment it stops, check the sensor and its wiring, and fix the cause instead of adding a restart.",
+          "skills": ["plc", "wiring"]
+        },
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "Commissioning notes for a bottling line upgrade: new HMI screens, interlock tests and the operator training plan.",
+          "skills": ["control-systems", "automation"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Finnish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Working"
+        }
+      ],
+      "availability": "From January",
+      "mode": "On-site",
+      "audit": {
+        "origin": "Finland",
+        "education": "Vocational",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-79",
+      "revealName": "Karim Benali",
+      "contact": {
+        "fullName": "Karim Benali",
+        "email": "karim.benali@example.com",
+        "phone": "+358 40 000 0175",
+        "city": "Espoo"
+      },
+      "headline": "Automation engineer from Algiers, commissioned water treatment plants.",
+      "previousField": "Water treatment",
+      "skills": [
+        {
+          "id": "plc",
+          "level": "evidenced"
+        },
+        {
+          "id": "automation",
+          "level": "evidenced"
+        },
+        {
+          "id": "wiring",
+          "level": "evidenced"
+        },
+        {
+          "id": "control-systems",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A conveyor stops at random and the operators restart it by hand. What do you do?",
+          "excerpt": "Read the PLC alarms and the I/O status at the moment it stops, check the sensor and its wiring, and fix the cause instead of adding a restart.",
+          "skills": ["plc", "wiring"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: a line you made better",
+          "excerpt": "We moved the recipe changes into the control system, so a product change takes one button instead of six people.",
+          "skills": ["automation"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Arabic",
+          "level": "Native"
+        },
+        {
+          "lang": "French",
+          "level": "Fluent"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Learning"
+        }
+      ],
+      "availability": "Now",
+      "mode": "On-site",
+      "audit": {
+        "origin": "Outside EU",
+        "education": "University",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-80",
+      "revealName": "Ondřej Dvořák",
+      "contact": {
+        "fullName": "Ondřej Dvořák",
+        "email": "ondrej.dvorak@example.com",
+        "phone": "+358 40 000 0176",
+        "city": "Espoo"
+      },
+      "headline": "Controls technician from Brno, programs and services packaging machines.",
+      "previousField": "Packaging machinery",
+      "skills": [
+        {
+          "id": "automation",
+          "level": "evidenced"
+        },
+        {
+          "id": "control-systems",
+          "level": "evidenced"
+        },
+        {
+          "id": "plc",
+          "level": "claimed"
+        },
+        {
+          "id": "wiring",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "Commissioning notes for a bottling line upgrade: new HMI screens, interlock tests and the operator training plan.",
+          "skills": ["control-systems", "automation"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: a line you made better",
+          "excerpt": "We moved the recipe changes into the control system, so a product change takes one button instead of six people.",
+          "skills": ["automation"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Czech",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "German",
+          "level": "Working"
+        }
+      ],
+      "availability": "From March",
+      "mode": "Any",
+      "audit": {
+        "origin": "EU/EEA",
+        "education": "Vocational",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-81",
+      "revealName": "Lotta Rinne",
+      "contact": {
+        "fullName": "Lotta Rinne",
+        "email": "lotta.rinne@example.com",
+        "phone": "+358 40 000 0177",
+        "city": "Espoo"
+      },
+      "headline": "Robotics engineer who built automated test cells for a phone maker.",
+      "previousField": "Electronics test automation",
+      "skills": [
+        {
+          "id": "robotics",
+          "level": "evidenced"
+        },
+        {
+          "id": "automation",
+          "level": "evidenced"
+        },
+        {
+          "id": "embedded",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A robot arm collides with a fixture after a software update. What do you do?",
+          "excerpt": "Stop the cell, compare the old and new paths in simulation, check the tool and fixture coordinates, and only restart at low speed with someone watching.",
+          "skills": ["robotics"]
+        },
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "Pick-and-place cell with a cobot and a camera, including the safety zones and the cycle-time measurements.",
+          "skills": ["robotics", "automation"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Finnish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Swedish",
+          "level": "Working"
+        }
+      ],
+      "availability": "From February",
+      "mode": "On-site",
+      "audit": {
+        "origin": "Finland",
+        "education": "University",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-82",
+      "revealName": "Pedro Alves",
+      "contact": {
+        "fullName": "Pedro Alves",
+        "email": "pedro.alves@example.com",
+        "phone": "+358 40 000 0178",
+        "city": "Espoo"
+      },
+      "headline": "Car mechanic from Lisbon who retrained in robotics and cobots.",
+      "previousField": "Automotive repair",
+      "skills": [
+        {
+          "id": "robotics",
+          "level": "evidenced"
+        },
+        {
+          "id": "automation",
+          "level": "evidenced"
+        },
+        {
+          "id": "embedded",
+          "level": "evidenced"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "Pick-and-place cell with a cobot and a camera, including the safety zones and the cycle-time measurements.",
+          "skills": ["robotics", "automation"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: building robots",
+          "excerpt": "I started with hobby robots on microcontrollers, and that's still how I debug: one motor, one sensor at a time.",
+          "skills": ["embedded"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Portuguese",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        }
+      ],
+      "availability": "Now",
+      "mode": "On-site",
+      "audit": {
+        "origin": "EU/EEA",
+        "education": "Self-taught / bootcamp",
+        "path": "Career changer"
+      }
+    },
+    {
+      "id": "T-83",
+      "revealName": "Markus Leinonen",
+      "contact": {
+        "fullName": "Markus Leinonen",
+        "email": "markus.leinonen@example.com",
+        "phone": "+358 40 000 0179",
+        "city": "Espoo"
+      },
+      "headline": "System specialist with eight years running Windows and Linux servers for a municipality.",
+      "previousField": "Municipal IT",
+      "skills": [
+        {
+          "id": "sysadmin",
+          "level": "evidenced"
+        },
+        {
+          "id": "virtualisation",
+          "level": "evidenced"
+        },
+        {
+          "id": "monitoring",
+          "level": "evidenced"
+        },
+        {
+          "id": "networking",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A server's disk fills up every weekend. What do you do?",
+          "excerpt": "Find what writes there with the monitoring history, fix the log rotation or job causing it, and set an alert at 80 percent instead of 100.",
+          "skills": ["sysadmin", "monitoring"]
+        },
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "Plan to move 30 old virtual machines to a new cluster with a test move first, a rollback and a timetable agreed with users.",
+          "skills": ["virtualisation"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Finnish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        }
+      ],
+      "availability": "From January",
+      "mode": "Hybrid",
+      "audit": {
+        "origin": "Finland",
+        "education": "Vocational",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-84",
+      "revealName": "Ivan Kozlov",
+      "contact": {
+        "fullName": "Ivan Kozlov",
+        "email": "ivan.kozlov@example.com",
+        "phone": "+358 40 000 0180",
+        "city": "Espoo"
+      },
+      "headline": "System engineer from Sofia, ran virtualised hosting for 200 small business customers.",
+      "previousField": "Web hosting",
+      "skills": [
+        {
+          "id": "virtualisation",
+          "level": "evidenced"
+        },
+        {
+          "id": "networking",
+          "level": "evidenced"
+        },
+        {
+          "id": "sysadmin",
+          "level": "claimed"
+        },
+        {
+          "id": "monitoring",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "Plan to move 30 old virtual machines to a new cluster with a test move first, a rollback and a timetable agreed with users.",
+          "skills": ["virtualisation"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: fixing a network problem",
+          "excerpt": "Printers vanished every morning. It turned out two devices fought over one address, so I cleaned up the DHCP ranges.",
+          "skills": ["networking"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Bulgarian",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Russian",
+          "level": "Fluent"
+        }
+      ],
+      "availability": "Now",
+      "mode": "Remote",
+      "audit": {
+        "origin": "EU/EEA",
+        "education": "University",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-85",
+      "revealName": "Grace Mwangi",
+      "contact": {
+        "fullName": "Grace Mwangi",
+        "email": "grace.mwangi@example.com",
+        "phone": "+358 40 000 0181",
+        "city": "Espoo"
+      },
+      "headline": "Former school administrator from Nairobi who ran the school's network and now works in IT ops.",
+      "previousField": "School administration",
+      "skills": [
+        {
+          "id": "sysadmin",
+          "level": "evidenced"
+        },
+        {
+          "id": "monitoring",
+          "level": "evidenced"
+        },
+        {
+          "id": "networking",
+          "level": "evidenced"
+        },
+        {
+          "id": "virtualisation",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A server's disk fills up every weekend. What do you do?",
+          "excerpt": "Find what writes there with the monitoring history, fix the log rotation or job causing it, and set an alert at 80 percent instead of 100.",
+          "skills": ["sysadmin", "monitoring"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: fixing a network problem",
+          "excerpt": "Printers vanished every morning. It turned out two devices fought over one address, so I cleaned up the DHCP ranges.",
+          "skills": ["networking"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Swahili",
+          "level": "Native"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Learning"
+        }
+      ],
+      "availability": "From February",
+      "mode": "On-site",
+      "audit": {
+        "origin": "Outside EU",
+        "education": "Self-taught / bootcamp",
+        "path": "Career changer"
+      }
+    },
+    {
+      "id": "T-86",
+      "revealName": "Lena Fischer",
+      "contact": {
+        "fullName": "Lena Fischer",
+        "email": "lena.fischer@example.com",
+        "phone": "+358 40 000 0182",
+        "city": "Espoo"
+      },
+      "headline": "Integration developer from Hamburg, connected SAP with warehouse systems.",
+      "previousField": "ERP consulting",
+      "skills": [
+        {
+          "id": "integration",
+          "level": "evidenced"
+        },
+        {
+          "id": "backend",
+          "level": "evidenced"
+        },
+        {
+          "id": "sdlc",
+          "level": "evidenced"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "Orders from the webshop reach the ERP twice. How do you fix it?",
+          "excerpt": "Trace a duplicate by its message id through each system, find where the retry happens, and make the receiving side ignore repeats.",
+          "skills": ["integration", "backend"]
+        },
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "Interface specification between a payroll system and an HR system: fields, error handling and the test cases both vendors approved.",
+          "skills": ["integration", "sdlc"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "German",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Working"
+        }
+      ],
+      "availability": "From January",
+      "mode": "Hybrid",
+      "audit": {
+        "origin": "EU/EEA",
+        "education": "University",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-87",
+      "revealName": "Ahmed Farouk",
+      "contact": {
+        "fullName": "Ahmed Farouk",
+        "email": "ahmed.farouk@example.com",
+        "phone": "+358 40 000 0183",
+        "city": "Espoo"
+      },
+      "headline": "Systems analyst from Cairo who wrote interfaces between hospital systems.",
+      "previousField": "Hospital IT",
+      "skills": [
+        {
+          "id": "integration",
+          "level": "evidenced"
+        },
+        {
+          "id": "sdlc",
+          "level": "evidenced"
+        },
+        {
+          "id": "backend",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "Interface specification between a payroll system and an HR system: fields, error handling and the test cases both vendors approved.",
+          "skills": ["integration", "sdlc"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: working between vendors",
+          "excerpt": "I keep one shared document of what each side sends and expects. It saves weeks of emails.",
+          "skills": ["integration"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Arabic",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        }
+      ],
+      "availability": "Now",
+      "mode": "Hybrid",
+      "audit": {
+        "origin": "Outside EU",
+        "education": "University",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-88",
+      "revealName": "Heidi Laaksonen",
+      "contact": {
+        "fullName": "Heidi Laaksonen",
+        "email": "heidi.laaksonen@example.com",
+        "phone": "+358 40 000 0184",
+        "city": "Espoo"
+      },
+      "headline": "Former primary teacher who became a recruiter for engineering firms.",
+      "previousField": "Teaching",
+      "skills": [
+        {
+          "id": "recruiting",
+          "level": "evidenced"
+        },
+        {
+          "id": "interviewing",
+          "level": "evidenced"
+        },
+        {
+          "id": "intercultural",
+          "level": "evidenced"
+        },
+        {
+          "id": "stakeholders",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A manager wants someone 'with a Finnish degree'. What do you say?",
+          "excerpt": "Ask what the degree is meant to prove, turn that into skills we can check, and assess every candidate on the same skills.",
+          "skills": ["recruiting", "intercultural"]
+        },
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "Structured interview guide for a customer service role: five questions, what a good answer shows, and a scoring sheet.",
+          "skills": ["interviewing"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Finnish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Swedish",
+          "level": "Fluent"
+        }
+      ],
+      "availability": "From February",
+      "mode": "Hybrid",
+      "audit": {
+        "origin": "Finland",
+        "education": "University",
+        "path": "Career changer"
+      }
+    },
+    {
+      "id": "T-89",
+      "revealName": "Olga Sokolova",
+      "contact": {
+        "fullName": "Olga Sokolova",
+        "email": "olga.sokolova@example.com",
+        "phone": "+358 40 000 0185",
+        "city": "Espoo"
+      },
+      "headline": "Recruitment consultant from Riga, hired IT and logistics staff across the Baltics.",
+      "previousField": "Recruitment agency",
+      "skills": [
+        {
+          "id": "interviewing",
+          "level": "evidenced"
+        },
+        {
+          "id": "stakeholders",
+          "level": "evidenced"
+        },
+        {
+          "id": "recruiting",
+          "level": "claimed"
+        },
+        {
+          "id": "intercultural",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "Structured interview guide for a customer service role: five questions, what a good answer shows, and a scoring sheet.",
+          "skills": ["interviewing"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: working with hiring managers",
+          "excerpt": "I agree with the manager before we start what 'good' looks like, so we don't change our minds after meeting the candidates.",
+          "skills": ["stakeholders"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Latvian",
+          "level": "Native"
+        },
+        {
+          "lang": "Russian",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Working"
+        }
+      ],
+      "availability": "Now",
+      "mode": "Hybrid",
+      "audit": {
+        "origin": "EU/EEA",
+        "education": "University",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-90",
+      "revealName": "Kwame Asante",
+      "contact": {
+        "fullName": "Kwame Asante",
+        "email": "kwame.asante@example.com",
+        "phone": "+358 40 000 0186",
+        "city": "Espoo"
+      },
+      "headline": "Talent acquisition specialist from Accra with a focus on fair, structured hiring.",
+      "previousField": "Corporate recruitment",
+      "skills": [
+        {
+          "id": "recruiting",
+          "level": "evidenced"
+        },
+        {
+          "id": "intercultural",
+          "level": "evidenced"
+        },
+        {
+          "id": "stakeholders",
+          "level": "evidenced"
+        },
+        {
+          "id": "interviewing",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A manager wants someone 'with a Finnish degree'. What do you say?",
+          "excerpt": "Ask what the degree is meant to prove, turn that into skills we can check, and assess every candidate on the same skills.",
+          "skills": ["recruiting", "intercultural"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: working with hiring managers",
+          "excerpt": "I agree with the manager before we start what 'good' looks like, so we don't change our minds after meeting the candidates.",
+          "skills": ["stakeholders"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "English",
+          "level": "Native"
+        },
+        {
+          "lang": "Twi",
+          "level": "Native"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Learning"
+        }
+      ],
+      "availability": "From January",
+      "mode": "Remote",
+      "audit": {
+        "origin": "Outside EU",
+        "education": "University",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-91",
+      "revealName": "Päivi Rautio",
+      "contact": {
+        "fullName": "Päivi Rautio",
+        "email": "paivi.rautio@example.com",
+        "phone": "+358 40 000 0187",
+        "city": "Espoo"
+      },
+      "headline": "HR specialist with ten years in industry; knows payroll and the collective agreements.",
+      "previousField": "Industrial HR",
+      "skills": [
+        {
+          "id": "hrm",
+          "level": "evidenced"
+        },
+        {
+          "id": "labour-law",
+          "level": "evidenced"
+        },
+        {
+          "id": "payroll",
+          "level": "evidenced"
+        },
+        {
+          "id": "staff-dev",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "An employee asks if their fixed-term contract can be renewed a third time. How do you answer?",
+          "excerpt": "Check the reason for the fixed term against the law and the collective agreement, explain the answer in plain words, and tell their manager what follows.",
+          "skills": ["labour-law", "hrm"]
+        },
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "Monthly payroll checklist: hours from the shift system, absences, allowances, and the checks before payment goes out.",
+          "skills": ["payroll"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Finnish",
+          "level": "Native"
+        },
+        {
+          "lang": "Swedish",
+          "level": "Working"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        }
+      ],
+      "availability": "From March",
+      "mode": "On-site",
+      "audit": {
+        "origin": "Finland",
+        "education": "University",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-92",
+      "revealName": "Monika Bauer",
+      "contact": {
+        "fullName": "Monika Bauer",
+        "email": "monika.bauer@example.com",
+        "phone": "+358 40 000 0188",
+        "city": "Espoo"
+      },
+      "headline": "HR generalist from Vienna, built onboarding for a fast-growing start-up.",
+      "previousField": "Start-up HR",
+      "skills": [
+        {
+          "id": "hrm",
+          "level": "evidenced"
+        },
+        {
+          "id": "labour-law",
+          "level": "evidenced"
+        },
+        {
+          "id": "staff-dev",
+          "level": "evidenced"
+        },
+        {
+          "id": "payroll",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "An employee asks if their fixed-term contract can be renewed a third time. How do you answer?",
+          "excerpt": "Check the reason for the fixed term against the law and the collective agreement, explain the answer in plain words, and tell their manager what follows.",
+          "skills": ["labour-law", "hrm"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: onboarding new people",
+          "excerpt": "I give every new hire a buddy and a 30-day plan, and I ask them after a month what we should change.",
+          "skills": ["staff-dev"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "German",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Working"
+        }
+      ],
+      "availability": "Now",
+      "mode": "Hybrid",
+      "audit": {
+        "origin": "EU/EEA",
+        "education": "University",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-93",
+      "revealName": "Ritva Honkanen",
+      "contact": {
+        "fullName": "Ritva Honkanen",
+        "email": "ritva.honkanen@example.com",
+        "phone": "+358 40 000 0189",
+        "city": "Espoo"
+      },
+      "headline": "Payroll clerk moving into a broader HR role after 12 years in accounting offices.",
+      "previousField": "Payroll accounting",
+      "skills": [
+        {
+          "id": "payroll",
+          "level": "evidenced"
+        },
+        {
+          "id": "staff-dev",
+          "level": "evidenced"
+        },
+        {
+          "id": "hrm",
+          "level": "claimed"
+        },
+        {
+          "id": "labour-law",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "Monthly payroll checklist: hours from the shift system, absences, allowances, and the checks before payment goes out.",
+          "skills": ["payroll"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: onboarding new people",
+          "excerpt": "I give every new hire a buddy and a 30-day plan, and I ask them after a month what we should change.",
+          "skills": ["staff-dev"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Finnish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Working"
+        }
+      ],
+      "availability": "From January",
+      "mode": "On-site",
+      "audit": {
+        "origin": "Finland",
+        "education": "Vocational",
+        "path": "Career changer"
+      }
+    },
+    {
+      "id": "T-94",
+      "revealName": "Esther Nakato",
+      "contact": {
+        "fullName": "Esther Nakato",
+        "email": "esther.nakato@example.com",
+        "phone": "+358 40 000 0190",
+        "city": "Espoo"
+      },
+      "headline": "Registered nurse from Kampala, in the Finnish licensing process; surgical ward background.",
+      "previousField": "Hospital nursing",
+      "skills": [
+        {
+          "id": "patient-care",
+          "level": "evidenced"
+        },
+        {
+          "id": "medication",
+          "level": "evidenced"
+        },
+        {
+          "id": "ehr",
+          "level": "evidenced"
+        },
+        {
+          "id": "intercultural",
+          "level": "evidenced"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A patient after surgery says the pain is worse than this morning. What do you do?",
+          "excerpt": "Assess the pain and vital signs, check what was given and when, follow the plan or call the doctor, and write it all in the record.",
+          "skills": ["patient-care", "medication", "ehr"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: caring for patients from other cultures",
+          "excerpt": "I ask how the patient wants things done instead of guessing. A short question saves a lot of misunderstanding.",
+          "skills": ["intercultural"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Luganda",
+          "level": "Native"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Working"
+        }
+      ],
+      "availability": "From February",
+      "mode": "On-site",
+      "audit": {
+        "origin": "Outside EU",
+        "education": "University",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-95",
+      "revealName": "Maria Santos",
+      "contact": {
+        "fullName": "Maria Santos",
+        "email": "maria.santos@example.com",
+        "phone": "+358 40 000 0191",
+        "city": "Espoo"
+      },
+      "headline": "Nurse from Manila with seven years in emergency care.",
+      "previousField": "Emergency nursing",
+      "skills": [
+        {
+          "id": "medication",
+          "level": "evidenced"
+        },
+        {
+          "id": "intercultural",
+          "level": "evidenced"
+        },
+        {
+          "id": "patient-care",
+          "level": "claimed"
+        },
+        {
+          "id": "ehr",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: caring for patients from other cultures",
+          "excerpt": "I ask how the patient wants things done instead of guessing. A short question saves a lot of misunderstanding.",
+          "skills": ["intercultural"]
+        },
+        {
+          "kind": "scenario",
+          "prompt": "Two medicines on a chart look like they shouldn't go together. What do you do?",
+          "excerpt": "Don't give the dose yet, check the interaction, and confirm with the prescribing doctor before continuing.",
+          "skills": ["medication"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Tagalog",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Working"
+        }
+      ],
+      "availability": "Now",
+      "mode": "On-site",
+      "audit": {
+        "origin": "Outside EU",
+        "education": "University",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-96",
+      "revealName": "Krista Lehto",
+      "contact": {
+        "fullName": "Krista Lehto",
+        "email": "krista.lehto@example.com",
+        "phone": "+358 40 000 0192",
+        "city": "Espoo"
+      },
+      "headline": "Registered nurse with five years in day surgery at a university hospital.",
+      "previousField": "Day surgery nursing",
+      "skills": [
+        {
+          "id": "patient-care",
+          "level": "evidenced"
+        },
+        {
+          "id": "medication",
+          "level": "evidenced"
+        },
+        {
+          "id": "ehr",
+          "level": "evidenced"
+        },
+        {
+          "id": "intercultural",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A patient after surgery says the pain is worse than this morning. What do you do?",
+          "excerpt": "Assess the pain and vital signs, check what was given and when, follow the plan or call the doctor, and write it all in the record.",
+          "skills": ["patient-care", "medication", "ehr"]
+        },
+        {
+          "kind": "scenario",
+          "prompt": "Two medicines on a chart look like they shouldn't go together. What do you do?",
+          "excerpt": "Don't give the dose yet, check the interaction, and confirm with the prescribing doctor before continuing.",
+          "skills": ["medication"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Finnish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Swedish",
+          "level": "Working"
+        }
+      ],
+      "availability": "From January",
+      "mode": "On-site",
+      "audit": {
+        "origin": "Finland",
+        "education": "University",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-97",
+      "revealName": "Abdi Warsame",
+      "contact": {
+        "fullName": "Abdi Warsame",
+        "email": "abdi.warsame@example.com",
+        "phone": "+358 40 000 0193",
+        "city": "Espoo"
+      },
+      "headline": "Former bus driver, now a practical nurse who works with older people.",
+      "previousField": "Public transport",
+      "skills": [
+        {
+          "id": "elderly-care",
+          "level": "evidenced"
+        },
+        {
+          "id": "patient-care",
+          "level": "evidenced"
+        },
+        {
+          "id": "team",
+          "level": "evidenced"
+        },
+        {
+          "id": "medication",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A resident with memory loss refuses to shower. What do you do?",
+          "excerpt": "Stay calm, try again later or offer a wash at the sink, and note what worked so the next shift can do the same.",
+          "skills": ["elderly-care", "patient-care"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: working in a team",
+          "excerpt": "We hand over every shift face to face for five minutes. Nothing important gets lost in the notes.",
+          "skills": ["team"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Somali",
+          "level": "Native"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Fluent"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        }
+      ],
+      "availability": "Now",
+      "mode": "On-site",
+      "audit": {
+        "origin": "Outside EU",
+        "education": "Vocational",
+        "path": "Career changer"
+      }
+    },
+    {
+      "id": "T-98",
+      "revealName": "Irina Popescu",
+      "contact": {
+        "fullName": "Irina Popescu",
+        "email": "irina.popescu@example.com",
+        "phone": "+358 40 000 0194",
+        "city": "Espoo"
+      },
+      "headline": "Care worker from Iași, six years in assisted living homes in Italy and Finland.",
+      "previousField": "Assisted living",
+      "skills": [
+        {
+          "id": "team",
+          "level": "evidenced"
+        },
+        {
+          "id": "medication",
+          "level": "evidenced"
+        },
+        {
+          "id": "elderly-care",
+          "level": "claimed"
+        },
+        {
+          "id": "patient-care",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: working in a team",
+          "excerpt": "We hand over every shift face to face for five minutes. Nothing important gets lost in the notes.",
+          "skills": ["team"]
+        },
+        {
+          "kind": "scenario",
+          "prompt": "You notice a resident's evening pills are missing from the dispenser. What do you do?",
+          "excerpt": "Don't guess, check the medication list, tell the nurse in charge and record what happened.",
+          "skills": ["medication"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Romanian",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Working"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Working"
+        }
+      ],
+      "availability": "Now",
+      "mode": "On-site",
+      "audit": {
+        "origin": "EU/EEA",
+        "education": "Vocational",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-99",
+      "revealName": "Seppo Karjalainen",
+      "contact": {
+        "fullName": "Seppo Karjalainen",
+        "email": "seppo.karjalainen@example.com",
+        "phone": "+358 40 000 0195",
+        "city": "Espoo"
+      },
+      "headline": "Transport planner with 15 years routing trucks for a grocery chain.",
+      "previousField": "Grocery logistics",
+      "skills": [
+        {
+          "id": "logistics",
+          "level": "evidenced"
+        },
+        {
+          "id": "customer",
+          "level": "evidenced"
+        },
+        {
+          "id": "problem",
+          "level": "evidenced"
+        },
+        {
+          "id": "supply",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A truck breaks down with deliveries for five customers. What do you do?",
+          "excerpt": "Call the customers with honest times, move the most urgent loads to other trucks, and replan the rest of the route.",
+          "skills": ["logistics", "customer", "problem"]
+        },
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "Weekly delivery plan for 25 stores that cut empty kilometres by combining two routes.",
+          "skills": ["logistics"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Finnish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Working"
+        }
+      ],
+      "availability": "From February",
+      "mode": "On-site",
+      "audit": {
+        "origin": "Finland",
+        "education": "Vocational",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-100",
+      "revealName": "Nadia Rahman",
+      "contact": {
+        "fullName": "Nadia Rahman",
+        "email": "nadia.rahman@example.com",
+        "phone": "+358 40 000 0196",
+        "city": "Espoo"
+      },
+      "headline": "Supply chain coordinator from Dhaka, managed garment shipments to Europe.",
+      "previousField": "Garment export",
+      "skills": [
+        {
+          "id": "logistics",
+          "level": "evidenced"
+        },
+        {
+          "id": "supply",
+          "level": "evidenced"
+        },
+        {
+          "id": "customer",
+          "level": "evidenced"
+        },
+        {
+          "id": "problem",
+          "level": "evidenced"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A truck breaks down with deliveries for five customers. What do you do?",
+          "excerpt": "Call the customers with honest times, move the most urgent loads to other trucks, and replan the rest of the route.",
+          "skills": ["logistics", "customer", "problem"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: keeping supply running",
+          "excerpt": "When a supplier was late I already had a second one tested, so the shelves never went empty.",
+          "skills": ["supply"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Bengali",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Learning"
+        }
+      ],
+      "availability": "Now",
+      "mode": "Hybrid",
+      "audit": {
+        "origin": "Outside EU",
+        "education": "University",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-101",
+      "revealName": "Jukka Ahonen",
+      "contact": {
+        "fullName": "Jukka Ahonen",
+        "email": "jukka.ahonen@example.com",
+        "phone": "+358 40 000 0197",
+        "city": "Espoo"
+      },
+      "headline": "Warehouse team leader for a building-supplies wholesaler, 12 people per shift.",
+      "previousField": "Wholesale warehousing",
+      "skills": [
+        {
+          "id": "warehouse",
+          "level": "evidenced"
+        },
+        {
+          "id": "lead",
+          "level": "evidenced"
+        },
+        {
+          "id": "team",
+          "level": "evidenced"
+        },
+        {
+          "id": "problem",
+          "level": "evidenced"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "Picking errors went up on the night shift. What do you do?",
+          "excerpt": "Look at which products and locations go wrong, ask the pickers why, fix the labels or layout, and check the numbers again after a week.",
+          "skills": ["warehouse", "problem"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: leading a shift",
+          "excerpt": "I start every shift with a two-minute meeting: today's volume, who does what, and one safety point.",
+          "skills": ["lead", "team"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Finnish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Working"
+        }
+      ],
+      "availability": "From January",
+      "mode": "On-site",
+      "audit": {
+        "origin": "Finland",
+        "education": "Vocational",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-102",
+      "revealName": "Ali Rezaei",
+      "contact": {
+        "fullName": "Ali Rezaei",
+        "email": "ali.rezaei@example.com",
+        "phone": "+358 40 000 0198",
+        "city": "Espoo"
+      },
+      "headline": "Former tailor from Herat, now a forklift driver ready to lead a shift.",
+      "previousField": "Tailoring",
+      "skills": [
+        {
+          "id": "warehouse",
+          "level": "evidenced"
+        },
+        {
+          "id": "lead",
+          "level": "evidenced"
+        },
+        {
+          "id": "team",
+          "level": "evidenced"
+        },
+        {
+          "id": "problem",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: leading a shift",
+          "excerpt": "I start every shift with a two-minute meeting: today's volume, who does what, and one safety point.",
+          "skills": ["lead", "team"]
+        },
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "Layout change for a small warehouse that moved fast-moving items near packing and cut walking time.",
+          "skills": ["warehouse"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Dari",
+          "level": "Native"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Working"
+        },
+        {
+          "lang": "English",
+          "level": "Working"
+        }
+      ],
+      "availability": "Now",
+      "mode": "On-site",
+      "audit": {
+        "origin": "Outside EU",
+        "education": "Vocational",
+        "path": "Career changer"
+      }
+    },
+    {
+      "id": "T-103",
+      "revealName": "Eva Novotná",
+      "contact": {
+        "fullName": "Eva Novotná",
+        "email": "eva.novotna@example.com",
+        "phone": "+358 40 000 0199",
+        "city": "Espoo"
+      },
+      "headline": "Buyer from Bratislava, sourced components for an electronics manufacturer.",
+      "previousField": "Electronics procurement",
+      "skills": [
+        {
+          "id": "procurement",
+          "level": "evidenced"
+        },
+        {
+          "id": "supply",
+          "level": "evidenced"
+        },
+        {
+          "id": "stakeholders",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A key supplier raises prices by 20 percent. What do you do?",
+          "excerpt": "Ask what changed, check what others charge, and negotiate with real alternatives in hand rather than threats.",
+          "skills": ["procurement", "supply"]
+        },
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "Supplier comparison for cleaning services: price, quality, environmental criteria and a scoring table the team agreed on.",
+          "skills": ["procurement"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Slovak",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Learning"
+        }
+      ],
+      "availability": "From March",
+      "mode": "Hybrid",
+      "audit": {
+        "origin": "EU/EEA",
+        "education": "University",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-104",
+      "revealName": "Timo Pesonen",
+      "contact": {
+        "fullName": "Timo Pesonen",
+        "email": "timo.pesonen@example.com",
+        "phone": "+358 40 000 0200",
+        "city": "Espoo"
+      },
+      "headline": "Energy engineer who audits public buildings for a consultancy.",
+      "previousField": "Energy consulting",
+      "skills": [
+        {
+          "id": "energy",
+          "level": "evidenced"
+        },
+        {
+          "id": "hvac",
+          "level": "evidenced"
+        },
+        {
+          "id": "problem",
+          "level": "evidenced"
+        },
+        {
+          "id": "esg",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A school's heating bill doubled this winter. Where do you look?",
+          "excerpt": "Compare the consumption data with the weather, check heating schedules and ventilation run times, and walk the building at night.",
+          "skills": ["energy", "hvac", "problem"]
+        },
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "Energy audit for a 1970s office building with ten measures ordered by payback time.",
+          "skills": ["energy"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Finnish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        }
+      ],
+      "availability": "From January",
+      "mode": "Hybrid",
+      "audit": {
+        "origin": "Finland",
+        "education": "University",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-105",
+      "revealName": "Rashid Karimov",
+      "contact": {
+        "fullName": "Rashid Karimov",
+        "email": "rashid.karimov@example.com",
+        "phone": "+358 40 000 0201",
+        "city": "Espoo"
+      },
+      "headline": "Power plant engineer from Tashkent retraining in building energy efficiency.",
+      "previousField": "Power generation",
+      "skills": [
+        {
+          "id": "energy",
+          "level": "evidenced"
+        },
+        {
+          "id": "esg",
+          "level": "evidenced"
+        },
+        {
+          "id": "hvac",
+          "level": "claimed"
+        },
+        {
+          "id": "problem",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "Energy audit for a 1970s office building with ten measures ordered by payback time.",
+          "skills": ["energy"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: why energy work matters",
+          "excerpt": "Every saving also shows up in the carbon report, so finance and sustainability both want the same thing.",
+          "skills": ["esg"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Uzbek",
+          "level": "Native"
+        },
+        {
+          "lang": "Russian",
+          "level": "Fluent"
+        },
+        {
+          "lang": "English",
+          "level": "Working"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Learning"
+        }
+      ],
+      "availability": "Now",
+      "mode": "On-site",
+      "audit": {
+        "origin": "Outside EU",
+        "education": "University",
+        "path": "Career changer"
+      }
+    },
+    {
+      "id": "T-106",
+      "revealName": "Aleksi Mustonen",
+      "contact": {
+        "fullName": "Aleksi Mustonen",
+        "email": "aleksi.mustonen@example.com",
+        "phone": "+358 40 000 0202",
+        "city": "Espoo"
+      },
+      "headline": "HVAC service technician, seven years with ventilation in schools and offices.",
+      "previousField": "Building services",
+      "skills": [
+        {
+          "id": "hvac",
+          "level": "evidenced"
+        },
+        {
+          "id": "customer",
+          "level": "evidenced"
+        },
+        {
+          "id": "problem",
+          "level": "evidenced"
+        },
+        {
+          "id": "energy",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "Office staff say the meeting room is stuffy in the afternoon. What do you check?",
+          "excerpt": "Measure CO2 and temperature in the afternoon, check the ventilation schedule and dampers, and tell staff what you found.",
+          "skills": ["hvac", "problem"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: talking to building users",
+          "excerpt": "I explain the fault in everyday words, and say when it will be fixed. People mostly want to know that.",
+          "skills": ["customer"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Finnish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Working"
+        }
+      ],
+      "availability": "From February",
+      "mode": "On-site",
+      "audit": {
+        "origin": "Finland",
+        "education": "Vocational",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-107",
+      "revealName": "Julia Sandberg",
+      "contact": {
+        "fullName": "Julia Sandberg",
+        "email": "julia.sandberg@example.com",
+        "phone": "+358 40 000 0203",
+        "city": "Espoo"
+      },
+      "headline": "Biologist turned sustainability analyst; wrote an employer's first carbon report.",
+      "previousField": "Environmental research",
+      "skills": [
+        {
+          "id": "esg",
+          "level": "evidenced"
+        },
+        {
+          "id": "circular",
+          "level": "evidenced"
+        },
+        {
+          "id": "analysis",
+          "level": "evidenced"
+        },
+        {
+          "id": "stakeholders",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "Your company must report its emissions for the first time. Where do you start?",
+          "excerpt": "Map which data we already have, start with energy and transport, write down assumptions, and improve the estimates every year.",
+          "skills": ["esg", "analysis"]
+        },
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "Material flow study for a furniture maker showing which waste streams could be sold or reused.",
+          "skills": ["circular", "analysis"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Swedish",
+          "level": "Native"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Fluent"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        }
+      ],
+      "availability": "From January",
+      "mode": "Hybrid",
+      "audit": {
+        "origin": "Finland",
+        "education": "University",
+        "path": "Career changer"
+      }
+    },
+    {
+      "id": "T-108",
+      "revealName": "Lorenzo Bianchi",
+      "contact": {
+        "fullName": "Lorenzo Bianchi",
+        "email": "lorenzo.bianchi@example.com",
+        "phone": "+358 40 000 0204",
+        "city": "Espoo"
+      },
+      "headline": "Circular economy specialist from Turin who worked with recycling start-ups.",
+      "previousField": "Circular economy consulting",
+      "skills": [
+        {
+          "id": "circular",
+          "level": "evidenced"
+        },
+        {
+          "id": "analysis",
+          "level": "evidenced"
+        },
+        {
+          "id": "stakeholders",
+          "level": "evidenced"
+        },
+        {
+          "id": "esg",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "Material flow study for a furniture maker showing which waste streams could be sold or reused.",
+          "skills": ["circular", "analysis"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: getting people on board",
+          "excerpt": "I show each team one number they can change themselves. Reporting becomes their result, not mine.",
+          "skills": ["stakeholders"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Italian",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Learning"
+        }
+      ],
+      "availability": "Now",
+      "mode": "Remote",
+      "audit": {
+        "origin": "EU/EEA",
+        "education": "University",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-109",
+      "revealName": "Satu Hiltunen",
+      "contact": {
+        "fullName": "Satu Hiltunen",
+        "email": "satu.hiltunen@example.com",
+        "phone": "+358 40 000 0205",
+        "city": "Espoo"
+      },
+      "headline": "Project manager who has rolled out IT systems in schools and health centres.",
+      "previousField": "Public sector IT projects",
+      "skills": [
+        {
+          "id": "pm",
+          "level": "evidenced"
+        },
+        {
+          "id": "stakeholders",
+          "level": "evidenced"
+        },
+        {
+          "id": "lead",
+          "level": "evidenced"
+        },
+        {
+          "id": "adapt",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "Your project is three weeks late halfway through. What do you do?",
+          "excerpt": "Find what caused the delay, agree with the sponsor what to cut or move, and give everyone the new plan in one meeting.",
+          "skills": ["pm", "stakeholders"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: leading without being the boss",
+          "excerpt": "Most of my teams didn't report to me. I made the goal and each person's part very clear, and thanked people in public.",
+          "skills": ["lead"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Finnish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Swedish",
+          "level": "Working"
+        }
+      ],
+      "availability": "From February",
+      "mode": "Hybrid",
+      "audit": {
+        "origin": "Finland",
+        "education": "University",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-110",
+      "revealName": "Omar Haddad",
+      "contact": {
+        "fullName": "Omar Haddad",
+        "email": "omar.haddad@example.com",
+        "phone": "+358 40 000 0206",
+        "city": "Espoo"
+      },
+      "headline": "Civil engineer from Amman moving into project management.",
+      "previousField": "Construction",
+      "skills": [
+        {
+          "id": "pm",
+          "level": "evidenced"
+        },
+        {
+          "id": "lead",
+          "level": "evidenced"
+        },
+        {
+          "id": "adapt",
+          "level": "evidenced"
+        },
+        {
+          "id": "stakeholders",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: leading without being the boss",
+          "excerpt": "Most of my teams didn't report to me. I made the goal and each person's part very clear, and thanked people in public.",
+          "skills": ["lead"]
+        },
+        {
+          "kind": "scenario",
+          "prompt": "The customer changes a key requirement late. How do you handle it?",
+          "excerpt": "Show the cost in time and money of the change, let them choose, and update the plan without blaming anyone.",
+          "skills": ["adapt", "pm"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Arabic",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Working"
+        }
+      ],
+      "availability": "Now",
+      "mode": "Any",
+      "audit": {
+        "origin": "Outside EU",
+        "education": "University",
+        "path": "Career changer"
+      }
+    },
+    {
+      "id": "T-111",
+      "revealName": "Mirja Toivonen",
+      "contact": {
+        "fullName": "Mirja Toivonen",
+        "email": "mirja.toivonen@example.com",
+        "phone": "+358 40 000 0207",
+        "city": "Espoo"
+      },
+      "headline": "Customer service lead with nine years in a telecom contact centre.",
+      "previousField": "Telecom customer service",
+      "skills": [
+        {
+          "id": "customer",
+          "level": "evidenced"
+        },
+        {
+          "id": "sales",
+          "level": "evidenced"
+        },
+        {
+          "id": "stakeholders",
+          "level": "evidenced"
+        },
+        {
+          "id": "team",
+          "level": "claimed"
+        },
+        {
+          "id": "lead",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "An unhappy customer threatens to leave. What do you do?",
+          "excerpt": "Listen until they're done, repeat back the problem, offer what I can actually do and when, and follow up when I said I would.",
+          "skills": ["customer"]
+        },
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "Account plan for a mid-size B2B customer: their goals, who decides, and three next steps for the quarter.",
+          "skills": ["sales", "stakeholders"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Finnish",
+          "level": "Native"
+        },
+        {
+          "lang": "Swedish",
+          "level": "Working"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        }
+      ],
+      "availability": "From January",
+      "mode": "Hybrid",
+      "audit": {
+        "origin": "Finland",
+        "education": "Vocational",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-112",
+      "revealName": "Carlos Mendes",
+      "contact": {
+        "fullName": "Carlos Mendes",
+        "email": "carlos.mendes@example.com",
+        "phone": "+358 40 000 0208",
+        "city": "Espoo"
+      },
+      "headline": "Former restaurant manager from Montevideo moving into B2B sales.",
+      "previousField": "Restaurant management",
+      "skills": [
+        {
+          "id": "customer",
+          "level": "evidenced"
+        },
+        {
+          "id": "team",
+          "level": "evidenced"
+        },
+        {
+          "id": "sales",
+          "level": "claimed"
+        },
+        {
+          "id": "stakeholders",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "An unhappy customer threatens to leave. What do you do?",
+          "excerpt": "Listen until they're done, repeat back the problem, offer what I can actually do and when, and follow up when I said I would.",
+          "skills": ["customer"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: working in a team",
+          "excerpt": "I share good leads with colleagues when they fit better. The team target matters more than mine.",
+          "skills": ["team"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Spanish",
+          "level": "Native"
+        },
+        {
+          "lang": "Portuguese",
+          "level": "Fluent"
+        },
+        {
+          "lang": "English",
+          "level": "Fluent"
+        }
+      ],
+      "availability": "Now",
+      "mode": "Any",
+      "audit": {
+        "origin": "Outside EU",
+        "education": "Self-taught / bootcamp",
+        "path": "Career changer"
+      }
+    },
+    {
+      "id": "T-113",
+      "revealName": "Lauri Hakala",
+      "contact": {
+        "fullName": "Lauri Hakala",
+        "email": "lauri.hakala@example.com",
+        "phone": "+358 40 000 0209",
+        "city": "Espoo"
+      },
+      "headline": "Electrician installing solar panels and home batteries for five years.",
+      "previousField": "Electrical installation",
+      "skills": [
+        {
+          "id": "battery",
+          "level": "evidenced"
+        },
+        {
+          "id": "wiring",
+          "level": "evidenced"
+        },
+        {
+          "id": "energy",
+          "level": "evidenced"
+        },
+        {
+          "id": "team",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A home battery stops charging from the solar panels. What do you check?",
+          "excerpt": "Check the inverter and battery error codes, measure at the connections, follow the wiring diagram, and explain the fix to the homeowner.",
+          "skills": ["battery", "wiring"]
+        },
+        {
+          "kind": "sample",
+          "prompt": "Short work sample",
+          "excerpt": "Installation record for a 10 kW solar system with battery: layout, cabling, protection and test measurements.",
+          "skills": ["wiring", "energy"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Finnish",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Working"
+        }
+      ],
+      "availability": "From February",
+      "mode": "On-site",
+      "audit": {
+        "origin": "Finland",
+        "education": "Vocational",
+        "path": "Linear"
+      }
+    },
+    {
+      "id": "T-114",
+      "revealName": "Andrius Kazlauskas",
+      "contact": {
+        "fullName": "Andrius Kazlauskas",
+        "email": "andrius.kazlauskas@example.com",
+        "phone": "+358 40 000 0210",
+        "city": "Espoo"
+      },
+      "headline": "Electrician from Kaunas who wired battery storage sites in Lithuania.",
+      "previousField": "Energy storage installation",
+      "skills": [
+        {
+          "id": "battery",
+          "level": "evidenced"
+        },
+        {
+          "id": "wiring",
+          "level": "evidenced"
+        },
+        {
+          "id": "team",
+          "level": "evidenced"
+        },
+        {
+          "id": "energy",
+          "level": "claimed"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "scenario",
+          "prompt": "A home battery stops charging from the solar panels. What do you check?",
+          "excerpt": "Check the inverter and battery error codes, measure at the connections, follow the wiring diagram, and explain the fix to the homeowner.",
+          "skills": ["battery", "wiring"]
+        },
+        {
+          "kind": "voice",
+          "prompt": "60-second voice note: working on site",
+          "excerpt": "On a roof you look after each other. I check my partner's harness and they check mine, every time.",
+          "skills": ["team"]
+        }
+      ],
+      "languages": [
+        {
+          "lang": "Lithuanian",
+          "level": "Native"
+        },
+        {
+          "lang": "English",
+          "level": "Working"
+        },
+        {
+          "lang": "Finnish",
+          "level": "Learning"
+        }
+      ],
+      "availability": "Now",
+      "mode": "On-site",
+      "audit": {
+        "origin": "EU/EEA",
+        "education": "Vocational",
+        "path": "Linear"
       }
     }
   ]

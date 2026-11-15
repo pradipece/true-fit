@@ -95,7 +95,7 @@ describe("reasons and audit log", () => {
     expect(lines[0]).toBe("time,actor,action,need,candidate,from,to,reason,note");
     expect(lines[1]).toContain(",approved,");
     expect(lines[2]).toContain('"Said ""no"", twice"');
-    expect(lines[1]).toContain("Data engineer, battery telemetry");
+    expect(lines[1]).toContain("Data engineer · Kivi Energy Systems");
   });
 });
 

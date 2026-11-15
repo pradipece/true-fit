@@ -1,5 +1,4 @@
 {
-  "$comment": "Synthetic companies and their needs for the demo event. All names are fictional. Skill ids refer to data/esco/skills.json, occupation ids to data/esco/occupations.json.",
   "companies": [
     {
       "id": "C-kivi",
@@ -10,7 +9,7 @@
       "needs": [
         {
           "id": "N-01",
-          "title": "Data engineer, battery telemetry",
+          "title": "Data engineer",
           "occupation": "data-scientist",
           "summary": "Build pipelines from test rigs to the cloud and help engineers make sense of cell data.",
           "must": ["pipelines", "python", "sql"],
@@ -18,6 +17,17 @@
           "language": "English OK",
           "mode": "Hybrid",
           "submittedWeeksBefore": 4
+        },
+        {
+          "id": "N-08",
+          "title": "Automation engineer, cell assembly line",
+          "occupation": "automation-engineer",
+          "summary": "Program and commission the PLCs and robot cells on our new battery module assembly line.",
+          "must": ["plc", "automation"],
+          "nice": ["robotics", "battery", "problem"],
+          "language": "English OK",
+          "mode": "On-site",
+          "submittedWeeksBefore": 3
         }
       ]
     },
@@ -49,6 +59,17 @@
           "language": "Finnish or English",
           "mode": "On-site",
           "submittedWeeksBefore": 2
+        },
+        {
+          "id": "N-13",
+          "title": "HR coordinator, recruitment",
+          "occupation": "hr-officer",
+          "summary": "Run hiring for warehouse and transport roles end to end, from job ads to first-day onboarding.",
+          "must": ["recruiting", "interviewing"],
+          "nice": ["staff-dev", "intercultural", "labour-law"],
+          "language": "Finnish or English",
+          "mode": "Hybrid",
+          "submittedWeeksBefore": 3
         }
       ]
     },
@@ -80,6 +101,17 @@
           "language": "English OK",
           "mode": "Hybrid",
           "submittedWeeksBefore": 3
+        },
+        {
+          "id": "N-11",
+          "title": "System engineer, hospital integrations",
+          "occupation": "integration-engineer",
+          "summary": "Connect our platform to hospital systems, keep the integrations healthy and document them for audits.",
+          "must": ["integration", "sysadmin"],
+          "nice": ["health-regs", "monitoring", "security"],
+          "language": "English OK",
+          "mode": "Hybrid",
+          "submittedWeeksBefore": 4
         }
       ]
     },
@@ -120,6 +152,573 @@
           "language": "Finnish or English",
           "mode": "On-site",
           "submittedWeeksBefore": 3
+        },
+        {
+          "id": "N-14",
+          "title": "HR specialist",
+          "occupation": "hr-officer",
+          "summary": "Support 300 care staff with contracts, working hours and payroll questions under the healthcare collective agreement.",
+          "must": ["hrm", "labour-law"],
+          "nice": ["payroll", "recruiting", "stakeholders"],
+          "language": "Finnish required",
+          "mode": "On-site",
+          "submittedWeeksBefore": 2
+        }
+      ]
+    },
+    {
+      "id": "C-vaski",
+      "name": "Vaski Automation",
+      "blurb": "Industrial automation integrator, 120 people",
+      "sector": "Manufacturing & automation",
+      "location": "Kilo, Espoo",
+      "needs": [
+        {
+          "id": "N-09",
+          "title": "Automation engineer",
+          "occupation": "automation-engineer",
+          "summary": "Design and test control logic for food and pharma packaging lines, then commission them on site with customers.",
+          "must": ["plc", "control-systems"],
+          "nice": ["wiring", "robotics", "stakeholders"],
+          "language": "Finnish or English",
+          "mode": "On-site",
+          "submittedWeeksBefore": 4
+        },
+        {
+          "id": "N-15",
+          "title": "HR generalist",
+          "occupation": "hr-officer",
+          "summary": "Be the first HR hire next to the CEO: recruiting engineers, onboarding, and keeping contracts and policies in order.",
+          "must": ["hrm", "recruiting"],
+          "nice": ["labour-law", "staff-dev", "interviewing"],
+          "language": "Finnish or English",
+          "mode": "Hybrid",
+          "submittedWeeksBefore": 3
+        }
+      ]
+    },
+    {
+      "id": "C-pilvi",
+      "name": "Pilvi Datacenter Services",
+      "blurb": "Managed hosting and data centre operator, 60 people",
+      "sector": "IT infrastructure",
+      "location": "Leppävaara, Espoo",
+      "needs": [
+        {
+          "id": "N-10",
+          "title": "System engineer, Linux & virtualisation",
+          "occupation": "system-administrator",
+          "summary": "Keep customer server clusters patched, monitored and recoverable, and automate the routine work.",
+          "must": ["sysadmin", "virtualisation"],
+          "nice": ["networking", "monitoring", "python"],
+          "language": "English OK",
+          "mode": "Hybrid",
+          "submittedWeeksBefore": 4
+        },
+        {
+          "id": "N-12",
+          "title": "Junior system engineer, network & monitoring",
+          "occupation": "system-administrator",
+          "summary": "Join the operations team: watch the dashboards, fix network issues and learn the platform with a mentor.",
+          "must": ["networking", "monitoring"],
+          "nice": ["sysadmin", "security", "customer"],
+          "language": "English OK",
+          "mode": "On-site",
+          "submittedWeeksBefore": 2
+        }
+      ]
+    },
+    {
+      "id": "C-sisu",
+      "name": "Sisu Software",
+      "blurb": "Software consultancy, 150 people",
+      "sector": "Software services",
+      "location": "Tapiola, Espoo",
+      "needs": [
+        {
+          "id": "N-16",
+          "title": "Back-end developer",
+          "occupation": "software-developer",
+          "summary": "Build and run APIs for customer projects in a small cross-functional team.",
+          "must": ["backend", "sql"],
+          "nice": ["cloud", "testing", "team"],
+          "language": "English OK",
+          "mode": "Hybrid",
+          "submittedWeeksBefore": 4
+        },
+        {
+          "id": "N-17",
+          "title": "QA engineer",
+          "occupation": "software-tester",
+          "summary": "Own test automation for two client products and help developers test earlier.",
+          "must": ["testing"],
+          "nice": ["sdlc", "js", "problem"],
+          "language": "English OK",
+          "mode": "Hybrid",
+          "submittedWeeksBefore": 3
+        }
+      ]
+    },
+    {
+      "id": "C-meri",
+      "name": "Meri Robotics",
+      "blurb": "Marine robotics start-up, 35 people",
+      "sector": "Robotics",
+      "location": "Otaniemi, Espoo",
+      "needs": [
+        {
+          "id": "N-18",
+          "title": "Robotics engineer",
+          "occupation": "automation-engineer",
+          "summary": "Integrate and test the motion control of our autonomous hull-cleaning robots.",
+          "must": ["robotics", "automation"],
+          "nice": ["embedded", "plc", "problem"],
+          "language": "English OK",
+          "mode": "On-site",
+          "submittedWeeksBefore": 4
+        },
+        {
+          "id": "N-19",
+          "title": "Embedded developer",
+          "occupation": "embedded-developer",
+          "summary": "Write and test firmware for the sensors and motor controllers on our robots.",
+          "must": ["embedded"],
+          "nice": ["testing", "robotics", "team"],
+          "language": "English OK",
+          "mode": "On-site",
+          "submittedWeeksBefore": 3
+        }
+      ]
+    },
+    {
+      "id": "C-routa",
+      "name": "Routa Fintech",
+      "blurb": "Payments platform, 110 people",
+      "sector": "Financial technology",
+      "location": "Keilaniemi, Espoo",
+      "needs": [
+        {
+          "id": "N-20",
+          "title": "Security analyst",
+          "occupation": "ethical-hacker",
+          "summary": "Watch our cloud environment, run threat reviews with teams and handle incidents calmly.",
+          "must": ["security"],
+          "nice": ["networking", "cloud", "problem"],
+          "language": "English OK",
+          "mode": "Hybrid",
+          "submittedWeeksBefore": 4
+        },
+        {
+          "id": "N-21",
+          "title": "Data analyst, payments",
+          "occupation": "data-analyst",
+          "summary": "Answer business questions about payment flows with clear dashboards and honest numbers.",
+          "must": ["analysis", "sql"],
+          "nice": ["python", "stakeholders"],
+          "language": "English OK",
+          "mode": "Hybrid",
+          "submittedWeeksBefore": 3
+        }
+      ]
+    },
+    {
+      "id": "C-hongisto",
+      "name": "Hongisto Facilities",
+      "blurb": "Property maintenance company, 260 people",
+      "sector": "Real estate services",
+      "location": "Espoonlahti, Espoo",
+      "needs": [
+        {
+          "id": "N-22",
+          "title": "HVAC service technician",
+          "occupation": "hvac-technician",
+          "summary": "Service ventilation and heating in schools and offices and explain faults to building users.",
+          "must": ["hvac"],
+          "nice": ["energy", "customer", "problem"],
+          "language": "Finnish or English",
+          "mode": "On-site",
+          "submittedWeeksBefore": 2
+        },
+        {
+          "id": "N-23",
+          "title": "Energy engineer",
+          "occupation": "energy-assessor",
+          "summary": "Find and plan energy savings across 80 managed buildings.",
+          "must": ["energy"],
+          "nice": ["hvac", "esg", "pm"],
+          "language": "Finnish or English",
+          "mode": "Hybrid",
+          "submittedWeeksBefore": 3
+        }
+      ]
+    },
+    {
+      "id": "C-kaarna",
+      "name": "Kaarna Circular",
+      "blurb": "Recycling and materials recovery, 70 people",
+      "sector": "Circular economy",
+      "location": "Ämmässuo, Espoo",
+      "needs": [
+        {
+          "id": "N-24",
+          "title": "Sustainability analyst",
+          "occupation": "csr-manager",
+          "summary": "Measure material flows and write the sustainability report our customers ask for.",
+          "must": ["esg", "analysis"],
+          "nice": ["circular", "stakeholders"],
+          "language": "English OK",
+          "mode": "Hybrid",
+          "submittedWeeksBefore": 4
+        },
+        {
+          "id": "N-25",
+          "title": "Procurement specialist",
+          "occupation": "purchaser",
+          "summary": "Buy equipment and services with suppliers who meet our circularity criteria.",
+          "must": ["procurement"],
+          "nice": ["supply", "stakeholders", "circular"],
+          "language": "Finnish or English",
+          "mode": "On-site",
+          "submittedWeeksBefore": 3
+        }
+      ]
+    },
+    {
+      "id": "C-ilma",
+      "name": "Ilma Retail",
+      "blurb": "Online home goods retailer, 180 people",
+      "sector": "E-commerce",
+      "location": "Leppävaara, Espoo",
+      "needs": [
+        {
+          "id": "N-26",
+          "title": "Customer service team lead",
+          "occupation": "call-centre-agent",
+          "summary": "Lead a 10-person chat and phone team serving customers in three languages.",
+          "must": ["customer", "lead"],
+          "nice": ["team", "intercultural"],
+          "language": "Finnish or English",
+          "mode": "Hybrid",
+          "submittedWeeksBefore": 2
+        },
+        {
+          "id": "N-27",
+          "title": "UX designer",
+          "occupation": "ui-designer",
+          "summary": "Research and design the checkout and returns journeys with the product team.",
+          "must": ["ux"],
+          "nice": ["a11y", "stakeholders", "react"],
+          "language": "English OK",
+          "mode": "Remote",
+          "submittedWeeksBefore": 3
+        },
+        {
+          "id": "N-28",
+          "title": "Recruiter",
+          "occupation": "recruitment-consultant",
+          "summary": "Hire warehouse, customer service and tech staff with a fair, structured process.",
+          "must": ["recruiting", "interviewing"],
+          "nice": ["intercultural", "stakeholders"],
+          "language": "English OK",
+          "mode": "Hybrid",
+          "submittedWeeksBefore": 3
+        }
+      ]
+    },
+    {
+      "id": "C-pihlaja",
+      "name": "Pihlaja Clinics",
+      "blurb": "Private clinic network, 400 people",
+      "sector": "Healthcare",
+      "location": "Matinkylä, Espoo",
+      "needs": [
+        {
+          "id": "N-29",
+          "title": "Registered nurse, day surgery",
+          "occupation": "general-nurse",
+          "summary": "Care for day-surgery patients before and after their operation.",
+          "must": ["patient-care", "medication"],
+          "nice": ["ehr", "intercultural"],
+          "language": "Finnish required",
+          "mode": "On-site",
+          "submittedWeeksBefore": 3
+        },
+        {
+          "id": "N-30",
+          "title": "HR manager",
+          "occupation": "hr-manager",
+          "summary": "Lead a three-person HR team and the people side of opening two new clinics.",
+          "must": ["hrm", "labour-law"],
+          "nice": ["staff-dev", "lead"],
+          "language": "Finnish required",
+          "mode": "Hybrid",
+          "submittedWeeksBefore": 4
+        }
+      ]
+    },
+    {
+      "id": "C-taival",
+      "name": "Taival Transport",
+      "blurb": "Road freight company, 320 people",
+      "sector": "Transport",
+      "location": "Kauklahti, Espoo",
+      "needs": [
+        {
+          "id": "N-31",
+          "title": "Freight dispatcher",
+          "occupation": "freight-dispatcher",
+          "summary": "Plan daily routes for 60 trucks and keep drivers and customers informed.",
+          "must": ["logistics"],
+          "nice": ["customer", "problem", "intercultural"],
+          "language": "Finnish or English",
+          "mode": "On-site",
+          "submittedWeeksBefore": 2
+        },
+        {
+          "id": "N-32",
+          "title": "Logistics manager",
+          "occupation": "logistics-manager",
+          "summary": "Run the Espoo terminal's planning and a team of six planners.",
+          "must": ["logistics", "lead"],
+          "nice": ["supply", "pm"],
+          "language": "Finnish or English",
+          "mode": "On-site",
+          "submittedWeeksBefore": 4
+        }
+      ]
+    },
+    {
+      "id": "C-verso",
+      "name": "Verso Cloud",
+      "blurb": "Cloud data platform company, 90 people",
+      "sector": "Software",
+      "location": "Otaniemi, Espoo",
+      "needs": [
+        {
+          "id": "N-33",
+          "title": "Cloud data engineer",
+          "occupation": "data-scientist",
+          "summary": "Build reliable streaming pipelines for customers' operational data.",
+          "must": ["pipelines", "cloud"],
+          "nice": ["python", "sql", "monitoring"],
+          "language": "English OK",
+          "mode": "Remote",
+          "submittedWeeksBefore": 4
+        },
+        {
+          "id": "N-34",
+          "title": "Machine learning engineer",
+          "occupation": "data-scientist",
+          "summary": "Take forecasting models from notebooks to production and keep them honest.",
+          "must": ["ml", "python"],
+          "nice": ["cloud", "pipelines"],
+          "language": "English OK",
+          "mode": "Hybrid",
+          "submittedWeeksBefore": 4
+        },
+        {
+          "id": "N-35",
+          "title": "System engineer, cloud platform",
+          "occupation": "system-administrator",
+          "summary": "Keep the platform's servers, networks and backups healthy around the clock.",
+          "must": ["sysadmin", "cloud"],
+          "nice": ["virtualisation", "monitoring", "security"],
+          "language": "English OK",
+          "mode": "Hybrid",
+          "submittedWeeksBefore": 3
+        }
+      ]
+    },
+    {
+      "id": "C-sointu",
+      "name": "Sointu Learning",
+      "blurb": "Education technology company, 45 people",
+      "sector": "Education technology",
+      "location": "Tapiola, Espoo",
+      "needs": [
+        {
+          "id": "N-36",
+          "title": "Full-stack developer",
+          "occupation": "web-developer",
+          "summary": "Ship features for a learning app used by 300 schools.",
+          "must": ["js", "backend"],
+          "nice": ["react", "sql", "mentoring"],
+          "language": "English OK",
+          "mode": "Remote",
+          "submittedWeeksBefore": 3
+        },
+        {
+          "id": "N-37",
+          "title": "Project manager, school rollouts",
+          "occupation": "project-manager",
+          "summary": "Plan and run app rollouts with municipalities and school staff.",
+          "must": ["pm", "stakeholders"],
+          "nice": ["mentoring", "adapt"],
+          "language": "Finnish required",
+          "mode": "Hybrid",
+          "submittedWeeksBefore": 3
+        }
+      ]
+    },
+    {
+      "id": "C-valo",
+      "name": "Valo Solar",
+      "blurb": "Solar and home battery installer, 55 people",
+      "sector": "Energy & cleantech",
+      "location": "Suurpelto, Espoo",
+      "needs": [
+        {
+          "id": "N-38",
+          "title": "Solar & battery installer",
+          "occupation": "domestic-electrician",
+          "summary": "Install solar panels and home batteries safely and explain them to homeowners.",
+          "must": ["battery", "wiring"],
+          "nice": ["energy", "team"],
+          "language": "Finnish or English",
+          "mode": "On-site",
+          "submittedWeeksBefore": 2
+        },
+        {
+          "id": "N-39",
+          "title": "Automation technician",
+          "occupation": "automation-technician",
+          "summary": "Wire, program and test the control cabinets for our battery storage sites.",
+          "must": ["automation", "wiring"],
+          "nice": ["plc", "problem"],
+          "language": "Finnish or English",
+          "mode": "On-site",
+          "submittedWeeksBefore": 3
+        }
+      ]
+    },
+    {
+      "id": "C-kuusi",
+      "name": "Kuusi Integrations",
+      "blurb": "Integration and ERP consultancy, 65 people",
+      "sector": "IT services",
+      "location": "Leppävaara, Espoo",
+      "needs": [
+        {
+          "id": "N-40",
+          "title": "Integration engineer",
+          "occupation": "integration-engineer",
+          "summary": "Design and build integrations between ERP, warehouse and webshop systems.",
+          "must": ["integration", "sdlc"],
+          "nice": ["backend", "testing", "stakeholders"],
+          "language": "English OK",
+          "mode": "Hybrid",
+          "submittedWeeksBefore": 4
+        }
+      ]
+    },
+    {
+      "id": "C-saaristo",
+      "name": "Saaristo Senior Living",
+      "blurb": "Assisted living homes, 210 people",
+      "sector": "Healthcare & social care",
+      "location": "Soukka, Espoo",
+      "needs": [
+        {
+          "id": "N-41",
+          "title": "Assisted living carer",
+          "occupation": "home-care-aide",
+          "summary": "Support residents' daily living, activities and medication in a 40-resident home.",
+          "must": ["elderly-care"],
+          "nice": ["patient-care", "medication", "intercultural"],
+          "language": "Finnish or English",
+          "mode": "On-site",
+          "submittedWeeksBefore": 2
+        },
+        {
+          "id": "N-42",
+          "title": "Payroll and HR specialist",
+          "occupation": "hr-officer",
+          "summary": "Run monthly payroll for 210 staff and answer their contract and leave questions.",
+          "must": ["payroll", "hrm"],
+          "nice": ["labour-law", "customer"],
+          "language": "Finnish required",
+          "mode": "On-site",
+          "submittedWeeksBefore": 3
+        }
+      ]
+    },
+    {
+      "id": "C-tapiola",
+      "name": "Tapiola Data Works",
+      "blurb": "Data and software consultancy, 60 people",
+      "sector": "Data & software services",
+      "location": "Tapiola, Espoo",
+      "needs": [
+        {
+          "id": "N-43",
+          "title": "Data analyst",
+          "occupation": "data-analyst",
+          "summary": "Analyse client data in Python and turn it into clear findings and dashboards for their teams.",
+          "must": ["python", "analysis"],
+          "nice": ["sql", "stakeholders"],
+          "language": "English OK",
+          "mode": "Hybrid",
+          "submittedWeeksBefore": 3
+        }
+      ]
+    },
+    {
+      "id": "C-apila",
+      "name": "Apila Pharmacy",
+      "blurb": "Community pharmacy group, 4 pharmacies, 45 people",
+      "sector": "Pharmacy",
+      "location": "Espoon keskus, Espoo",
+      "needs": [
+        {
+          "id": "N-44",
+          "title": "Pharmacist",
+          "occupation": "pharmacist",
+          "summary": "Advise customers on their medicines, check prescriptions and keep the pharmacy's medication safety routines.",
+          "must": ["medication", "health-regs"],
+          "nice": ["customer", "intercultural"],
+          "language": "Finnish or English",
+          "mode": "On-site",
+          "submittedWeeksBefore": 3
+        }
+      ]
+    },
+    {
+      "id": "C-kattila",
+      "name": "Kattila Catering",
+      "blurb": "Lunch restaurants and event catering, 90 people",
+      "sector": "Hospitality",
+      "location": "Niittykumpu, Espoo",
+      "needs": [
+        {
+          "id": "N-45",
+          "title": "Chef, lunch restaurant",
+          "occupation": "chef",
+          "summary": "Run the hot kitchen of a 300-lunch office restaurant and keep a small team calm through the rush.",
+          "must": ["team", "problem"],
+          "nice": ["lead", "adapt", "customer"],
+          "language": "Finnish or English",
+          "mode": "On-site",
+          "submittedWeeksBefore": 2
+        }
+      ]
+    },
+    {
+      "id": "C-kaari",
+      "name": "Kaari International School",
+      "blurb": "International upper secondary school, 70 staff",
+      "sector": "Education",
+      "location": "Otaniemi, Espoo",
+      "needs": [
+        {
+          "id": "N-46",
+          "title": "Mathematics and physics teacher",
+          "occupation": "secondary-teacher",
+          "summary": "Teach maths and physics in English to students aged 13–18 and help plan cross-subject projects.",
+          "must": ["mentoring", "adapt"],
+          "nice": ["pm", "intercultural", "stakeholders"],
+          "language": "English OK",
+          "mode": "On-site",
+          "submittedWeeksBefore": 4
         }
       ]
     }
