@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
-import { BellDotIcon, UserRoundCheckIcon } from "lucide-react";
+import { UserRoundCheckIcon } from "lucide-react";
 import { useSession, useSwitchAccount } from "@/components/session";
 import { OWN_ID, pairOwner } from "@/lib/identity";
 import { activeKeys, myTurn, stageOf, visibleTo } from "@/lib/pipeline";
@@ -61,22 +61,14 @@ export function useViewAs() {
   };
 }
 
-/**
- * Who you are signed in as on this side, with a link to switch account, and (demo) other
- * accounts that have something to answer, since that's the usual reason "nothing shows up".
- */
+/** Who you are signed in as on this side, with a link to switch account. */
 export function IdentitySwitch({ side }: { side: FeedbackSide }) {
-  const { id, me, options, counts } = useIdentity(side);
-  const { switchTo, pending } = useSwitchAccount();
+  const { id, me, counts } = useIdentity(side);
   const { session } = useSession();
   const { talent } = useDemo();
   const own = talent.find((t) => t.id === id && t.createdByUser);
   const name = own?.contact?.fullName || session?.name || me?.name || id;
   const mine = counts.get(id);
-  const elsewhere = options
-    .filter((p) => p.id !== id && counts.get(p.id)?.todo)
-    .sort((a, b) => counts.get(b.id)!.todo - counts.get(a.id)!.todo)
-    .slice(0, 3);
   return (
     <div className="space-y-2 print:hidden">
       <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-card px-3 py-2 text-sm">
@@ -98,23 +90,6 @@ export function IdentitySwitch({ side }: { side: FeedbackSide }) {
           Switch account
         </Link>
       </div>
-      {elsewhere.length > 0 && (
-        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 px-1 text-xs text-muted-foreground">
-          <BellDotIcon className="size-3.5 text-primary" />
-          Demo: other {side === "company" ? "companies" : "candidates"} have something to answer. Sign in as:
-          {elsewhere.map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              disabled={pending}
-              onClick={() => switchTo(side, p.id, window.location.pathname)}
-              className="rounded-full border px-2 py-0.5 font-medium text-foreground hover:bg-muted disabled:opacity-50"
-            >
-              {p.name} ({counts.get(p.id)!.todo})
-            </button>
-          ))}
-        </p>
-      )}
     </div>
   );
 }
